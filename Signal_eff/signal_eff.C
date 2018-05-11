@@ -62,31 +62,51 @@ TH1 * GetHist(TString hname){
 //////////////////////////////////////////////////////////////////////////////
 
 
-void openfile_signal(TString samplename){
+void openfile_signal(TString samplename, TString channel){
 
-  TString filename = "HN_pair_all_HNpair_MuMu_WR5000_" + samplename + "_official_cat_v8-0-7.root";
+  TString filename = "HN_pair_all_HNpair_" + channel + "_WR5000_" + samplename + "_official_cat_v8-0-7.root";
   cout << "opening : " << filename << endl;
   
-  mapfile[filename] = new TFile ((filename)) ;
+  mapfile[filename] = new TFile (("./" + channel + "/" + filename)) ;
   gDirectory -> cd("Hists");
   
-  maphist[acceptancy + samplename] =  (TH1*)gDirectory -> Get(acceptancy);
+  maphist[acceptancy + samplename + channel] =  (TH1*)gDirectory -> Get(acceptancy);
 
   TString content[27] = {"Empty", "after_skim", "MET_filter", "good_PV", "HLT_mu", "HLT_ele", "DiEle_lepton_N_cut", "DiMu_lepton_N_cut", "EMu_lepton_N_cut", "DiEle_lepton_Pt_cut", "DiMu_lepton_Pt_cut", "EMu_leptn_Pt_cut",
 		       "DiEle_Mll_cut", "DiMu_Mll_cut", "EMu_Mll_cut", "DiEle_jet_N_cut", "DiMu_jet_N_cut", "EMu jet N cut", "DiEle_Mlljjjj_cut", "DiMu_Mlljjjj_cut", "EMu_Mlljjjj_cut", "DiEle_CR1", "DiMu_CR1", "EMu_CR1", "DiEle_CR2", "DiMu_CR2", "EMu CR2"};
   
   for(int i = 0; i < 27; i++){
     //cout << samplename + content[i] << endl;
-    map_eff[samplename + content[i]] = maphist[acceptancy + samplename] -> GetBinContent(i);
-    map_eff_err[samplename + content[i]] = maphist[acceptancy + samplename] -> GetBinError(i);
+    map_eff[samplename + content[i] + channel] = maphist[acceptancy + samplename + channel] -> GetBinContent(i);
+    map_eff_err[samplename + content[i] + channel] = maphist[acceptancy + samplename + channel] -> GetBinError(i);
 
   }
   
-  gDirectory -> cd();
+  gDirectory -> cd("../");
+
+  TString directories[] = {"SR1_DiMu", "SR1_DiEle"};
+  int n_directories = 2;
+  for(int i = 0; i < n_directories; i++){
+    gDirectory -> cd(directories[i]);
+    TIter next(gDirectory->GetListOfKeys());
+    TKey *key;
+    vector<TString> histnames;
+    while ((key = (TKey*)next())) {
+      TClass *cl = gROOT->GetClass(key->GetClassName());
+      if (!cl->InheritsFrom("TH1")) continue;
+      histnames.push_back(key -> GetName());
+    }
+    
+    for(int i = 0; i < histnames.size(); i ++){
+      maphist[histnames.at(i) + samplename + channel] = (TH1*)gDirectory -> Get(histnames.at(i));
+    }
+    gDirectory -> cd("../");
+  }  
+  
 }
 
 
-void make_2D_hist(TString content){
+void make_2D_hist(TString content, TString channel){
   cout << "making 2D plot for " << content << endl;
   
   Float_t xbins[9] = {500, 750, 1000, 1500, 2000, 2500, 3000, 4000, 5000};
@@ -95,10 +115,10 @@ void make_2D_hist(TString content){
     ybins[i] = 100. + 100.0 * i;
   }
 
-  maphist_2D[ content ] = new TH2D(content, content, 8, xbins, 19, ybins);
+  maphist_2D[ content + channel ] = new TH2D(content + channel, content + channel, 8, xbins, 19, ybins);
   gStyle->SetPaintTextFormat("4.4f");
   
-  maphist_2D[ content ] -> SetMarkerSize(0.9);
+  maphist_2D[ content + channel] -> SetMarkerSize(0.9);
   
   int Zpmass[8] = {500, 750, 1000, 1500, 2000, 2500, 3000, 4000};
   for(int i = 0; i < 8; i++){
@@ -107,25 +127,25 @@ void make_2D_hist(TString content){
     while(ratio > 2){
       TString current_name = "Zp" + TString::Itoa(Zpmass[i], 10) + "_HN" + TString::Itoa(HNmass, 10);
       //cout << current_name + content << endl;
-      maphist_2D[ content ] -> Fill(Zpmass[i] + 1., HNmass + 1., map_eff[current_name + content] / map_eff[current_name + "after_skim"]);
+      maphist_2D[ content + channel] -> Fill(Zpmass[i] + 1., HNmass + 1., map_eff[current_name + content + channel] / map_eff[current_name + "after_skim" + channel]);
       
       HNmass += 100;
       ratio = (Zpmass[i] + 0.) / (HNmass + 0.);
     }
   }
   
-  mapcanvas[ content ] = new TCanvas( content ,"",800,600);
+  mapcanvas[ content + channel ] = new TCanvas( content + channel,"",800,600);
   gStyle -> SetOptStat(0);
-  mapcanvas[ content] -> cd();
+  mapcanvas[ content + channel ] -> cd();
   
   gStyle -> SetOptStat(0);
-  maphist_2D[ content ] -> Draw("COLZTEXT");
+  maphist_2D[ content + channel ] -> Draw("COLZTEXT");
   
-  mapcanvas[ content ] -> Update();
-  mapcanvas[ content ] -> SaveAs("./pdfs/" + content + "_eff_MiniIso.pdf");
+  mapcanvas[ content + channel ] -> Update();
+  mapcanvas[ content + channel ] -> SaveAs("./pdfs/" + channel + "_" + content + "_eff_MiniIso.pdf");
 }
 
-void make_2D_hist_needed_Nevt(TString content, TString stat_error){
+void make_2D_hist_needed_Nevt(TString content, TString stat_error, TString channel){
   
   //stat_error : 5_percent, 2p5_percent, 1_percent
   double N_stat;
@@ -140,10 +160,10 @@ void make_2D_hist_needed_Nevt(TString content, TString stat_error){
     ybins[i] = 100. + 100.0 * i;
   }
 
-  maphist_2D[ content ] = new TH2D(content, content, 8, xbins, 19, ybins);
+  maphist_2D[ content  + channel] = new TH2D(content + channel, content + channel, 8, xbins, 19, ybins);
   gStyle->SetPaintTextFormat("4.0f");
 
-  maphist_2D[ content ] -> SetMarkerSize(0.9);
+  maphist_2D[ content + channel ] -> SetMarkerSize(0.9);
 
   int Zpmass[8] = {500, 750, 1000, 1500, 2000, 2500, 3000, 4000};
   for(int i = 0; i < 8; i++){
@@ -152,31 +172,38 @@ void make_2D_hist_needed_Nevt(TString content, TString stat_error){
     while(ratio > 2){
       TString current_name = "Zp" + TString::Itoa(Zpmass[i], 10) + "_HN" + TString::Itoa(HNmass, 10);
       //cout << current_name + content << endl;
-      double accep_X_eff =  map_eff[current_name + content] / map_eff[current_name + "after_skim"];
-      maphist_2D[ content ] -> Fill(Zpmass[i] + 1., HNmass + 1., N_stat / accep_X_eff);
+      double accep_X_eff =  map_eff[current_name + content + channel] / map_eff[current_name + "after_skim" + channel];
+      maphist_2D[ content + channel ] -> Fill(Zpmass[i] + 1., HNmass + 1., N_stat / accep_X_eff);
       
       HNmass += 100;
       ratio = (Zpmass[i] + 0.) / (HNmass + 0.);
     }
   }
 
-  mapcanvas[ content ] = new TCanvas( content ,"",800,600);
+  mapcanvas[ content + channel ] = new TCanvas( content + channel,"",800,600);
   gStyle -> SetOptStat(0);
-  mapcanvas[ content] -> cd();
+  mapcanvas[ content + channel] -> cd();
 
   gStyle -> SetOptStat(0);
-  maphist_2D[ content ] -> Draw("COLZTEXT");
+  maphist_2D[ content + channel ] -> Draw("COLZTEXT");
 
-  mapcanvas[ content ] -> Update();
-  mapcanvas[ content ] -> SaveAs("./pdfs/" + stat_error + "_stat_error.pdf");
+  mapcanvas[ content + channel ] -> Update();
+  mapcanvas[ content + channel ] -> SaveAs("./pdfs/" + channel + "_" + stat_error + "_stat_error.pdf");
 
 
 }
 
-void make_1D_hist(int Zpmass){
+void make_1D_hist(int Zpmass, TString channel){
   
-  cout << "making 1D plot for Zp mass of " << Zpmass  << endl;
+  cout << "making 1D plot for Zp mass of " << Zpmass << " channel " << channel << endl;
+  
   TString content[11] = {"after_skim", "MET_filter", "good_PV", "HLT_mu", "DiMu_lepton_N_cut", "DiMu_lepton_Pt_cut", "DiMu_Mll_cut", "DiMu_jet_N_cut", "DiMu_Mlljjjj_cut", "DiMu_CR1", "DiMu_CR2"};
+  if(channel.Contains("ElEl")){
+    TString content_ee[11] = {"after_skim", "MET_filter", "good_PV", "HLT_ele", "DiEle_lepton_N_cut", "DiEle_lepton_Pt_cut", "DiEle_Mll_cut", "DiEle_jet_N_cut", "DiEle_Mlljjjj_cut", "DiEle_CR1", "DiEle_CR2"};
+    for(int i = 0; i < 11; i++){
+      content[i] = content_ee[i];
+    }
+  }
   
   int HNmass = 100;
   double ratio = (Zpmass + 0.) / (HNmass + 0.);
@@ -186,20 +213,20 @@ void make_1D_hist(int Zpmass){
     TString current_name = "Zp" + TString::Itoa(Zpmass, 10) + "_HN" + TString::Itoa(HNmass, 10);
     HNmass += 100;
     ratio = (Zpmass + 0.) / (HNmass + 0.);
-    maphist["eff" + current_name] = new TH1D("eff" + current_name, "eff" + current_name, 15, 0., 15.);
+    maphist["eff" + current_name + channel] = new TH1D("eff" + current_name + channel, "eff" + current_name + channel, 15, 0., 15.);
     for(int i = 0; i < 11; i++){
-      maphist["eff" + current_name] -> SetBinContent(i + 2, map_eff[current_name + content[i]] / map_eff[current_name + "after_skim"]);
+      maphist["eff" + current_name + channel] -> SetBinContent(i + 2, map_eff[current_name + content[i] + channel] / map_eff[current_name + "after_skim" + channel]);
       //maphist["eff" + current_name] -> SetBinError(i + 2, map_eff_err[current_name + content[i]]);
     }
     for(int i = 0; i < 11; i++){
-      maphist["eff" + current_name] -> GetXaxis() -> SetBinLabel(i + 2, content[i]);
+      maphist["eff" + current_name + channel] -> GetXaxis() -> SetBinLabel(i + 2, content[i]);
     }
-    maphist["eff" + current_name] -> SetTitle("");
+    maphist["eff" + current_name + channel] -> SetTitle("");
     //maphist["eff" + current_name] -> Draw();
     gStyle -> SetOptStat(0);
   }
   
-  TString map_name = "Zp" + TString::Itoa(Zpmass, 10) + "_eff";
+  TString map_name = "Zp" + TString::Itoa(Zpmass, 10) + "_eff" + channel;
   
   mapcanvas[map_name] = new TCanvas(map_name,"",1500,800);
   gStyle -> SetOptStat(0);
@@ -220,18 +247,18 @@ void make_1D_hist(int Zpmass){
     TString current_name = "Zp" + TString::Itoa(Zpmass, 10) + "_HN" + TString::Itoa(HNmass, 10);
     
     if(HNmass < 150){
-      maphist["eff" + current_name] -> SetMinimum(0.);
-      maphist["eff" + current_name] -> SetMaximum(1.2);
-      maphist["eff" + current_name] -> SetLineColor(color);
-      maphist["eff" + current_name] -> Draw("hist");
+      maphist["eff" + current_name + channel] -> SetMinimum(0.);
+      maphist["eff" + current_name + channel] -> SetMaximum(1.2);
+      maphist["eff" + current_name + channel] -> SetLineColor(color);
+      maphist["eff" + current_name + channel] -> Draw("hist");
     }
     else{
-      maphist["eff" + current_name] -> SetLineColor(color);
-      maphist["eff" + current_name] -> Draw("histsame");
+      maphist["eff" + current_name + channel] -> SetLineColor(color);
+      maphist["eff" + current_name + channel] -> Draw("histsame");
     }
     color += 76 / N_HN;
     
-    maplegend[map_name] -> AddEntry(maphist["eff" + current_name], current_name, "fl");
+    maplegend[map_name] -> AddEntry(maphist["eff" + current_name + channel], current_name, "fl");
     
     HNmass += 100;
     ratio = (Zpmass + 0.) / (HNmass + 0.);
@@ -242,8 +269,60 @@ void make_1D_hist(int Zpmass){
   maplegend[map_name] -> Draw("lcsame");
 
   mapcanvas[ map_name ] -> Update();
-  mapcanvas[ map_name ] -> SaveAs("./pdfs/cutflow/cutflow_Zp_" + TString::Itoa(Zpmass, 10) + ".pdf");
+  mapcanvas[ map_name ] -> SaveAs("./cutflow/cutflow_Zp_" + TString::Itoa(Zpmass, 10) + "_" + channel + "_doublephoton.pdf");
 }
+
+
+//draw signal shape
+void draw_signal_shape(TString nameofhistogram, TString channel, double rebin){
+ 
+  TString canvas = nameofhistogram;
+  TString legend = nameofhistogram;
+  canvas.Insert(0, "c_");
+  legend.Insert(0, "legend_");
+  
+  mapcanvas[canvas] = new TCanvas(canvas,"",1000,800);
+  gStyle -> SetOptStat(1111);
+  mapcanvas[canvas] -> SetTopMargin( 0.05 );
+  mapcanvas[canvas] -> SetBottomMargin( 0.13 );
+  mapcanvas[canvas] -> SetRightMargin( 0.05 );
+  mapcanvas[canvas] -> SetLeftMargin( 0.16 );
+  
+  maplegend[legend] = new TLegend(0.69, 0.50, 0.96, 0.92);
+
+  TString masspoints[] = {"Zp2000_HN500", "Zp3000_HN1000", "Zp4000_HN1500"};
+  Int_t colour_array[] = {900, 432 , 600};
+  int n_points = 3;
+  
+  maphist[nameofhistogram + "Zp1000_HN200" + channel] -> Rebin(rebin);
+  maphist[nameofhistogram + "Zp1000_HN200" + channel] -> SetLineColor(623);
+  maphist[nameofhistogram + "Zp1000_HN200" + channel] -> Draw("hist");
+  maphist[nameofhistogram + "Zp1000_HN200" + channel] -> GetYaxis()->SetLabelSize(0.05);;
+  maphist[nameofhistogram + "Zp1000_HN200" + channel] -> GetYaxis()->SetTitleSize(0.07);;
+  maphist[nameofhistogram + "Zp1000_HN200" + channel] -> GetYaxis()->SetTitleOffset(1.02);;
+  maphist[nameofhistogram + "Zp1000_HN200" + channel] -> GetXaxis()->SetLabelSize(0);
+  maphist[nameofhistogram + "Zp1000_HN200" + channel] -> GetXaxis() -> SetRangeUser(0., 5000.);
+  maphist[nameofhistogram + "Zp1000_HN200" + channel] -> GetXaxis()->SetLabelSize(0.02);
+  maphist[nameofhistogram + "Zp1000_HN200" + channel] -> GetXaxis()->SetTitle("m(Z') (GeV)");
+  maplegend[legend] -> AddEntry(GetHist(nameofhistogram + "Zp1000_HN200" + channel), "Zp1000_HN200", "l");
+  
+  //maphist[nameofhistogram + "Zp1000_HN200" + channel] -> SetMaximum(data_max * 100.);
+  maphist[nameofhistogram + "Zp1000_HN200" + channel] -> SetMinimum(1.0);
+  
+  for(int i = 0; i < n_points; i++){
+    maphist[nameofhistogram + masspoints[i] + channel] -> Rebin(rebin);
+    maphist[nameofhistogram + masspoints[i] + channel] -> SetLineColor(colour_array[i]);
+    maphist[nameofhistogram + masspoints[i] + channel] -> Draw("histsame");
+    maplegend[legend] -> AddEntry(GetHist(nameofhistogram + masspoints[i] + channel), masspoints[i], "l");
+    
+  }
+
+
+}
+
+
+
+
 
 
 
@@ -259,10 +338,12 @@ void plot(){
       //cout << current_name << endl;
       HNmass += 100;
       ratio = (Zpmass[i] + 0.) / (HNmass + 0.);
-      openfile_signal(current_name);
+      openfile_signal(current_name, "MuMu");
+      openfile_signal(current_name, "ElEl");
     }
   
-    make_1D_hist(Zpmass[i]);
+    make_1D_hist(Zpmass[i], "MuMu");
+    make_1D_hist(Zpmass[i], "ElEl");
   }
 
   cout << "open files complete" << endl;
@@ -270,6 +351,10 @@ void plot(){
   
   TString content[27] = {"Empty", "after_skim", "MET_filter", "good_PV", "HLT_mu", "HLT_ele", "DiEle_lepton_N_cut", "DiMu_lepton_N_cut", "EMu_lepton_N_cut", "DiEle_lepton_Pt_cut", "DiMu_lepton_Pt_cut", "EMu_leptn_Pt_cut",
 			 "DiEle_Mll_cut", "DiMu_Mll_cut", "EMu_Mll_cut", "DiEle_jet_N_cut", "DiMu_jet_N_cut", "EMu jet N cut", "DiEle_Mlljjjj_cut", "DiMu_Mlljjjj_cut", "EMu_Mlljjjj_cut", "DiEle_CR1", "DiMu_CR1", "EMu_CR1", "DiEle_CR2", "DiMu_CR2", "EMu CR2"};
+
+  
+
+
   /*
   for(int i = 1; i < 27; i++){
     make_2D_hist(content[i]);
