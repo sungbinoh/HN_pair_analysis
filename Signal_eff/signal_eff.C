@@ -72,10 +72,11 @@ void openfile_signal(TString samplename, TString channel){
   
   maphist[acceptancy + samplename + channel] =  (TH1*)gDirectory -> Get(acceptancy);
 
-  TString content[27] = {"Empty", "after_skim", "MET_filter", "good_PV", "HLT_mu", "HLT_ele", "DiEle_lepton_N_cut", "DiMu_lepton_N_cut", "EMu_lepton_N_cut", "DiEle_lepton_Pt_cut", "DiMu_lepton_Pt_cut", "EMu_leptn_Pt_cut",
-		       "DiEle_Mll_cut", "DiMu_Mll_cut", "EMu_Mll_cut", "DiEle_jet_N_cut", "DiMu_jet_N_cut", "EMu jet N cut", "DiEle_Mlljjjj_cut", "DiMu_Mlljjjj_cut", "EMu_Mlljjjj_cut", "DiEle_CR1", "DiMu_CR1", "EMu_CR1", "DiEle_CR2", "DiMu_CR2", "EMu CR2"};
+  TString content[33] = {"Empty", "after_skim", "MET_filter", "good_PV", "HLT_mu", "HLT_ele", "DiEle_lepton_N_cut", "DiMu_lepton_N_cut", "EMu_lepton_N_cut", "DiEle_lepton_Pt_cut", "DiMu_lepton_Pt_cut", "EMu_leptn_Pt_cut",
+			 "DiEle_Mll_cut", "DiMu_Mll_cut", "EMu_Mll_cut", "DiEle_jet_N_cut", "DiMu_jet_N_cut", "EMu jet N cut", "DiEle_Mlljjjj_cut", "DiMu_Mlljjjj_cut", "EMu_Mlljjjj_cut", "DiEle_CR1", "DiMu_CR1", "EMu_CR1", "DiEle_CR2", "DiMu_CR2", "EMu CR2",
+			 "DiEle_CR3", "DiMu_CR3", "EMu CR3", "DiMu_Lep_pt_53_20", "DiMu_Lep_pt_53_53", "DiMu_Lep_pt_65_53"};
   
-  for(int i = 0; i < 27; i++){
+  for(int i = 0; i < 33; i++){
     //cout << samplename + content[i] << endl;
     map_eff[samplename + content[i] + channel] = maphist[acceptancy + samplename + channel] -> GetBinContent(i);
     map_eff_err[samplename + content[i] + channel] = maphist[acceptancy + samplename + channel] -> GetBinError(i);
@@ -98,6 +99,7 @@ void openfile_signal(TString samplename, TString channel){
     }
     
     for(int i = 0; i < histnames.size(); i ++){
+      //if(histnames.at(i).Contains("h_OS_lljjjjmass") ) cout << histnames.at(i) + samplename + channel << endl;
       maphist[histnames.at(i) + samplename + channel] = (TH1*)gDirectory -> Get(histnames.at(i));
     }
     gDirectory -> cd("../");
@@ -197,10 +199,10 @@ void make_1D_hist(int Zpmass, TString channel){
   
   cout << "making 1D plot for Zp mass of " << Zpmass << " channel " << channel << endl;
   
-  TString content[11] = {"after_skim", "MET_filter", "good_PV", "HLT_mu", "DiMu_lepton_N_cut", "DiMu_lepton_Pt_cut", "DiMu_Mll_cut", "DiMu_jet_N_cut", "DiMu_Mlljjjj_cut", "DiMu_CR1", "DiMu_CR2"};
+  TString content[12] = {"after_skim", "MET_filter", "good_PV", "HLT_mu", "DiMu_lepton_N_cut", "DiMu_lepton_Pt_cut", "DiMu_Mll_cut", "DiMu_jet_N_cut", "DiMu_Mlljjjj_cut", "DiMu_CR1", "DiMu_CR2", "DiMu_CR3"};
   if(channel.Contains("ElEl")){
-    TString content_ee[11] = {"after_skim", "MET_filter", "good_PV", "HLT_ele", "DiEle_lepton_N_cut", "DiEle_lepton_Pt_cut", "DiEle_Mll_cut", "DiEle_jet_N_cut", "DiEle_Mlljjjj_cut", "DiEle_CR1", "DiEle_CR2"};
-    for(int i = 0; i < 11; i++){
+    TString content_ee[12] = {"after_skim", "MET_filter", "good_PV", "HLT_ele", "DiEle_lepton_N_cut", "DiEle_lepton_Pt_cut", "DiEle_Mll_cut", "DiEle_jet_N_cut", "DiEle_Mlljjjj_cut", "DiEle_CR1", "DiEle_CR2", "DiEle_CR3"};
+    for(int i = 0; i < 12; i++){
       content[i] = content_ee[i];
     }
   }
@@ -214,11 +216,11 @@ void make_1D_hist(int Zpmass, TString channel){
     HNmass += 100;
     ratio = (Zpmass + 0.) / (HNmass + 0.);
     maphist["eff" + current_name + channel] = new TH1D("eff" + current_name + channel, "eff" + current_name + channel, 15, 0., 15.);
-    for(int i = 0; i < 11; i++){
+    for(int i = 0; i < 12; i++){
       maphist["eff" + current_name + channel] -> SetBinContent(i + 2, map_eff[current_name + content[i] + channel] / map_eff[current_name + "after_skim" + channel]);
       //maphist["eff" + current_name] -> SetBinError(i + 2, map_eff_err[current_name + content[i]]);
     }
-    for(int i = 0; i < 11; i++){
+    for(int i = 0; i < 12; i++){
       maphist["eff" + current_name + channel] -> GetXaxis() -> SetBinLabel(i + 2, content[i]);
     }
     maphist["eff" + current_name + channel] -> SetTitle("");
@@ -282,46 +284,133 @@ void draw_signal_shape(TString nameofhistogram, TString channel, double rebin){
   legend.Insert(0, "legend_");
   
   mapcanvas[canvas] = new TCanvas(canvas,"",1000,800);
-  gStyle -> SetOptStat(1111);
+  gStyle -> SetOptStat(0);
   mapcanvas[canvas] -> SetTopMargin( 0.05 );
   mapcanvas[canvas] -> SetBottomMargin( 0.13 );
   mapcanvas[canvas] -> SetRightMargin( 0.05 );
   mapcanvas[canvas] -> SetLeftMargin( 0.16 );
   
-  maplegend[legend] = new TLegend(0.69, 0.50, 0.96, 0.92);
+  maplegend[legend] = new TLegend(0.65, 0.60, 0.95, 0.95);
 
   TString masspoints[] = {"Zp2000_HN500", "Zp3000_HN1000", "Zp4000_HN1500"};
   Int_t colour_array[] = {900, 432 , 600};
   int n_points = 3;
-  
+  cout << "0"<< endl;
+
+  cout << nameofhistogram + "Zp1000_HN200" + channel << endl;
   maphist[nameofhistogram + "Zp1000_HN200" + channel] -> Rebin(rebin);
   maphist[nameofhistogram + "Zp1000_HN200" + channel] -> SetLineColor(623);
+  maphist[nameofhistogram + "Zp1000_HN200" + channel] -> SetTitle("");
   maphist[nameofhistogram + "Zp1000_HN200" + channel] -> Draw("hist");
   maphist[nameofhistogram + "Zp1000_HN200" + channel] -> GetYaxis()->SetLabelSize(0.05);;
   maphist[nameofhistogram + "Zp1000_HN200" + channel] -> GetYaxis()->SetTitleSize(0.07);;
   maphist[nameofhistogram + "Zp1000_HN200" + channel] -> GetYaxis()->SetTitleOffset(1.02);;
+  maphist[nameofhistogram + "Zp1000_HN200" + channel] -> SetMaximum(maphist[nameofhistogram + "Zp1000_HN200" + channel] -> GetMaximum() * 1.5);
   maphist[nameofhistogram + "Zp1000_HN200" + channel] -> GetXaxis()->SetLabelSize(0);
   maphist[nameofhistogram + "Zp1000_HN200" + channel] -> GetXaxis() -> SetRangeUser(0., 5000.);
   maphist[nameofhistogram + "Zp1000_HN200" + channel] -> GetXaxis()->SetLabelSize(0.02);
   maphist[nameofhistogram + "Zp1000_HN200" + channel] -> GetXaxis()->SetTitle("m(Z') (GeV)");
-  maplegend[legend] -> AddEntry(GetHist(nameofhistogram + "Zp1000_HN200" + channel), "Zp1000_HN200", "l");
+  maplegend[legend] -> AddEntry(GetHist(nameofhistogram + "Zp1000_HN200" + channel), "Zp1000_HN200, 0.1 pb", "l");
+  cout << "1"<< endl;
   
+
   //maphist[nameofhistogram + "Zp1000_HN200" + channel] -> SetMaximum(data_max * 100.);
   maphist[nameofhistogram + "Zp1000_HN200" + channel] -> SetMinimum(1.0);
   
   for(int i = 0; i < n_points; i++){
+    cout << "2" << endl;
     maphist[nameofhistogram + masspoints[i] + channel] -> Rebin(rebin);
     maphist[nameofhistogram + masspoints[i] + channel] -> SetLineColor(colour_array[i]);
     maphist[nameofhistogram + masspoints[i] + channel] -> Draw("histsame");
-    maplegend[legend] -> AddEntry(GetHist(nameofhistogram + masspoints[i] + channel), masspoints[i], "l");
-    
+    maplegend[legend] -> AddEntry(GetHist(nameofhistogram + masspoints[i] + channel), masspoints[i] + ", 0.1 pb", "l");
   }
 
+  cout << "3" << endl;
+  
+  maplegend[legend] -> Draw("lcsame");
+
+  TLatex latex_CMSPriliminary, latex_Lumi;
+  latex_CMSPriliminary.SetNDC();
+  latex_Lumi.SetNDC();
+  latex_CMSPriliminary.SetTextSize(0.035);
+  latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Simulation}}}");
+  latex_Lumi.SetTextSize(0.035);
+  latex_Lumi.DrawLatex(0.7, 0.96, "35.9 fb^{-1} (13 TeV)");
+
+  
+  mapcanvas[ canvas ] -> Update();
+  mapcanvas[ canvas ] -> SaveAs("./signal_shape/signal_shape_Zp_" + channel + ".pdf");
 
 }
 
 
+void draw_signal_shape_normalized(TString nameofhistogram, TString channel, double rebin){
 
+  TString canvas = nameofhistogram;
+  TString legend = nameofhistogram;
+  canvas.Insert(0, "c_");
+  legend.Insert(0, "legend_");
+
+  mapcanvas[canvas] = new TCanvas(canvas,"",1000,800);
+  gStyle -> SetOptStat(0);
+  mapcanvas[canvas] -> SetTopMargin( 0.05 );
+  mapcanvas[canvas] -> SetBottomMargin( 0.13 );
+  mapcanvas[canvas] -> SetRightMargin( 0.05 );
+  mapcanvas[canvas] -> SetLeftMargin( 0.16 );
+
+  maplegend[legend] = new TLegend(0.16, 0.60, 0.46, 0.95);
+
+  TString masspoints[] = {"Zp4000_HN500", "Zp4000_HN1000", "Zp4000_HN1500"};
+  Int_t colour_array[] = {900, 432 , 600};
+  int n_points = 3;
+  cout << "0"<< endl;
+
+  cout << nameofhistogram + "Zp4000_HN200" + channel << endl;
+  maphist[nameofhistogram + "Zp4000_HN200" + channel] -> Rebin(rebin);
+  double integ = maphist[nameofhistogram + "Zp4000_HN200" + channel] -> Integral();
+  maphist[nameofhistogram + "Zp4000_HN200" + channel] -> Scale(1. / integ);
+  maphist[nameofhistogram + "Zp4000_HN200" + channel] -> SetLineColor(623);
+  maphist[nameofhistogram + "Zp4000_HN200" + channel] -> SetTitle("");
+  maphist[nameofhistogram + "Zp4000_HN200" + channel] -> SetMaximum(0.12);
+  maphist[nameofhistogram + "Zp4000_HN200" + channel] -> Draw("hist");
+  maphist[nameofhistogram + "Zp4000_HN200" + channel] -> GetYaxis()->SetLabelSize(0.05);
+  maphist[nameofhistogram + "Zp4000_HN200" + channel] -> GetYaxis()->SetTitleSize(0.07);
+  maphist[nameofhistogram + "Zp4000_HN200" + channel] -> GetYaxis()->SetTitleOffset(1.02);
+  maphist[nameofhistogram + "Zp4000_HN200" + channel] -> GetXaxis()->SetLabelSize(0);
+  maphist[nameofhistogram + "Zp4000_HN200" + channel] -> GetXaxis() -> SetRangeUser(0., 5000.);
+  maphist[nameofhistogram + "Zp4000_HN200" + channel] -> GetXaxis()->SetLabelSize(0.02);
+  maphist[nameofhistogram + "Zp4000_HN200" + channel] -> GetXaxis()->SetTitle("m(Z') (GeV)");
+  maplegend[legend] -> AddEntry(GetHist(nameofhistogram + "Zp4000_HN200" + channel), "Zp4000_HN200", "l");
+  cout << "1"<< endl;
+
+
+  //maphist[nameofhistogram + "Zp1000_HN200" + channel] -> SetMaximum(data_max * 100.);                                                                                                                                                                                         
+  maphist[nameofhistogram + "Zp4000_HN200" + channel] -> SetMinimum(0.);
+
+  for(int i = 0; i < n_points; i++){
+    cout << "2" << endl;
+    maphist[nameofhistogram + masspoints[i] + channel] -> Rebin(rebin);
+    double integ_i =  maphist[nameofhistogram + masspoints[i] + channel] -> Integral();
+    maphist[nameofhistogram + masspoints[i] + channel] -> Scale(1. / integ_i);
+    maphist[nameofhistogram + masspoints[i] + channel] -> SetLineColor(colour_array[i]);
+    maphist[nameofhistogram + masspoints[i] + channel] -> Draw("histsame");
+    maplegend[legend] -> AddEntry(GetHist(nameofhistogram + masspoints[i] + channel), masspoints[i], "l");
+  }
+
+  cout << "3" << endl;
+
+  maplegend[legend] -> Draw("lcsame");
+  
+  TLatex latex_CMSPriliminary, latex_Lumi;
+  latex_CMSPriliminary.SetNDC();
+  latex_Lumi.SetNDC();
+  latex_CMSPriliminary.SetTextSize(0.035);
+  latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Simulation}}}");
+
+  mapcanvas[ canvas ] -> Update();
+  mapcanvas[ canvas ] -> SaveAs("./signal_shape/Norm_signal_shape_Zp_" + channel + ".pdf");
+
+}
 
 
 
@@ -352,8 +441,13 @@ void plot(){
   TString content[27] = {"Empty", "after_skim", "MET_filter", "good_PV", "HLT_mu", "HLT_ele", "DiEle_lepton_N_cut", "DiMu_lepton_N_cut", "EMu_lepton_N_cut", "DiEle_lepton_Pt_cut", "DiMu_lepton_Pt_cut", "EMu_leptn_Pt_cut",
 			 "DiEle_Mll_cut", "DiMu_Mll_cut", "EMu_Mll_cut", "DiEle_jet_N_cut", "DiMu_jet_N_cut", "EMu jet N cut", "DiEle_Mlljjjj_cut", "DiMu_Mlljjjj_cut", "EMu_Mlljjjj_cut", "DiEle_CR1", "DiMu_CR1", "EMu_CR1", "DiEle_CR2", "DiMu_CR2", "EMu CR2"};
 
-  
+  //draw_signal_shape("h_OS_lljjjjmass_SR1_DiEle", "ElEl", 50.);
+  //draw_signal_shape("h_OS_lljjjjmass_SR1_DiMu", "MuMu", 50.);
 
+  draw_signal_shape_normalized("h_OS_lljjjjmass_SR1_DiEle", "ElEl", 50.);
+  draw_signal_shape_normalized("h_OS_lljjjjmass_SR1_DiMu", "MuMu", 50.);
+  
+  
 
   /*
   for(int i = 1; i < 27; i++){
