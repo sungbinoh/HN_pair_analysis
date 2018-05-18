@@ -543,7 +543,7 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   mappad[pad1] -> SetRightMargin( 0.03 );
   mappad[pad1] -> Draw();
   mappad[pad1] -> cd();
-  //mappad[pad1] -> SetLogy();
+  mappad[pad1] -> SetLogy();
 
   maplegend[legend] = new TLegend(0.69, 0.60, 0.96, 0.92);
   
