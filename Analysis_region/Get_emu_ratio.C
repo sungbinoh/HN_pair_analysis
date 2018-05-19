@@ -9,6 +9,7 @@ plot() : main working function
 
 #include <TH2.h>
 #include <TH1F.h>
+#include <TF1.h>
 #include <TStyle.h>
 #include <TCanvas.h>
 #include <iostream>
@@ -32,6 +33,7 @@ using namespace std;
 
 map<TString, TH1*> maphist;
 map<TString, TH2*> maphist_2D;
+map<TString, TF1*> map_fitfunc;
 map<TString, TFile*> mapfile;
 map<TString, TCanvas*> mapcanvas;
 map<TString, TPad*> mappad;
@@ -150,7 +152,7 @@ void save_ratio_plot(TString nameofhistogram, TString sample, TString region, TS
   legend.Insert(0, "legend_");
   
   mapcanvas[canvas] = new TCanvas(canvas,"",800,800);
-  gStyle -> SetOptStat(1111);
+  gStyle -> SetOptStat(0);
   mapcanvas[canvas] -> SetTopMargin( 0.05 );
   mapcanvas[canvas] -> SetBottomMargin( 0.13 );
   mapcanvas[canvas] -> SetRightMargin( 0.05 );
@@ -163,15 +165,47 @@ void save_ratio_plot(TString nameofhistogram, TString sample, TString region, TS
   mapfunc[nameofhistogram + channel + sample + region] -> GetXaxis()->SetLabelSize(0.05);
   mapfunc[nameofhistogram + channel + sample + region] -> GetXaxis()->SetTitle(title_x);
   
+  
+  //  TF1 *func_eta = new TF1("func", "[0]*TMath::Gaus(x, [1], [2], 1)", -0.05, 0.3);
+  map_fitfunc[nameofhistogram + channel + sample + region] = new TF1(nameofhistogram + channel + sample + region, "[1]", 0., 5500.);
+  map_fitfunc[nameofhistogram + channel + sample + region]  -> SetLineColor(kBlue);
+
+  
+  mapfunc[nameofhistogram + channel + sample + region]  -> Fit(map_fitfunc[nameofhistogram + channel + sample + region], "R");
+  double chi2, chi2_norm, Ndf, p0, p0_err;
+  int ndf;
+  
+  
+  chi2 = map_fitfunc[nameofhistogram + channel + sample + region] -> GetChisquare();
+  ndf = map_fitfunc[nameofhistogram + channel + sample + region] -> GetNDF();
+  Ndf = 0. + ndf;
+  chi2_norm = chi2/ Ndf;
+  p0 = map_fitfunc[nameofhistogram + channel + sample + region] -> GetParameter(1);
+  p0_err = map_fitfunc[nameofhistogram + channel + sample + region] -> GetParError(1);
+  
+  TString chi2_Str, chi2_norm_str, Ndf_str, p0_str, p0_err_str;
+  chi2_Str = Form("%4.2f", chi2);
+  chi2_norm_str = Form("%4.3f", chi2_norm);
+  Ndf_str = Form("%4.0f", Ndf);
+  p0_str = Form("%4.3f", p0);
+  p0_err_str = Form("%4.3f", p0_err);
+  
   mapfunc[nameofhistogram + channel + sample + region] -> Draw();
   
-  TLatex latex_CMSPriliminary, latex_Lumi;
+  
+  TLatex latex_CMSPriliminary, latex_Lumi, chi2_result, p0_result;
   latex_CMSPriliminary.SetNDC();
   latex_Lumi.SetNDC();
+  chi2_result.SetNDC();
+  p0_result.SetNDC();
   latex_CMSPriliminary.SetTextSize(0.035);
   latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Simulation}}}");
   latex_Lumi.SetTextSize(0.035);
   latex_Lumi.DrawLatex(0.7, 0.96, "35.9 fb^{-1} (13 TeV)");
+  chi2_result.SetTextSize(0.035);
+  chi2_result.DrawLatex(0.25, 0.7, "#chi^{2} / ndof = " + chi2_Str + "/" + Ndf_str + " = " + chi2_norm_str);
+  p0_result.SetTextSize(0.035);
+  p0_result.DrawLatex(0.25, 0.7 - 0.035, "ratio = " + p0_str + " #pm " + p0_err_str);
 
   TString pdfname;
   pdfname = "./emu_ratio/" + directory + "/"+ channel + "_emu_ratio_" + sample + ".pdf";
