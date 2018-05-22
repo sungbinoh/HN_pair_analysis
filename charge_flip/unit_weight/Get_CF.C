@@ -49,6 +49,18 @@ TString file_end = "_cat_v8-0-7.root";
 
 TString dy_low = "SKDYJets_10to50";
 TString dy_high = "SKDYJets";
+TString dy_binned_50_120 = "SKZToEE_NNPDF30_13TeV-powheg_M_50_120";
+TString dy_binned_120_200 = "SKZToEE_NNPDF30_13TeV-powheg_M_120_200";
+TString dy_binned_200_400 = "SKZToEE_NNPDF30_13TeV-powheg_M_200_400";
+TString dy_binned_400_800 = "SKZToEE_NNPDF30_13TeV-powheg_M_400_800";
+TString dy_binned_800_1400 = "SKZToEE_NNPDF30_13TeV-powheg_M_800_1400";
+TString dy_binned_1400_2300 = "SKZToEE_NNPDF30_13TeV-powheg_M_1400_2300";
+TString dy_binned_2300_3500 = "SKZToEE_NNPDF30_13TeV-powheg_M_2300_3500";
+TString dy_binned_3500_4500 = "SKZToEE_NNPDF30_13TeV-powheg_M_3500_4500";
+TString dy_binned_4500_6000 = "SKZToEE_NNPDF30_13TeV-powheg_M_4500_6000";
+TString dy_binned_6000_Inf= "SKZToEE_NNPDF30_13TeV-powheg_M_6000_Inf";
+
+
 TString TTLL = "SKTTLL_powheg";
 TString TT = "SKTT_powheg";
 
@@ -173,6 +185,16 @@ void add_all_MC(TString nameofhistogram){
 
   mapfunc[nameofhistogram + "_num"] = (TH1F*)GetHist(nameofhistogram + "_num" + dy_low) -> Clone(nameofhistogram + "_num");
   mapfunc[nameofhistogram + "_num"] -> Add(GetHist(nameofhistogram + "_num" + dy_high));
+  mapfunc[nameofhistogram + "_num"] -> Add(GetHist(nameofhistogram + "_num" + dy_binned_50_120));
+  mapfunc[nameofhistogram + "_num"] -> Add(GetHist(nameofhistogram + "_num" + dy_binned_120_200));
+  mapfunc[nameofhistogram + "_num"] -> Add(GetHist(nameofhistogram + "_num" + dy_binned_200_400));
+  mapfunc[nameofhistogram + "_num"] -> Add(GetHist(nameofhistogram + "_num" + dy_binned_400_800));
+  mapfunc[nameofhistogram + "_num"] -> Add(GetHist(nameofhistogram + "_num" + dy_binned_800_1400));
+  mapfunc[nameofhistogram + "_num"] -> Add(GetHist(nameofhistogram + "_num" + dy_binned_1400_2300));
+  mapfunc[nameofhistogram + "_num"] -> Add(GetHist(nameofhistogram + "_num" + dy_binned_2300_3500));
+  mapfunc[nameofhistogram + "_num"] -> Add(GetHist(nameofhistogram + "_num" + dy_binned_3500_4500));
+  mapfunc[nameofhistogram + "_num"] -> Add(GetHist(nameofhistogram + "_num" + dy_binned_4500_6000));
+  mapfunc[nameofhistogram + "_num"] -> Add(GetHist(nameofhistogram + "_num" + dy_binned_6000_Inf));
   mapfunc[nameofhistogram + "_num"] -> Add(GetHist(nameofhistogram + "_num" + TT));
   mapfunc[nameofhistogram + "_num"] -> Add(GetHist(nameofhistogram + "_num" + TTLL));
 
@@ -180,16 +202,26 @@ void add_all_MC(TString nameofhistogram){
 
   mapfunc[nameofhistogram + "_den"] = (TH1F*)GetHist(nameofhistogram + "_den" + dy_low) -> Clone(nameofhistogram + "_den");
   mapfunc[nameofhistogram + "_den"] -> Add(GetHist(nameofhistogram + "_den" + dy_high));
+  mapfunc[nameofhistogram + "_den"] -> Add(GetHist(nameofhistogram + "_den" + dy_binned_50_120));
+  mapfunc[nameofhistogram + "_den"] -> Add(GetHist(nameofhistogram + "_den" + dy_binned_120_200));
+  mapfunc[nameofhistogram + "_den"] -> Add(GetHist(nameofhistogram + "_den" + dy_binned_200_400));
+  mapfunc[nameofhistogram + "_den"] -> Add(GetHist(nameofhistogram + "_den" + dy_binned_400_800));
+  mapfunc[nameofhistogram + "_den"] -> Add(GetHist(nameofhistogram + "_den" + dy_binned_800_1400));
+  mapfunc[nameofhistogram + "_den"] -> Add(GetHist(nameofhistogram + "_den" + dy_binned_1400_2300));
+  mapfunc[nameofhistogram + "_den"] -> Add(GetHist(nameofhistogram + "_den" + dy_binned_2300_3500));
+  mapfunc[nameofhistogram + "_den"] -> Add(GetHist(nameofhistogram + "_den" + dy_binned_3500_4500));
+  mapfunc[nameofhistogram + "_den"] -> Add(GetHist(nameofhistogram + "_den" + dy_binned_4500_6000));
+  mapfunc[nameofhistogram + "_den"] -> Add(GetHist(nameofhistogram + "_den" + dy_binned_6000_Inf));
   mapfunc[nameofhistogram + "_den"] -> Add(GetHist(nameofhistogram + "_den" + TT));
   mapfunc[nameofhistogram + "_den"] -> Add(GetHist(nameofhistogram + "_den" + TTLL));
   
   mapfunc[nameofhistogram + "_num"] -> Divide(mapfunc[nameofhistogram + "_den"]);
   
-  map_fitfunc[nameofhistogram] = new TF1(nameofhistogram, "[0] + [1]*x", 0., 0.02);
+  map_fitfunc[nameofhistogram] = new TF1(nameofhistogram, "0.5 * (1 - exp( -1. * [0] / x))", 0., 0.02);
   map_fitfunc[nameofhistogram]  -> SetLineColor(kBlue);
   
   mapfunc[nameofhistogram + "_num"]  -> Fit(map_fitfunc[nameofhistogram], "R");
-
+  
   double chi2, chi2_norm, Ndf, p0, p0_err, p1, p1_err;
   int ndf;
   
@@ -240,7 +272,7 @@ void add_all_MC(TString nameofhistogram){
   p1_result.SetTextSize(0.025);
   p1_result.DrawLatex(0.35, 0.7 - 0.025 - 0.025, "a = " + p0_str + " #pm " + p0_err_str + ", b = " + p1_str + " #pm " + p1_err_str );
   
-
+  
   TString pdfname;
   pdfname = "./CF/CF_all_" + nameofhistogram + ".pdf";
 
@@ -261,14 +293,34 @@ void run_for_sample(TString sample){
 
 /// Main Function ////////////////////////////////////////////////////////////
 void plot(){
-  
+   
   openfile(dy_low);
   openfile(dy_high);
+  openfile(dy_binned_50_120);
+  openfile(dy_binned_120_200);
+  openfile(dy_binned_200_400);
+  openfile(dy_binned_400_800);
+  openfile(dy_binned_800_1400);
+  openfile(dy_binned_1400_2300);
+  openfile(dy_binned_2300_3500);
+  openfile(dy_binned_3500_4500);
+  openfile(dy_binned_4500_6000);
+  openfile(dy_binned_6000_Inf);
   openfile(TTLL);
   openfile(TT);
 
   run_for_sample(dy_low);
   run_for_sample(dy_high);
+  run_for_sample(dy_binned_50_120);
+  run_for_sample(dy_binned_120_200);
+  run_for_sample(dy_binned_200_400);
+  run_for_sample(dy_binned_400_800);
+  run_for_sample(dy_binned_800_1400);
+  run_for_sample(dy_binned_1400_2300);
+  run_for_sample(dy_binned_2300_3500);
+  run_for_sample(dy_binned_3500_4500);
+  run_for_sample(dy_binned_4500_6000);
+  run_for_sample(dy_binned_6000_Inf);
   run_for_sample(TTLL);
   run_for_sample(TT);
   
@@ -279,7 +331,12 @@ void plot(){
   add_all_MC("CF_TRUEpT_IB");
   add_all_MC("CF_TRUEpT_OB");
 
-
+  TFile *MyFile = new TFile("CF_result_MC.root","RECREATE");
+  mapfunc["CF_TRUEpT_IB_num"] -> Write();
+  mapfunc["CF_TRUEpT_OB_num"] -> Write();
+  mapfunc["CF_TRUEpT_EC_num"] -> Write();
   
+  MyFile -> Close();
+
 
 }// End of Main Function ////////////////////////////////////////////////////// 

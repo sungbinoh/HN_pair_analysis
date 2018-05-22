@@ -51,6 +51,26 @@ TString DoubleEG = "data_DoubleEG";
 //DY
 TString DY_low = "SKDYJets_10to50";
 TString DY_high = "SKDYJets";
+TString dy_binned_ee_50_120 = "SKZToEE_NNPDF30_13TeV-powheg_M_50_120";
+TString dy_binned_ee_120_200 = "SKZToEE_NNPDF30_13TeV-powheg_M_120_200";
+TString dy_binned_ee_200_400 = "SKZToEE_NNPDF30_13TeV-powheg_M_200_400";
+TString dy_binned_ee_400_800 = "SKZToEE_NNPDF30_13TeV-powheg_M_400_800";
+TString dy_binned_ee_800_1400 = "SKZToEE_NNPDF30_13TeV-powheg_M_800_1400";
+TString dy_binned_ee_1400_2300 = "SKZToEE_NNPDF30_13TeV-powheg_M_1400_2300";
+TString dy_binned_ee_2300_3500 = "SKZToEE_NNPDF30_13TeV-powheg_M_2300_3500";
+TString dy_binned_ee_3500_4500 = "SKZToEE_NNPDF30_13TeV-powheg_M_3500_4500";
+TString dy_binned_ee_4500_6000 = "SKZToEE_NNPDF30_13TeV-powheg_M_4500_6000";
+TString dy_binned_ee_6000_Inf= "SKZToEE_NNPDF30_13TeV-powheg_M_6000_Inf";
+TString dy_binned_mm_50_120 = "SKZToMuMu_NNPDF30_13TeV-powheg_M_50_120";
+TString dy_binned_mm_120_200 = "SKZToMuMu_NNPDF30_13TeV-powheg_M_120_200";
+TString dy_binned_mm_200_400 = "SKZToMuMu_NNPDF30_13TeV-powheg_M_200_400";
+TString dy_binned_mm_400_800 = "SKZToMuMu_NNPDF30_13TeV-powheg_M_400_800";
+TString dy_binned_mm_800_1400 = "SKZToMuMu_NNPDF30_13TeV-powheg_M_800_1400";
+TString dy_binned_mm_1400_2300 = "SKZToMuMu_NNPDF30_13TeV-powheg_M_1400_2300";
+TString dy_binned_mm_2300_3500 = "SKZToMuMu_NNPDF30_13TeV-powheg_M_2300_3500";
+TString dy_binned_mm_3500_4500 = "SKZToMuMu_NNPDF30_13TeV-powheg_M_3500_4500";
+TString dy_binned_mm_4500_6000 = "SKZToMuMu_NNPDF30_13TeV-powheg_M_4500_6000";
+TString dy_binned_mm_6000_Inf= "SKZToMuMu_NNPDF30_13TeV-powheg_M_6000_Inf";
 
 TString Wjets = "SKWJets";
 
@@ -104,7 +124,7 @@ void openfile(TString cyclename, TString samplename){
   TString underbar = "_";
   TString version = "dilep_cat_v8-0-7.root";
   TString filename = cyclename + underbar + samplename + underbar + version;
-  if(samplename.Contains("data")) filename = cyclename + underbar + samplename + "_cat_v8-0-7.root";
+  if(samplename.Contains("data") || samplename.Contains("NNPDF30_13TeV-powheg")) filename = cyclename + underbar + samplename + "_cat_v8-0-7.root";
   
   cout << "opening : " << filename << endl;
   
@@ -188,319 +208,50 @@ void openfile_signal(TString cyclename, TString samplename, TString channel){
 }
 //////////////////////////////////////////////////////////////////////////////
 
-/// Make Output Histogram ////////////////////////////////////////////////////
-void makehistogram(TString nameofhistogram, float xmin, float xmax, float rebin, float ymax, TString name_x, bool name_y, TString channel){
 
-  double additional_weight = 1.;
-  //if(channel.Contains("DiEle")) additional_weight = 20150.390 / 35820.052000;
+void make_hist_after_emu_method(TString nameofhistogram, TString channel, TString region){
   
-  bool blind = false;
-  blind = (channel.Contains("SR")) && (!channel.Contains("EMu"));
-  
-  TString current_data;
-  if(channel.Contains("EMu") || channel.Contains("DiMu")) current_data = SingleMuon;
-  if(channel.Contains("DiEle")) current_data = DoubleEG; 
-  
-  
-  TString title_y;
-  if(name_y) title_y = "Events/" + TString::Itoa(rebin,10) + " (GeV)";
-  else title_y = "Number";
-  
-  TString pad1 = nameofhistogram;
-  TString pad2 = nameofhistogram;
-  TString canvas = nameofhistogram;
-  TString hstack = nameofhistogram;
-  TString legend = nameofhistogram;
-  TString func = nameofhistogram;
-  TString clone = nameofhistogram;
-  TString line = nameofhistogram;
-  pad1.Insert(0, "pad1_");
-  pad2.Insert(0, "pad2_");
-  canvas.Insert(0, "c_");
-  hstack.Insert(0, "hs_");
-  legend.Insert(0, "legend_");
-  func.Insert(0, "ratio_");
-  clone.Insert(0, "h3_");
-  line.Insert(0, "l_");
-  
-  mapcanvas[canvas] = new TCanvas(canvas,"",800,800); 
-  gStyle -> SetOptStat(1111);
-  mapcanvas[canvas] -> SetTopMargin( 0.05 );
-  mapcanvas[canvas] -> SetBottomMargin( 0.13 );
-  mapcanvas[canvas] -> SetRightMargin( 0.05 );
-  mapcanvas[canvas] -> SetLeftMargin( 0.16 );
-  //gStyle -> SetPadTickY(1);
-  //gStyle -> SetPadTickX(1);
-  
-  mappad[pad1] = new TPad("", "", 0, 0.25, 1, 1);
-  mappad[pad1] -> SetTopMargin( 0.07 );
-  mappad[pad1] -> SetBottomMargin( 0.02 );
-  mappad[pad1] -> SetLeftMargin( 0.15 );
-  mappad[pad1] -> SetRightMargin( 0.03 );
-  //gStyle -> SetPadTickY(1);
-  //gStyle -> SetPadTickX(1);
-  mappad[pad1] -> Draw();
-  mappad[pad1] -> cd();
-  mappad[pad1] -> SetLogy();
-  
-  maplegend[legend] = new TLegend(0.69, 0.50, 0.96, 0.92);
-  cout << "0" << endl;
-  //cout << nameofhistogram + Cycle_name + data << endl;
-  //mapfunc[func] = new TH1F("", "", GetHist(nameofhistogram + Cycle_name + periodC) -> GetNbinsX(),  GetHist(nameofhistogram + Cycle_name + periodC) -> GetXaxis() -> GetXmin(), GetHist(nameofhistogram + Cycle_name + periodC) -> GetXaxis() -> GetXmax());
-  mapfunc[func] = new TH1F("", "", GetHist(nameofhistogram + Cycle_name + current_data) -> GetNbinsX(),  GetHist(nameofhistogram + Cycle_name + current_data) -> GetXaxis() -> GetXmin(), GetHist(nameofhistogram + Cycle_name + current_data) -> GetXaxis() -> GetXmax());
-  
-  cout << "1" << endl;
-  
-  maphstack[hstack] = new THStack(hstack, "Stacked_" + nameofhistogram);
-  gStyle->SetOptTitle(0);
-  //maphstack[hstack] -> SetTitle("CMS simulation");
-  //gStyle->SetTitleFont(32,"t");
-  //gStyle->SetTitleH(0.03);
-  //gStyle->SetTitleX(0.83);
-  //gStyle->SetTitleY(0.97);
-  //gStyle->SetTitleH(0.1);//title perpendicular size  
-  //gStyle->SetTitleW(0.9);//title width
-  //gStyle->SetTitleX(.78);//title x-axis offset
-  
-  
-  ///To do for each sample
-  ///1. add, fill color, markerstyle
-  ///2. add to stack
-  ///3. set legend
-  mapfunc[func] -> Rebin(rebin);
-  
-  int n_kind = 3;
-  //TString samples_array[] = {DY_high, ttbar, Wjets, WGtoLNuG, WZ};
-  TString samples_array[] = {WZ, ttbar, DY_high};
-  
-  //kWhite  = 0,   kBlack  = 1,   kGray    = 920,  kRed    = 632,  kGreen  = 416, kBlue   = 600, kYellow = 400, kMagenta = 616,  kCyan   = 432,  kOrange = 800,
-  //kSpring = 820, kTeal   = 840, kAzure   =  860, kViolet = 880,  kPink   = 900
-  //Int_t colour_array[] = {906, 416, 867, 600, 800, 432, 632};
-  //Int_t colour_array[] = {400, 632, 416, 813, 819};
-  Int_t colour_array[] = {419, 416, 400};
-  //TString samples_legend[] = {"DY", "top", "Wjets", "X#gamma", "VV"};
-  TString samples_legend[] = {"Other backgrounds", "t#bar{t}", "Z/#gamma + jets"};
-  
-  //std::vector<TString> samples(samples_array, samples_array + n_kind);
-  //std::vector<Int_t> fill_colour(colour_array, colour_array + n_kind);
-  //std::vector<TString> legends(samples_legend, samples_legend + n_kind);
-  
-  cout << "2" << endl;
-  
-  
-  
-  TString name_cycle = nameofhistogram + Cycle_name;
-  cout << "check1" << endl;
-  if(maphist[name_cycle + DY_high] || maphist[name_cycle + DY_low]){
-    GetHist(name_cycle + DY_high) -> Add(GetHist(name_cycle + DY_low));
-  }
-  cout << "2.1" << endl;
-  
-  if(maphist[name_cycle + SingleTop_s] || maphist[name_cycle + SingleTbar_tW] || maphist[name_cycle + SingleTbar_t] || maphist[name_cycle + SingleTop_tW] || maphist[name_cycle + SingleTop_t]){
-    GetHist(name_cycle +  SingleTop_s) -> Add(GetHist(name_cycle + SingleTbar_tW));
-    GetHist(name_cycle +  SingleTop_s) -> Add(GetHist(name_cycle + SingleTbar_t));
-    GetHist(name_cycle +  SingleTop_s) -> Add(GetHist(name_cycle + SingleTop_tW));
-    GetHist(name_cycle +  SingleTop_s) -> Add(GetHist(name_cycle + SingleTop_t));
-  }
-  cout << "2.2" << endl;
-  
-  if(maphist[name_cycle + WGtoLNuG] || maphist[name_cycle + ZGto2LG]){
-    GetHist(name_cycle +  WGtoLNuG) -> Add(GetHist(name_cycle + ZGto2LG));
-  }
-  
-  if(maphist[name_cycle + WW] || maphist[name_cycle + WZ] || maphist[name_cycle + ZZ]){
-    GetHist(name_cycle +  WZ) -> Add(GetHist(name_cycle + WW));
-    GetHist(name_cycle +  WZ) -> Add(GetHist(name_cycle + ZZ));
-  }
-  
-  if(maphist[name_cycle + WWW] || maphist[name_cycle + WWZ] || maphist[name_cycle + WZZ] || maphist[name_cycle + ZZZ]){
-    GetHist(name_cycle +  WWW) -> Add(GetHist(name_cycle + WWZ));
-    GetHist(name_cycle +  WWW) -> Add(GetHist(name_cycle + WZZ));
-    GetHist(name_cycle +  WWW) -> Add(GetHist(name_cycle + ZZZ));
-  }
-  
-  
-  
-  cout << "2.3" << endl;
-  //Add ohter backgrounds
-  maphist[name_cycle + WW] -> Add(GetHist(name_cycle +  SingleTop_s));
-  maphist[name_cycle + WW] -> Add(GetHist(name_cycle +  WWW));
-  maphist[name_cycle + WW] -> Add(GetHist(name_cycle +  WGtoLNuG));
+  double current_emu_ratio = 1.;
+  if(channel.Contains("DiEle")) current_emu_ratio = emu_over_ee;
+  else if(channel.Contains("DiMu")) current_emu_ratio = emu_over_mumu;
 
-  
-  cout << "3" << endl;
-  
-  
-  cout << "check2" << endl;
-  
-  
-  if(!channel.Contains("SR")){
-    maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + current_data), "data", "lp");
-  }
-  
-  double data_max = GetHist(nameofhistogram + Cycle_name + current_data) -> GetMaximum();
-  
-  for(int i = 0; i < n_kind; i++){
-    cout << samples_array[i] << endl;
-    if(maphist[nameofhistogram + Cycle_name + samples_array[i]]){
-      //cout << nameofhistogram + Cycle_name + samples_array[i] << endl;
-      GetHist(nameofhistogram + Cycle_name + samples_array[i]) -> SetFillColor(colour_array[i]);
-      GetHist(nameofhistogram + Cycle_name + samples_array[i]) -> Rebin(rebin);
-      GetHist(nameofhistogram + Cycle_name + samples_array[i]) -> Scale(additional_weight);
-      cout << samples_array[i] << endl;
-      maphstack[hstack] -> Add(GetHist(nameofhistogram + Cycle_name + samples_array[i]));
-      maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + samples_array[n_kind - 1 - i]), samples_legend[n_kind - 1 - i], "lf");
-      mapfunc[func] -> Add(GetHist(nameofhistogram + Cycle_name + samples_array[i]));
-    }
-  }//for loop
-  
-  cout << "4" << endl;
-  
-  
-  /*
-    for(int i = 0; i < n_kind; i++){
-    maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + samples_array[n_kind - i]), samples_legend[n_kind - i], "f");
-    cout << "n_kind - i = " << n_kind - i << endl;
-    }
-  */
-  
-  
-  ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  maphstack[hstack] -> Draw("hist");
-  maphstack[hstack] -> GetYaxis()->SetLabelSize(0.05);;
-  maphstack[hstack] -> GetYaxis()->SetTitleSize(0.07);;
-  maphstack[hstack] -> GetYaxis()->SetTitleOffset(1.02);;
-  maphstack[hstack] -> GetXaxis()->SetLabelSize(0);;
-  maphstack[hstack] -> GetXaxis() -> SetRangeUser(xmin, xmax);
-  maphstack[hstack] -> SetMaximum(data_max * 100.);
-  maphstack[hstack] -> SetMinimum(1.0);
-  //maphstack[hstack] -> SetMinimum(0.001); 
-  maphstack[hstack] -> GetXaxis() -> SetTitle(nameofhistogram);
-  //maphstack[hstack] -> GetYaxis() -> SetTitle("Entries / 25 GeV");
-  maphstack[hstack] -> GetYaxis() -> SetTitle(title_y);  
-  maphstack[hstack] -> Draw("histsame");
-  
-  GetHist(nameofhistogram + Cycle_name + current_data) -> Rebin(rebin);
-  GetHist(nameofhistogram + Cycle_name + current_data) -> SetMarkerStyle(20);
-  GetHist(nameofhistogram + Cycle_name + current_data) -> SetMarkerSize(1.0);
-  if(!blind){
-    GetHist(nameofhistogram + Cycle_name + current_data) -> Draw("epsame");
-  }
-  GetHist(nameofhistogram + Cycle_name + current_data) -> GetXaxis() -> SetRangeUser(xmin, xmax);  
-  GetHist(nameofhistogram + Cycle_name + current_data) -> SetMinimum(1.0);
-  
-  mappad[pad1] -> Update();
-  
-  if(!blind){
-    GetHist(nameofhistogram + Cycle_name + current_data) -> Draw("epsame");       
-  }
-  maplegend[legend] -> SetFillColor(kWhite);
-  maplegend[legend] -> SetLineColor(kWhite);
-  maplegend[legend] -> SetBorderSize(1);
-  maplegend[legend] -> SetFillStyle(1001);
-  maplegend[legend] -> SetShadowColor(0); // 0 = transparent
-  maplegend[legend] -> SetEntrySeparation(0.3);
-  maplegend[legend] -> Draw("same");
-  
-  //maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + data), "data", "p");
-  
-  mapcanvas[canvas] -> cd();
-  
-  mappad[pad2] = new TPad(pad2, "", 0, 0, 1, 0.25);
-  mappad[pad2] -> SetTopMargin( 0.03 );
-  mappad[pad2] -> SetBottomMargin( 0.4 );
-  mappad[pad2] -> SetLeftMargin( 0.15 );
-  mappad[pad2] -> SetRightMargin( 0.03 );
-  mappad[pad2] -> Draw();
-  mappad[pad2] -> cd();
-  
-  mapfunc[clone] = (TH1F*)GetHist(nameofhistogram + Cycle_name + current_data) -> Clone(clone);
-  
-  mapfunc["stat" + nameofhistogram] = (TH1F*)GetHist(nameofhistogram + Cycle_name + current_data) -> Clone(clone);
-  
-  mapline[line] = new TLine(xmin, 1, xmax, 1);
-  mapline[line] -> Draw();
-  mapline[line] -> SetLineStyle(1);
-  mapline[line] -> SetLineColor(kRed);
-  
-  mapfunc["stat" + nameofhistogram] -> SetTitle("");
-  mapfunc["stat" + nameofhistogram] -> SetYTitle("#frac{Obs.}{Pred.}");
-  mapfunc["stat" + nameofhistogram] -> SetFillColor(kOrange);
-  mapfunc["stat" + nameofhistogram] -> SetMarkerSize(0);
-  mapfunc["stat" + nameofhistogram] -> SetMarkerStyle(0);
-  mapfunc["stat" + nameofhistogram] -> SetLineColor(kWhite);
-  mapfunc["stat" + nameofhistogram] -> GetXaxis() -> SetTitle(name_x);
-  mapfunc["stat" + nameofhistogram] -> GetXaxis() -> SetLabelSize(0.10);
-  mapfunc["stat" + nameofhistogram] -> GetYaxis() -> SetLabelSize(0.08);
-  mapfunc["stat" + nameofhistogram] -> SetFillColorAlpha(45,0.35);
-  mapfunc["stat" + nameofhistogram] -> GetXaxis() -> SetRangeUser(xmin, xmax);
-  mapfunc["stat" + nameofhistogram] -> GetYaxis() -> SetTitleOffset(0.5);
-  mapfunc["stat" + nameofhistogram] -> GetXaxis() -> SetTitleSize(0.15);
-  mapfunc["stat" + nameofhistogram] -> GetYaxis() -> SetTitleSize(0.12);
-  mapfunc["stat" + nameofhistogram] -> SetMinimum(0.5);
-  mapfunc["stat" + nameofhistogram] -> SetMaximum(1.5);
-  mapfunc["stat" + nameofhistogram] -> SetStats(0);
-  //cout << "data integral , MC integral" << endl;
-  //cout << mapfunc["stat" + nameofhistogram] -> Integral() << endl;
-  //cout << mapfunc[func] -> Integral() << endl;
-  
-  mapfunc["stat" + nameofhistogram] -> Divide(mapfunc[func]);
-  Int_t ncells = mapfunc["stat" + nameofhistogram] -> GetSize();
-  for(int i = 0; i < ncells - 2; i++){
-    mapfunc["stat" + nameofhistogram] -> SetBinContent(i, 1.);
-  }
-  mapfunc["stat" + nameofhistogram] -> Draw("CE2");
-  mapfunc[clone] -> Divide(mapfunc[func]);
-  if(!blind){
-    mapfunc[clone] ->Draw("PE1same");
-  }
-  mapline[line] -> Draw("same");
-  
-  maplegend["bottom" + legend] = new TLegend(0.2, 0.8, 0.6, 0.9);
-  maplegend["bottom" + legend]->SetBorderSize(0);
-  maplegend["bottom" + legend]->SetNColumns(2);
-  maplegend["bottom" + legend]->AddEntry(mapfunc["stat" + nameofhistogram], "Stat.", "f");
-  maplegend["bottom" + legend]->AddEntry(mapfunc[clone] , "Obs./Pred.", "p");
-  maplegend["bottom" + legend]->Draw("same");
-  
-  mapcanvas[canvas] -> cd();
-  TLatex latex_CMSPriliminary, latex_Lumi;
-  latex_CMSPriliminary.SetNDC();
-  latex_Lumi.SetNDC();
-  latex_CMSPriliminary.SetTextSize(0.035);
-  latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
-  latex_Lumi.SetTextSize(0.035);
-  latex_Lumi.DrawLatex(0.7, 0.96, "35.9 fb^{-1} (13 TeV)");
+  TString current_data = SingleMuon;
+  TString cyclename = Cycle_name;
 
-  TString pdfname;
-  if(channel.Contains("EMu")){
-    pdfname = "./plots/EMu/";
+  cout << "making data driven plot of " + nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu" << endl;
   
-  }
-  else if(channel.Contains("DiEle")){
-    pdfname = "./plots/DiEle/";
+  //clone emu data plot
+  mapfunc[nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu"] = (TH1F*)GetHist(nameofhistogram +"_" + region + "_EMu" + Cycle_name + current_data) -> Clone(nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu");
+  
+  TString name_cycle = nameofhistogram + "_" + region + "_EMu" +  + Cycle_name;
+  
+  //subtract non flavour symmetric bkgs
+  mapfunc[nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu"] -> Add(GetHist(name_cycle +  WZ), -1);
+  mapfunc[nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu"] -> Add(GetHist(name_cycle +  ZZ), -1);
+  mapfunc[nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu"] -> Add(GetHist(name_cycle +  SingleTop_s), -1);
+  mapfunc[nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu"] -> Add(GetHist(name_cycle +  SingleTbar_t), -1);
+  mapfunc[nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu"] -> Add(GetHist(name_cycle +  SingleTop_t), -1);
+  mapfunc[nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu"] -> Add(GetHist(name_cycle +  WGtoLNuG), -1);
+  mapfunc[nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu"] -> Add(GetHist(name_cycle +  ZGto2LG), -1);
+  mapfunc[nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu"] -> Add(GetHist(name_cycle +  WWW), -1);
+  mapfunc[nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu"] -> Add(GetHist(name_cycle +  WWZ), -1);
+  mapfunc[nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu"] -> Add(GetHist(name_cycle +  WZZ), -1);
+  mapfunc[nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu"] -> Add(GetHist(name_cycle +  ZZZ), -1);
+  
+  mapfunc[nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu"] -> Scale(current_emu_ratio);
 
-  }
-  else if(channel.Contains("DiMu")){
-    pdfname = "./plots/DiMu/";
-  }
-  else return;
-    
-  pdfname.Append(nameofhistogram);
-  pdfname.Append(".pdf");
-  mapcanvas[canvas] -> SaveAs(pdfname);
+  maphist[nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu"] = mapfunc[nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu"];
   
 }
-
-//////////////////////////////////////////////////////////////////////////////
-
-
 
 
 //////////////////////////////////////////////////////////////////////////////
 void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax, float ymax, double binx[], int N_bin, TString name_x, bool name_y, TString channel){
 
+  double current_emu_ratio = 1.;
+  if(channel.Contains("DiEle")) current_emu_ratio = emu_over_ee;
+  else if(channel.Contains("DiMu")) current_emu_ratio = emu_over_mumu;
+  
   double additional_weight = 1.;
   //if(channel.Contains("DiEle")) additional_weight = 20150.390 / 35820.052000;
 
@@ -515,7 +266,7 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   TString title_y;
   if(name_y) title_y = "Events/bin";
   else title_y = "Number";
-
+  
   TString pad1 = nameofhistogram;
   TString pad2 = nameofhistogram;
   TString canvas = nameofhistogram;
@@ -556,50 +307,64 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
 
   maphstack[hstack] = new THStack(hstack, "Stacked_" + nameofhistogram);
   gStyle->SetOptTitle(0);
-    
-  int n_kind = 3;
-  TString samples_array[] = {WZ, ttbar, DY_high};
-  Int_t colour_array[] = {419, 416, 400};
-  TString samples_legend[] = {"Other backgrounds", "t#bar{t}", "Z/#gamma + jets"};
+  
+  TString current_dy;
+  if(channel.Contains("DiEle")) current_dy = dy_binned_ee_50_120;
+  else if(channel.Contains("DiMu")) current_dy = dy_binned_mm_50_120;
+  else return;
 
+  
+  int n_kind = 3;
+  TString samples_array[] = {WZ, "emu", current_dy};
+  Int_t colour_array[] = {419, 416, 400};
+  TString samples_legend[] = {"Other backgrounds", "Data Driven Flavour symm. bkg", "Z/#gamma + jets"};
+  
   cout << "2" << endl;
   
   TString name_cycle = nameofhistogram + Cycle_name;
   cout << "check1" << endl;
-  if(maphist[name_cycle + DY_high] || maphist[name_cycle + DY_low]){
-    GetHist(name_cycle + DY_high) -> Add(GetHist(name_cycle + DY_low));
+  std::vector<TString> dy_samples;
+  if(channel.Contains("DiEle")){
+    dy_samples.push_back(dy_binned_ee_120_200);
+    dy_samples.push_back(dy_binned_ee_200_400);
+    dy_samples.push_back(dy_binned_ee_400_800);
+    dy_samples.push_back(dy_binned_ee_800_1400);
+    dy_samples.push_back(dy_binned_ee_1400_2300);
+    dy_samples.push_back(dy_binned_ee_2300_3500);
+    dy_samples.push_back(dy_binned_ee_3500_4500);
+    dy_samples.push_back(dy_binned_ee_4500_6000);
+    dy_samples.push_back(dy_binned_ee_6000_Inf);
   }
+  else if(channel.Contains("DiMu")){
+    dy_samples.push_back(dy_binned_mm_120_200);
+    dy_samples.push_back(dy_binned_mm_200_400);
+    dy_samples.push_back(dy_binned_mm_400_800);
+    dy_samples.push_back(dy_binned_mm_800_1400);
+    dy_samples.push_back(dy_binned_mm_1400_2300);
+    dy_samples.push_back(dy_binned_mm_2300_3500);
+    dy_samples.push_back(dy_binned_mm_3500_4500);
+    dy_samples.push_back(dy_binned_mm_4500_6000);
+    dy_samples.push_back(dy_binned_mm_6000_Inf);
+  }  
+  else return;
+  
+  for(int i_dy = 0; i_dy < dy_samples.size(); i_dy++){
+    GetHist(name_cycle + current_dy) -> Add(GetHist(name_cycle + dy_samples.at(i_dy)));
+  }
+  
   cout << "2.1" << endl;
-
-  if(maphist[name_cycle + SingleTop_s] || maphist[name_cycle + SingleTbar_tW] || maphist[name_cycle + SingleTbar_t] || maphist[name_cycle + SingleTop_tW] || maphist[name_cycle + SingleTop_t]){
-    GetHist(name_cycle +  SingleTop_s) -> Add(GetHist(name_cycle + SingleTbar_tW));
-    GetHist(name_cycle +  SingleTop_s) -> Add(GetHist(name_cycle + SingleTbar_t));
-    GetHist(name_cycle +  SingleTop_s) -> Add(GetHist(name_cycle + SingleTop_tW));
-    GetHist(name_cycle +  SingleTop_s) -> Add(GetHist(name_cycle + SingleTop_t));
-  }
-  cout << "2.2" << endl;
-
-  if(maphist[name_cycle + WW] || maphist[name_cycle + WZ] || maphist[name_cycle + ZZ]){
-    GetHist(name_cycle +  WZ) -> Add(GetHist(name_cycle + WW));
-    GetHist(name_cycle +  WZ) -> Add(GetHist(name_cycle + ZZ));
-  }
-
-  if(maphist[name_cycle + WGtoLNuG] || maphist[name_cycle + ZGto2LG]){
-    GetHist(name_cycle +  WGtoLNuG) -> Add(GetHist(name_cycle + ZGto2LG));
-  }
-
-  if(maphist[name_cycle + WWW] || maphist[name_cycle + WWZ] || maphist[name_cycle + WZZ] || maphist[name_cycle + ZZZ]){
-    GetHist(name_cycle +  WWW) -> Add(GetHist(name_cycle + WWZ));
-    GetHist(name_cycle +  WWW) -> Add(GetHist(name_cycle + WZZ));
-    GetHist(name_cycle +  WWW) -> Add(GetHist(name_cycle + ZZZ));
-  }
-
-  cout << "2.3" << endl;
-    
+  
+  GetHist(name_cycle +  SingleTop_s) -> Add(GetHist(name_cycle + SingleTbar_t));
+  GetHist(name_cycle +  SingleTop_s) -> Add(GetHist(name_cycle + SingleTop_t));
+  GetHist(name_cycle +  WZ) -> Add(GetHist(name_cycle + ZZ));
+  GetHist(name_cycle +  WGtoLNuG) -> Add(GetHist(name_cycle + ZGto2LG));
+  GetHist(name_cycle +  WWW) -> Add(GetHist(name_cycle + WWZ));
+  GetHist(name_cycle +  WWW) -> Add(GetHist(name_cycle + WZZ));
+  GetHist(name_cycle +  WWW) -> Add(GetHist(name_cycle + ZZZ));
   maphist[name_cycle + WZ] -> Add(GetHist(name_cycle +  SingleTop_s));
   maphist[name_cycle + WZ] -> Add(GetHist(name_cycle +  WWW));
   maphist[name_cycle + WZ] -> Add(GetHist(name_cycle +  WGtoLNuG));
-
+  
   
   cout << "3" << endl;
 
@@ -762,15 +527,15 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
 
   TString pdfname;
   if(channel.Contains("EMu")){
-    pdfname = "./plots/EMu/";
+    pdfname = "./plots_emu_method/EMu/";
 
   }
   else if(channel.Contains("DiEle")){
-    pdfname = "./plots/DiEle/";
+    pdfname = "./plots_emu_method/DiEle/";
 
   }
   else if(channel.Contains("DiMu")){
-    pdfname = "./plots/DiMu/";
+    pdfname = "./plots_emu_method/DiMu/";
   }
   else return;
 
@@ -870,27 +635,22 @@ void makehistogram_signal_VS_bkg(TString nameofhistogram, double binx[], int N_b
 
 //////////////////////////////////////////////////////////////////////////////
 
-void draw_histogram(TString nameofhistogram, float xmin, float xmax, float rebin, float ymax, TString name_x, bool name_y){
-  
-  TString directories[18] = {"CR1_DiEle", "CR1_DiMu", "CR1_EMu", "CR2_DiEle", "CR2_DiMu", "CR2_EMu", "CR3_DiEle", "CR3_DiMu", "CR3_EMu", "CR4_DiEle", "CR4_DiMu", "CR4_EMu", "CR5_DiEle", "CR5_DiMu", "CR5_EMu", "SR1_DiEle", "SR1_DiMu", "SR1_EMu"};
-  int N_directories = 18;
-
-  //makehistogram(nameofhistogram + "_" + directories[0], xmin, xmax, rebin, ymax, name_x, name_y, directories[0]);
-
-  
-  for(int i = 0; i < N_directories; i++){
-    makehistogram(nameofhistogram + "_" + directories[i], xmin, xmax, rebin, ymax, name_x, name_y, directories[i]);
-  }
-  
-}
-
 void draw_histogram_variable_bin(TString nameofhistogram, float xmin, float xmax, double binx[], int N_bin,  float ymax, TString name_x, bool name_y){
 
   TString directories[18] = {"CR1_DiEle", "CR1_DiMu", "CR1_EMu", "CR2_DiEle", "CR2_DiMu", "CR2_EMu", "CR3_DiEle", "CR3_DiMu", "CR3_EMu", "CR4_DiEle", "CR4_DiMu", "CR4_EMu", "CR5_DiEle", "CR5_DiMu", "CR5_EMu", "SR1_DiEle", "SR1_DiMu", "SR1_EMu"};
   int N_directories = 18;
 
-  //void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax, float ymax, double binx[], int N_bin, TString name_x, bool name_y, TString channel){
- 
+  
+  //make emu method applied hists
+  TString regions[6] = {"CR1", "CR2", "CR3", "CR4", "CR5", "SR1"};
+  TString channels[2] = {"DiMu", "DiEle"};
+  for(int i = 0; i < 6; i++){//for regions
+    for(int j = 0; j < 2; j++){//for channels
+      make_hist_after_emu_method(nameofhistogram, channels[j], regions[i]);
+    }
+  } 
+  
+  
   for(int i = 0; i < N_directories; i++){
     makehistogram_variable_bin(nameofhistogram + "_" + directories[i], xmin, xmax, ymax, binx, N_bin, name_x, name_y, directories[i]);
   }
@@ -932,6 +692,27 @@ void plot(){
   openfile(Cycle_name, WGtoLNuG);
   openfile(Cycle_name, ZGto2LG);
   openfile(Cycle_name, ttbar);
+  openfile(Cycle_name, dy_binned_ee_50_120);
+  openfile(Cycle_name, dy_binned_ee_120_200);
+  openfile(Cycle_name, dy_binned_ee_200_400);
+  openfile(Cycle_name, dy_binned_ee_400_800);
+  openfile(Cycle_name, dy_binned_ee_800_1400);
+  openfile(Cycle_name, dy_binned_ee_1400_2300);
+  openfile(Cycle_name, dy_binned_ee_2300_3500);
+  openfile(Cycle_name, dy_binned_ee_3500_4500);
+  openfile(Cycle_name, dy_binned_ee_4500_6000);
+  openfile(Cycle_name, dy_binned_ee_6000_Inf);
+  openfile(Cycle_name, dy_binned_mm_50_120);
+  openfile(Cycle_name, dy_binned_mm_120_200);
+  openfile(Cycle_name, dy_binned_mm_200_400);
+  openfile(Cycle_name, dy_binned_mm_400_800);
+  openfile(Cycle_name, dy_binned_mm_800_1400);
+  openfile(Cycle_name, dy_binned_mm_1400_2300);
+  openfile(Cycle_name, dy_binned_mm_2300_3500);
+  openfile(Cycle_name, dy_binned_mm_3500_4500);
+  openfile(Cycle_name, dy_binned_mm_4500_6000);
+  openfile(Cycle_name, dy_binned_mm_6000_Inf);
+  
 
   //open signal samples
   int Zpmass[8] = {500, 750, 1000, 1500, 2000, 2500, 3000, 4000};
@@ -983,7 +764,7 @@ void plot(){
   draw_histogram_variable_bin("h_OS_lljjjjmass", 0., 5500., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(Z') (GeV)", true);
   draw_histogram_variable_bin("h_OS_leadingljjmass", 0., 5000., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(1st N) (GeV)", true);
   draw_histogram_variable_bin("h_OS_secondljjmass", 0., 5000., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(2nd N) (GeV)", true);
-  draw_histogram_variable_bin("h_OS_llmass", 0., 1000., bin_llmass, N_bin_llmass, 10000., "m(ll) (GeV)", true);
+  draw_histogram_variable_bin("h_OS_llmass", 50., 1000., bin_llmass, N_bin_llmass, 10000., "m(ll) (GeV)", true);
   draw_histogram_variable_bin("h_OS_leadingLeptonPt", 0., 1000., bin_pt, N_bin_pt, 10000., "Pt(1st lepton) (GeV)", true);
   draw_histogram_variable_bin("h_OS_secondLeptonPt", 0., 1000., bin_pt, N_bin_pt, 10000.,"Pt(2nd lepton) (GeV)", true);
   draw_histogram_variable_bin("h_OS_leadingjet_pt", 0., 1000., bin_pt, N_bin_pt, 10000.,"Pt(1st jet) (GeV)", true);
@@ -992,16 +773,16 @@ void plot(){
   draw_histogram_variable_bin("h_SS_lljjjjmass", 0., 5500., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(Z') (GeV)", true);
   draw_histogram_variable_bin("h_SS_leadingljjmass", 0., 5000., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(1st N) (GeV)", true);
   draw_histogram_variable_bin("h_SS_secondljjmass", 0., 5000., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(2nd N) (GeV)", true);
-  draw_histogram_variable_bin("h_SS_llmass", 0., 1000., bin_llmass, N_bin_llmass, 10000., "m(ll) (GeV)", true);
+  draw_histogram_variable_bin("h_SS_llmass", 50., 1000., bin_llmass, N_bin_llmass, 10000., "m(ll) (GeV)", true);
   draw_histogram_variable_bin("h_SS_leadingLeptonPt", 0., 1000., bin_pt, N_bin_pt, 10000., "Pt(1st lepton) (GeV)", true);
   draw_histogram_variable_bin("h_SS_secondLeptonPt", 0., 1000., bin_pt, N_bin_pt, 10000.,"Pt(2nd lepton) (GeV)", true);
   draw_histogram_variable_bin("h_SS_leadingjet_pt", 0., 1000., bin_pt, N_bin_pt, 10000.,"Pt(1st jet) (GeV)", true);
   draw_histogram_variable_bin("h_SS_secondjet_pt", 0., 1000., bin_pt, N_bin_pt, 10000.,"Pt(2nd jet) (GeV)", true);
-  
+  /*
   draw_histogram("h_OS_Njets", 0., 20., 1., 100000., "Njets", false);
   draw_histogram("h_OS_Nbjets", 0., 20., 1., 100000., "Njets", false);
   draw_histogram("h_OS_Nfatjets", 0., 20., 1., 100000., "Njets", false);
-
+  */
   /*
   draw_histogram("h_OS_lljjjjmass", 10., 5000., 50., 100000., "M(ll jjjj) (GeV)", true);   
   draw_histogram("h_OS_llmass", 10., 1000., 2., 10000., "M(ll) (GeV)", true);
