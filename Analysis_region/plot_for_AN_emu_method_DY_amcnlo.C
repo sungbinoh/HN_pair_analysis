@@ -51,26 +51,6 @@ TString DoubleEG = "data_DoubleEG";
 //DY
 TString DY_low = "SKDYJets_10to50";
 TString DY_high = "SKDYJets";
-TString dy_binned_ee_50_120 = "SKZToEE_NNPDF30_13TeV-powheg_M_50_120";
-TString dy_binned_ee_120_200 = "SKZToEE_NNPDF30_13TeV-powheg_M_120_200";
-TString dy_binned_ee_200_400 = "SKZToEE_NNPDF30_13TeV-powheg_M_200_400";
-TString dy_binned_ee_400_800 = "SKZToEE_NNPDF30_13TeV-powheg_M_400_800";
-TString dy_binned_ee_800_1400 = "SKZToEE_NNPDF30_13TeV-powheg_M_800_1400";
-TString dy_binned_ee_1400_2300 = "SKZToEE_NNPDF30_13TeV-powheg_M_1400_2300";
-TString dy_binned_ee_2300_3500 = "SKZToEE_NNPDF30_13TeV-powheg_M_2300_3500";
-TString dy_binned_ee_3500_4500 = "SKZToEE_NNPDF30_13TeV-powheg_M_3500_4500";
-TString dy_binned_ee_4500_6000 = "SKZToEE_NNPDF30_13TeV-powheg_M_4500_6000";
-TString dy_binned_ee_6000_Inf= "SKZToEE_NNPDF30_13TeV-powheg_M_6000_Inf";
-TString dy_binned_mm_50_120 = "SKZToMuMu_NNPDF30_13TeV-powheg_M_50_120";
-TString dy_binned_mm_120_200 = "SKZToMuMu_NNPDF30_13TeV-powheg_M_120_200";
-TString dy_binned_mm_200_400 = "SKZToMuMu_NNPDF30_13TeV-powheg_M_200_400";
-TString dy_binned_mm_400_800 = "SKZToMuMu_NNPDF30_13TeV-powheg_M_400_800";
-TString dy_binned_mm_800_1400 = "SKZToMuMu_NNPDF30_13TeV-powheg_M_800_1400";
-TString dy_binned_mm_1400_2300 = "SKZToMuMu_NNPDF30_13TeV-powheg_M_1400_2300";
-TString dy_binned_mm_2300_3500 = "SKZToMuMu_NNPDF30_13TeV-powheg_M_2300_3500";
-TString dy_binned_mm_3500_4500 = "SKZToMuMu_NNPDF30_13TeV-powheg_M_3500_4500";
-TString dy_binned_mm_4500_6000 = "SKZToMuMu_NNPDF30_13TeV-powheg_M_4500_6000";
-TString dy_binned_mm_6000_Inf= "SKZToMuMu_NNPDF30_13TeV-powheg_M_6000_Inf";
 
 TString Wjets = "SKWJets";
 
@@ -301,21 +281,16 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   mappad[pad1] -> cd();
   mappad[pad1] -> SetLogy();
 
-  maplegend[legend] = new TLegend(0.69, 0.60, 0.96, 0.92);
+  maplegend[legend] = new TLegend(0.60, 0.60, 0.96, 0.92);
   
   cout << "1" << endl;
 
   maphstack[hstack] = new THStack(hstack, "Stacked_" + nameofhistogram);
   gStyle->SetOptTitle(0);
   
-  TString current_dy;
-  if(channel.Contains("DiEle")) current_dy = dy_binned_ee_50_120;
-  else if(channel.Contains("DiMu")) current_dy = dy_binned_mm_50_120;
-  else return;
-
   
   int n_kind = 3;
-  TString samples_array[] = {WZ, "emu", current_dy};
+  TString samples_array[] = {WZ, "emu", DY_high};
   Int_t colour_array[] = {419, 416, 400};
   TString samples_legend[] = {"Other backgrounds", "Data Driven Flavour symm. bkg", "Z/#gamma + jets"};
   
@@ -323,34 +298,7 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   
   TString name_cycle = nameofhistogram + Cycle_name;
   cout << "check1" << endl;
-  std::vector<TString> dy_samples;
-  if(channel.Contains("DiEle")){
-    dy_samples.push_back(dy_binned_ee_120_200);
-    dy_samples.push_back(dy_binned_ee_200_400);
-    dy_samples.push_back(dy_binned_ee_400_800);
-    dy_samples.push_back(dy_binned_ee_800_1400);
-    dy_samples.push_back(dy_binned_ee_1400_2300);
-    dy_samples.push_back(dy_binned_ee_2300_3500);
-    dy_samples.push_back(dy_binned_ee_3500_4500);
-    dy_samples.push_back(dy_binned_ee_4500_6000);
-    dy_samples.push_back(dy_binned_ee_6000_Inf);
-  }
-  else if(channel.Contains("DiMu")){
-    dy_samples.push_back(dy_binned_mm_120_200);
-    dy_samples.push_back(dy_binned_mm_200_400);
-    dy_samples.push_back(dy_binned_mm_400_800);
-    dy_samples.push_back(dy_binned_mm_800_1400);
-    dy_samples.push_back(dy_binned_mm_1400_2300);
-    dy_samples.push_back(dy_binned_mm_2300_3500);
-    dy_samples.push_back(dy_binned_mm_3500_4500);
-    dy_samples.push_back(dy_binned_mm_4500_6000);
-    dy_samples.push_back(dy_binned_mm_6000_Inf);
-  }  
-  else return;
-  
-  for(int i_dy = 0; i_dy < dy_samples.size(); i_dy++){
-    GetHist(name_cycle + current_dy) -> Add(GetHist(name_cycle + dy_samples.at(i_dy)));
-  }
+  GetHist(name_cycle +  DY_high) -> Add(GetHist(name_cycle + DY_low));
   
   cout << "2.1" << endl;
   
@@ -540,7 +488,7 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   else return;
 
   pdfname.Append(nameofhistogram);
-  pdfname.Append(".pdf");
+  pdfname.Append("_DY_amcnlo.pdf");
   mapcanvas[canvas] -> SaveAs(pdfname);
   
 
@@ -627,7 +575,7 @@ void makehistogram_signal_VS_bkg(TString nameofhistogram, double binx[], int N_b
 
   
   pdfname.Append(nameofhistogram);
-  pdfname.Append(".pdf");
+  pdfname.Append("_DY_amcnlo.pdf");
   mapcanvas[canvas] -> SaveAs(pdfname);
   
 }
@@ -692,26 +640,6 @@ void plot(){
   openfile(Cycle_name, WGtoLNuG);
   openfile(Cycle_name, ZGto2LG);
   openfile(Cycle_name, ttbar);
-  openfile(Cycle_name, dy_binned_ee_50_120);
-  openfile(Cycle_name, dy_binned_ee_120_200);
-  openfile(Cycle_name, dy_binned_ee_200_400);
-  openfile(Cycle_name, dy_binned_ee_400_800);
-  openfile(Cycle_name, dy_binned_ee_800_1400);
-  openfile(Cycle_name, dy_binned_ee_1400_2300);
-  openfile(Cycle_name, dy_binned_ee_2300_3500);
-  openfile(Cycle_name, dy_binned_ee_3500_4500);
-  openfile(Cycle_name, dy_binned_ee_4500_6000);
-  openfile(Cycle_name, dy_binned_ee_6000_Inf);
-  openfile(Cycle_name, dy_binned_mm_50_120);
-  openfile(Cycle_name, dy_binned_mm_120_200);
-  openfile(Cycle_name, dy_binned_mm_200_400);
-  openfile(Cycle_name, dy_binned_mm_400_800);
-  openfile(Cycle_name, dy_binned_mm_800_1400);
-  openfile(Cycle_name, dy_binned_mm_1400_2300);
-  openfile(Cycle_name, dy_binned_mm_2300_3500);
-  openfile(Cycle_name, dy_binned_mm_3500_4500);
-  openfile(Cycle_name, dy_binned_mm_4500_6000);
-  openfile(Cycle_name, dy_binned_mm_6000_Inf);
   
 
   //open signal samples
@@ -734,8 +662,8 @@ void plot(){
   cout << "open files complete" << endl;
 
   //make bins for each variables
-  double bin_llmass[32], bin_lljjjjmass[15], bin_pt[17];
-  int N_bin_llmass = 0, N_bin_lljjjjmass = 0, N_bin_pt = 0;
+  double bin_llmass[32], bin_lljjjjmass[15], bin_pt[17], bin_2nd_lep_pt[15];
+  int N_bin_llmass = 0, N_bin_lljjjjmass = 0, N_bin_pt = 0, N_bin_2nd_lep_pt = 0;
   for(int i = 0; i < 31; i++){
     N_bin_llmass++;
     bin_llmass[i] = 20. * (i + 0.);
@@ -753,20 +681,28 @@ void plot(){
   bin_lljjjjmass[14] = 5500;//overflow bin
   
 
+  for(int i = 0; i < 8; i++){
+    N_bin_2nd_lep_pt++;
+    bin_2nd_lep_pt[i] = 30. * (i + 0.);
+  }
+  bin_2nd_lep_pt[8] = 1000;
 
-  for(int i = 0; i < 16; i++){
+  for(int i = 0; i < 8; i++){
     N_bin_pt++;
     bin_pt[i] = 30. * (i + 0.);
   }
-  bin_pt[16] = 1000;
-  
+  bin_pt[8] = 270;
+  bin_pt[9] = 330;
+  bin_pt[10] = 390;
+  bin_pt[11] = 1000;
+  N_bin_pt += 3;
 
   draw_histogram_variable_bin("h_OS_lljjjjmass", 0., 5500., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(Z') (GeV)", true);
   draw_histogram_variable_bin("h_OS_leadingljjmass", 0., 5000., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(1st N) (GeV)", true);
   draw_histogram_variable_bin("h_OS_secondljjmass", 0., 5000., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(2nd N) (GeV)", true);
   draw_histogram_variable_bin("h_OS_llmass", 50., 1000., bin_llmass, N_bin_llmass, 10000., "m(ll) (GeV)", true);
   draw_histogram_variable_bin("h_OS_leadingLeptonPt", 0., 1000., bin_pt, N_bin_pt, 10000., "Pt(1st lepton) (GeV)", true);
-  draw_histogram_variable_bin("h_OS_secondLeptonPt", 0., 1000., bin_pt, N_bin_pt, 10000.,"Pt(2nd lepton) (GeV)", true);
+  draw_histogram_variable_bin("h_OS_secondLeptonPt", 0., 1000., bin_2nd_lep_pt, N_bin_2nd_lep_pt, 10000.,"Pt(2nd lepton) (GeV)", true);
   draw_histogram_variable_bin("h_OS_leadingjet_pt", 0., 1000., bin_pt, N_bin_pt, 10000.,"Pt(1st jet) (GeV)", true);
   draw_histogram_variable_bin("h_OS_secondjet_pt", 0., 1000., bin_pt, N_bin_pt, 10000.,"Pt(2nd jet) (GeV)", true);
   
@@ -792,9 +728,9 @@ void plot(){
   draw_histogram("h_OS_secondjet_pt", 0., 1000., 2.,10000.,"Pt(1st jet) (GeV)", true);
   */
   
-  draw_signal_VS_bkg("h_SS_lljjjjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(Z') (GeV)");
-  draw_signal_VS_bkg("h_SS_leadingljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(1st N) (GeV)");
-  draw_signal_VS_bkg("h_SS_secondljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(2nd N) (GeV)");
+  draw_signal_VS_bkg("h_OS_lljjjjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(Z') (GeV)");
+  draw_signal_VS_bkg("h_OS_leadingljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(1st N) (GeV)");
+  draw_signal_VS_bkg("h_OS_secondljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(2nd N) (GeV)");
  
   draw_signal_VS_bkg("h_SS_lljjjjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(Z') (GeV)");
   draw_signal_VS_bkg("h_SS_leadingljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(1st N) (GeV)");

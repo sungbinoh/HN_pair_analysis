@@ -134,81 +134,86 @@ void plot(){
   
   cout << "open files complete" << endl;
   
-  vector<TString> plot_names = gethistnames("Electron_QCD_result.root");
+  vector<TString> plot_names_e = gethistnames("Electron_QCD_result.root");
+  vector<TString> plot_names_mu = gethistnames("Muon_QCD_result.root");
+    
+  vector<TString> plots_names_L_e;
+  vector<TString> plots_names_T_e;
+  vector<TString> plots_names_L_mu;
+  vector<TString> plots_names_T_mu;
   
-  vector<TString> plots_names_L;
-  vector<TString> plots_names_T;
   
-  for(int i = 0; i < plot_names.size(); i++){
-    TString current_name = plot_names.at(i);
+  for(int i = 0; i < plot_names_e.size(); i++){
+    TString current_name = plot_names_e.at(i);
     bool ID_syst = current_name.Contains("pt_vs_eta_L") ;
     bool ID_syst_else =current_name.Contains("pt_vs_eta_T") ;
     
-    if(ID_syst) plots_names_L.push_back(current_name);
-    else if(ID_syst_else) plots_names_T.push_back(current_name);
-  }
-  
-  cout << "F 2D hists" << endl;
-  for(int i = 0; i < plots_names_L.size(); i++){
-    cout << plots_names_L.at(i) << endl;
-    maphist[plots_names_L.at(i) + "Electron"] = GetHist_2D(plots_names_L.at(i) + "Electron") -> ProjectionX(plots_names_L.at(i) +"_Electron_1D", 0, 6, "");
-    maphist[plots_names_L.at(i) + "Muon"] = GetHist_2D(plots_names_L.at(i) + "Muon") -> ProjectionX(plots_names_L.at(i) +"_Muon_1D", 0, 6, "");
-    //maphist[plots_names_F.at(i)] -> Draw();
-        
+    if(ID_syst) plots_names_L_e.push_back(current_name);
+    else if(ID_syst_else) plots_names_T_e.push_back(current_name);
   }
 
   
-  cout << "F0 2D hists" << endl;
-  for(int i = 0; i < plots_names_T.size(); i++){
-    cout << plots_names_T.at(i) << endl;
-    maphist[plots_names_T.at(i) + "Electron"] = GetHist_2D(plots_names_T.at(i) + "Electron") -> ProjectionX(plots_names_T.at(i)+"_Electron_1D", 0, 6, "");
-    maphist[plots_names_T.at(i) + "Muon"] = GetHist_2D(plots_names_T.at(i) + "Muon") -> ProjectionX(plots_names_T.at(i)+"_Muon_1D", 0, 6, "");
-  }
-
-  
-  for(int i = 0; i < plots_names_L.size();i++){
-    GetHist(plots_names_T.at(i) + "Electron") -> Divide(GetHist(plots_names_L.at(i) + "Electron"));
-    GetHist(plots_names_T.at(i) + "Muon") -> Divide(GetHist(plots_names_L.at(i) + "Muon"));
-    GetHist_2D(plots_names_T.at(i) + "Electron") -> Divide(GetHist_2D(plots_names_L.at(i) + "Electron"));
-    GetHist_2D(plots_names_T.at(i) + "Muon") -> Divide(GetHist_2D(plots_names_L.at(i) + "Muon"));
+  for(int i = 0; i < plot_names_mu.size(); i++){
+    TString current_name = plot_names_mu.at(i);
+    bool ID_syst = current_name.Contains("pt_vs_eta_L") ;
+    bool ID_syst_else =current_name.Contains("pt_vs_eta_T") ;
+    
+    if(ID_syst) plots_names_L_mu.push_back(current_name);
+    else if(ID_syst_else) plots_names_T_mu.push_back(current_name);
   }
   
   
+  cout << "Make projections" << endl;
+  for(int i = 0; i < plots_names_L_e.size(); i++){
+    cout << plots_names_L_e.at(i) << endl;
+    maphist[plots_names_L_e.at(i) + "Electron"] = GetHist_2D(plots_names_L_e.at(i) + "Electron") -> ProjectionX(plots_names_L_e.at(i) +"_Electron_1D", 0, 6, "");
+  }
+  for(int i = 0; i < plots_names_L_mu.size(); i++){
+    cout << plots_names_L_mu.at(i) << endl;
+    maphist[plots_names_L_mu.at(i) + "Muon"] = GetHist_2D(plots_names_L_mu.at(i) + "Muon") -> ProjectionX(plots_names_L_mu.at(i) +"_Muon_1D", 0, 6, "");
+  }
+  for(int i = 0; i < plots_names_T_e.size(); i++){
+    cout << plots_names_T_e.at(i) << endl;
+    maphist[plots_names_T_e.at(i) + "Electron"] = GetHist_2D(plots_names_T_e.at(i) + "Electron") -> ProjectionX(plots_names_T_e.at(i)+"_Electron_1D", 0, 6, "");
+  }
+  for(int i = 0; i < plots_names_T_mu.size(); i++){
+    cout << plots_names_T_mu.at(i) << endl;
+    maphist[plots_names_T_mu.at(i) + "Muon"] = GetHist_2D(plots_names_T_mu.at(i) + "Muon") -> ProjectionX(plots_names_T_mu.at(i)+"_Muon_1D", 0, 6, "");
+  }
   
+  cout << "Dividing histograms" << endl;
+  cout << "e" << endl;
+  for(int i = 0; i < plots_names_L_e.size();i++){
+    cout << plots_names_L_e.at(i) << endl;
+    cout << "1D" << endl;
+    GetHist(plots_names_T_e.at(i) + "Electron") -> Divide(GetHist(plots_names_L_e.at(i) + "Electron"));
+    cout << "2D" << endl;
+    GetHist_2D(plots_names_T_e.at(i) + "Electron") -> Divide(GetHist_2D(plots_names_L_e.at(i) + "Electron"));
+  }
+  cout << "mu" << endl;
+  for(int i = 0; i < plots_names_L_mu.size();i++){
+    GetHist(plots_names_T_mu.at(i) + "Muon") -> Divide(GetHist(plots_names_L_mu.at(i) + "Muon"));
+    GetHist_2D(plots_names_T_mu.at(i) + "Muon") -> Divide(GetHist_2D(plots_names_L_mu.at(i) + "Muon"));
+  }
+  
+  
+  cout << "Writing output file" << endl;
   TFile *MyFile = new TFile("FakeRate_QCD.root","RECREATE");
-  for(int i = 0; i < plots_names_L.size(); i++){
-    /*
-    cout << "Writing : " << plots_names_F.at(i) + "data_fr" << endl;
-    mapcanvas[plots_names_F.at(i)] = new TCanvas("", "", 800, 600);
-    maphist_2D[plots_names_F.at(i)] -> Draw("colztext1e");
-    gStyle -> SetPaintTextFormat("0.3f");
-    mapcanvas[plots_names_F.at(i)] -> SaveAs("./pdfs/" + plots_names_F.at(i) + ".pdf");
-    maphist_2D[plots_names_F.at(i)] -> Write();
-    */
-
-
-    cout << "Writing : " << plots_names_L.at(i) + "data_fr" << endl;
-    //mapcanvas[plots_names_F.at(i)] = new TCanvas("", "", 800, 600);
-    //maphist[plots_names_F.at(i)] -> Draw("AP");
-    //mapcanvas[plots_names_F.at(i)] -> SaveAs("./pdfs/" + plots_names_F.at(i) + ".pdf");
-    maphist[plots_names_T.at(i) + "Electron"] -> Write();
-    maphist[plots_names_T.at(i) + "Muon"] -> Write();
-    maphist_2D[plots_names_T.at(i) + "Electron"] -> SetName(plots_names_T.at(i) + "Electron");
-    maphist_2D[plots_names_T.at(i) + "Muon"] -> SetName(plots_names_T.at(i) + "Muon");
-    maphist_2D[plots_names_T.at(i) + "Electron"] -> Write();
-    maphist_2D[plots_names_T.at(i) + "Muon"] -> Write();
+  for(int i = 0; i < plots_names_L_e.size(); i++){
+    cout << "Writing : " << plots_names_L_e.at(i) + "data_fr" << endl;
+    maphist[plots_names_T_e.at(i) + "Electron"] -> Write();
+    maphist_2D[plots_names_T_e.at(i) + "Electron"] -> SetName(plots_names_T_e.at(i) + "Electron");
+    maphist_2D[plots_names_T_e.at(i) + "Electron"] -> Write();
+  }
+  
+  for(int i = 0; i < plots_names_L_mu.size(); i++){
+    cout << "Writing : " << plots_names_L_mu.at(i) + "data_fr" << endl;
+    maphist[plots_names_T_mu.at(i) + "Muon"] -> Write();
+    maphist_2D[plots_names_T_mu.at(i) + "Muon"] -> SetName(plots_names_T_mu.at(i) + "Muon");
+    maphist_2D[plots_names_T_mu.at(i) + "Muon"] -> Write();
   }
   
   MyFile->Close();
-
-  /*
-  draw_histogram("SingleMuonTrigger_Dijet_Awayjet_40_pt_F0", 0., 500., 1., 8000.); 
-  draw_histogram("SingleMuonTrigger_Dijet_Awayjet_40_pt_F", 0., 500., 1., 500.);
-  draw_histogram("SingleMuonTrigger_Dijet_Awayjet_40_eta_F", -3., 3., 1., 500.);
-  draw_histogram("SingleMuonTrigger_Dijet_Awayjet_40_eta_F0", -3., 3., 1., 4000.);
-  */
-  //draw_histogram("h_tri_Z_tag_dimu_mass", 0., 500., 1., 1000.);
-  //draw_histogram("h_tri_non_Z_tag_pt", 0., 500., 5., 1500.);
   
-
+  
 }// End of Main Function ////////////////////////////////////////////////////// 

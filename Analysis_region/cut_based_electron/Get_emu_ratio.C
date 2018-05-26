@@ -79,7 +79,8 @@ void openfile(TString filename){
   else samplename = "TT";
   
   //cout << samplename << "'s histograms are" << endl;
-  TString directories[18] = {"CR1_DiEle", "CR1_DiMu", "CR1_EMu", "CR2_DiEle", "CR2_DiMu", "CR2_EMu", "CR3_DiEle", "CR3_DiMu", "CR3_EMu", "CR4_DiEle", "CR4_DiMu", "CR4_EMu", "CR5_DiEle", "CR5_DiMu", "CR5_EMu", "SR1_DiEle", "SR1_DiMu", "SR1_EMu"};
+  TString directories[18] = {"CR1_OS_DiEle", "CR1_OS_DiMu", "CR1_OS_EMu", "CR2_OS_DiEle", "CR2_OS_DiMu", "CR2_OS_EMu", "CR3_OS_DiEle", "CR3_OS_DiMu", "CR3_OS_EMu", "CR4_OS_DiEle", "CR4_OS_DiMu", "CR4_OS_EMu", "CR5_OS_DiEle", "CR5_OS_DiMu", "CR5_OS_EMu",
+                             "SR1_OS_DiEle", "SR1_OS_DiMu", "SR1_OS_EMu"};
   int N_directories = 18;
   
   for(int i = 0; i < N_directories; i++){
@@ -123,7 +124,7 @@ void make_hist_with_overflow(TString nameofhistogram, TString sample, int N_bin,
 void make_ratio_plot(TString nameofhistogram, TString sample, TString region, TString channel){
   
   mapfunc[nameofhistogram + channel + sample + region] = (TH1F*)GetHist(nameofhistogram + "_" + channel + sample + "rebin") -> Clone(nameofhistogram + channel + sample + region);
-  mapfunc[nameofhistogram + channel + sample + region] -> Divide(GetHist(nameofhistogram + "_" + region + "_EMu" + sample + "rebin"));
+  mapfunc[nameofhistogram + channel + sample + region] -> Divide(GetHist(nameofhistogram + "_" + region + "_OS_EMu" + sample + "rebin"));
 
   //mapfunc[nameofhistogram + channel + sample + region] -> Draw();
 }
@@ -216,7 +217,8 @@ void save_ratio_plot(TString nameofhistogram, TString sample, TString region, TS
 
 void run_plots_with_overflow(TString nameofhistogram, int N_bin, double binx[]){
   
-  TString directories[18] = {"CR1_DiEle", "CR1_DiMu", "CR1_EMu", "CR2_DiEle", "CR2_DiMu", "CR2_EMu", "CR3_DiEle", "CR3_DiMu", "CR3_EMu", "CR4_DiEle", "CR4_DiMu", "CR4_EMu", "CR5_DiEle", "CR5_DiMu", "CR5_EMu", "SR1_DiEle", "SR1_DiMu", "SR1_EMu"};
+  TString directories[18] = {"CR1_OS_DiEle", "CR1_OS_DiMu", "CR1_OS_EMu", "CR2_OS_DiEle", "CR2_OS_DiMu", "CR2_OS_EMu", "CR3_OS_DiEle", "CR3_OS_DiMu", "CR3_OS_EMu", "CR4_OS_DiEle", "CR4_OS_DiMu", "CR4_OS_EMu", "CR5_OS_DiEle", "CR5_OS_DiMu", "CR5_OS_EMu", 
+			     "SR1_OS_DiEle", "SR1_OS_DiMu", "SR1_OS_EMu"};
   int N_directories = 18;
   
   for(int i = 0; i < N_directories; i++){
@@ -227,17 +229,17 @@ void run_plots_with_overflow(TString nameofhistogram, int N_bin, double binx[]){
   TString regions[6] = {"CR1", "CR2", "CR3", "CR4", "CR5", "SR1"};
   int N_regions = 6;
   for(int i = 0; i < N_regions; i++){
-    make_ratio_plot(nameofhistogram, "TT", regions[i], regions[i] + "_" + "DiMu");
-    make_ratio_plot(nameofhistogram, "TTLL", regions[i], regions[i] + "_" + "DiMu");
-    make_ratio_plot(nameofhistogram, "TT", regions[i], regions[i] + "_" + "DiEle");
-    make_ratio_plot(nameofhistogram, "TTLL", regions[i], regions[i] + "_" + "DiEle");
+    make_ratio_plot(nameofhistogram, "TT", regions[i], regions[i] + "_OS_" + "DiMu");
+    make_ratio_plot(nameofhistogram, "TTLL", regions[i], regions[i] + "_OS_" + "DiMu");
+    make_ratio_plot(nameofhistogram, "TT", regions[i], regions[i] + "_OS_" + "DiEle");
+    make_ratio_plot(nameofhistogram, "TTLL", regions[i], regions[i] + "_OS_" + "DiEle");
   }
 
   for(int i = 0; i < N_regions; i++){
-    save_ratio_plot(nameofhistogram, "TT", regions[i], regions[i] + "_" + "DiMu");
-    save_ratio_plot(nameofhistogram, "TTLL", regions[i], regions[i] + "_" + "DiMu");
-    save_ratio_plot(nameofhistogram, "TT", regions[i], regions[i] + "_" + "DiEle");
-    save_ratio_plot(nameofhistogram, "TTLL", regions[i], regions[i] + "_" + "DiEle");
+    save_ratio_plot(nameofhistogram, "TT", regions[i], regions[i] + "_OS_" + "DiMu");
+    save_ratio_plot(nameofhistogram, "TTLL", regions[i], regions[i] + "_OS_" + "DiMu");
+    save_ratio_plot(nameofhistogram, "TT", regions[i], regions[i] + "_OS_" + "DiEle");
+    save_ratio_plot(nameofhistogram, "TTLL", regions[i], regions[i] + "_OS_" + "DiEle");
   }
 
 }

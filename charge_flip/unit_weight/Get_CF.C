@@ -217,6 +217,7 @@ void add_all_MC(TString nameofhistogram){
   
   mapfunc[nameofhistogram + "_num"] -> Divide(mapfunc[nameofhistogram + "_den"]);
   
+  /*
   map_fitfunc[nameofhistogram] = new TF1(nameofhistogram, "0.5 * (1 - exp( -1. * [0] / x))", 0., 0.02);
   map_fitfunc[nameofhistogram]  -> SetLineColor(kBlue);
   
@@ -242,7 +243,7 @@ void add_all_MC(TString nameofhistogram){
   p0_err_str = Form("%4.5f", p0_err);
   p1_str = Form("%4.5f", p1);
   p1_err_str = Form("%4.5f", p1_err);
-  
+  */
 
   mapfunc[nameofhistogram + "_num"] -> SetLineColor(kRed);
   mapfunc[nameofhistogram + "_num"] -> GetYaxis()->SetLabelSize(0.02);
@@ -265,13 +266,14 @@ void add_all_MC(TString nameofhistogram){
   latex_CMSPriliminary.DrawLatex(0.25, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Simulation}}}");
   latex_Lumi.SetTextSize(0.035);
   latex_Lumi.DrawLatex(0.7, 0.96, "35.9 fb^{-1} (13 TeV)");
+  /*
   chi2_result.SetTextSize(0.025);
   chi2_result.DrawLatex(0.35, 0.7, "#chi^{2} / ndof = " + chi2_Str + "/" + Ndf_str + " = " + chi2_norm_str);
   p0_result.SetTextSize(0.025);
   p0_result.DrawLatex(0.35, 0.7 - 0.025, "y = a + bx, where");
   p1_result.SetTextSize(0.025);
   p1_result.DrawLatex(0.35, 0.7 - 0.025 - 0.025, "a = " + p0_str + " #pm " + p0_err_str + ", b = " + p1_str + " #pm " + p1_err_str );
-  
+  */
   
   TString pdfname;
   pdfname = "./CF/CF_all_" + nameofhistogram + ".pdf";
