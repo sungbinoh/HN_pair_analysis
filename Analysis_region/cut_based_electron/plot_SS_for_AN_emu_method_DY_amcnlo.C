@@ -316,7 +316,7 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   func.Insert(0, "ratio_");
   clone.Insert(0, "h3_");
   line.Insert(0, "l_");
-
+  
   mapcanvas[canvas] = new TCanvas(canvas,"",800,800);
   gStyle -> SetOptStat(1111);
   mapcanvas[canvas] -> SetTopMargin( 0.05 );
@@ -455,8 +455,8 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   maphstack[hstack] -> GetXaxis()->SetLabelSize(0);
   maphstack[hstack] -> GetXaxis() -> SetRangeUser(xmin, xmax);
   maphstack[hstack] -> SetMaximum(data_max * 3);
-  maphstack[hstack] -> SetMinimum(0.0);
-  //maphstack[hstack] -> SetMinimum(0.01);  
+  //maphstack[hstack] -> SetMinimum(0.0);
+  maphstack[hstack] -> SetMinimum(0.01);  
   maphstack[hstack] -> GetXaxis() -> SetTitle(nameofhistogram);
   //maphstack[hstack] -> GetYaxis() -> SetTitle("Entries / 25 GeV");                                                                                                                                                                                                            
   maphstack[hstack] -> GetYaxis() -> SetTitle(title_y);
@@ -469,6 +469,26 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMinimum(0.01);
 
   mappad[pad1] -> Update();
+
+
+  // cout yields
+  double fake_content =  maphist[nameofhistogram + Cycle_name + fake_string + "rebin"] -> GetBinContent(1);
+  double fake_error = maphist[nameofhistogram + Cycle_name + fake_string + "rebin"] -> GetBinError(1);
+  double MC_content = maphist[nameofhistogram + Cycle_name + WZ + "rebin"] -> GetBinContent(1);
+  double MC_error = maphist[nameofhistogram + Cycle_name + WZ + "rebin"] -> GetBinError(1);
+
+  double stack_content = mapfunc[func + "rebin"] -> GetBinContent(1);
+  double stack_error = mapfunc[func + "rebin"] -> GetBinError(1);
+  double data_content = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetBinContent(1);
+  double data_error = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetBinError(1);
+  if(!blind){
+    cout << "bkg : " << stack_content << " +- "  << stack_error << ", data : " << data_content << " +- " << data_error << endl;
+    cout << "fake : " << fake_content << " +- " << fake_error << ", MC : " << MC_content << " +- " << MC_error << endl;
+  }  
+  else{
+    cout << "bkg : " << stack_content << " +- "  << stack_error << endl;
+    cout << "fake : " << fake_content << " +- "<< fake_error << ", MC : " << MC_content << " +- " << MC_error << endl;
+  }
 
   if(!blind){
     GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Draw("epsame");
@@ -584,19 +604,19 @@ void makehistogram_signal_VS_bkg(TString nameofhistogram, double binx[], int N_b
   canvas.Insert(0, "c_signal_VS");
   hstack.Insert(0, "hs_signal_VS");
   legend.Insert(0, "legend_");
-    
+  
   mapcanvas[canvas] = new TCanvas(canvas,"",800,800);
   gStyle -> SetOptStat(1111);
   mapcanvas[canvas] -> SetTopMargin( 0.05 );
   mapcanvas[canvas] -> SetBottomMargin( 0.13 );
   mapcanvas[canvas] -> SetRightMargin( 0.05 );
   mapcanvas[canvas] -> SetLeftMargin( 0.16 );
-  mapcanvas[canvas] -> SetLogy();
+  //mapcanvas[canvas] -> SetLogy();
 
   maphstack["hs_" + nameofhistogram] -> GetXaxis()->SetLabelSize(0.02);
   maphstack["hs_" + nameofhistogram] -> GetXaxis()->SetTitle(yaxis_name);
   maphstack["hs_" + nameofhistogram] -> GetXaxis()-> SetRangeUser(0., 5500.);
-  
+  maphstack["hs_" + nameofhistogram] -> GetYaxis()-> SetRangeUser(0.01, 100.);
   maphstack["hs_" + nameofhistogram] -> Draw("hist");
   
   TString channel;
@@ -628,7 +648,7 @@ void makehistogram_signal_VS_bkg(TString nameofhistogram, double binx[], int N_b
     maphist[nameofhistogram + channel + signal_points[i] + "rebin"] = htmp -> Rebin(N_bin, nameofhistogram + channel + signal_points[i] + "rebin", binx);
     GetHist(nameofhistogram + channel + signal_points[i] + "rebin") -> SetLineColor(colour_array[i]);
     GetHist(nameofhistogram + channel + signal_points[i] + "rebin") -> SetLineWidth(5);
-
+    GetHist(nameofhistogram + channel + signal_points[i] + "rebin") -> Scale(0.1);
     GetHist(nameofhistogram + channel + signal_points[i] + "rebin") -> Draw("histsame");
     maplegend[legend] -> AddEntry(GetHist(nameofhistogram + channel + signal_points[i] + "rebin"), signal_legend[i], "l");
   }
@@ -727,6 +747,7 @@ void plot(){
   
 
   //open signal samples
+  /*
   int Zpmass[8] = {500, 750, 1000, 1500, 2000, 2500, 3000, 4000};
   for(int i = 0; i < 8; i++){
     int HNmass = 100;
@@ -740,13 +761,13 @@ void plot(){
       openfile_signal(Cycle_name, current_name, "ElEl");
     }
   }
-  
+  */
   
   cout << "open files complete" << endl;
 
   //make bins for each variables
-  double bin_llmass[32], bin_lljjjjmass[15], bin_pt[17], bin_2nd_lep_pt[15];
-  int N_bin_llmass = 0, N_bin_lljjjjmass = 0, N_bin_pt = 0, N_bin_2nd_lep_pt = 0;
+  double bin_llmass[32], bin_lljjjjmass[15], bin_pt[17], bin_2nd_lep_pt[15], bin_integ[2] = {0., 5500};
+  int N_bin_llmass = 0, N_bin_lljjjjmass = 0, N_bin_pt = 0, N_bin_2nd_lep_pt = 0, N_bin_integ = 1;
   for(int i = 0; i < 31; i++){
     N_bin_llmass++;
     bin_llmass[i] = 20. * (i + 0.);
@@ -780,6 +801,11 @@ void plot(){
   bin_pt[11] = 1000;
   N_bin_pt += 3;
 
+  
+  
+  
+  draw_histogram_variable_bin("lljjjjmass", 0., 5500., bin_integ, N_bin_integ, 100000., "m(Z') (GeV)", true);
+  /*
   draw_histogram_variable_bin("lljjjjmass", 0., 5500., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(Z') (GeV)", true);
   draw_histogram_variable_bin("leadingljjmass", 0., 5000., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(1st N) (GeV)", true);
   draw_histogram_variable_bin("secondljjmass", 0., 5000., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(2nd N) (GeV)", true);
@@ -788,28 +814,23 @@ void plot(){
   draw_histogram_variable_bin("secondLeptonPt", 0., 1000., bin_2nd_lep_pt, N_bin_2nd_lep_pt, 10000.,"Pt(2nd lepton) (GeV)", true);
   draw_histogram_variable_bin("leadingjet_pt", 0., 1000., bin_pt, N_bin_pt, 10000.,"Pt(1st jet) (GeV)", true);
   draw_histogram_variable_bin("secondjet_pt", 0., 1000., bin_pt, N_bin_pt, 10000.,"Pt(2nd jet) (GeV)", true);
+  */
+  //draw_histogram_variable_bin("pass_jetcondition_SS", 0., 5., bin_count, N_bin_count, 10000., "pass jet sel", true); 
+
+
   
   /*
-  draw_histogram("h_OS_lljjjjmass", 10., 5000., 50., 100000., "M(ll jjjj) (GeV)", true);   
-  draw_histogram("h_OS_llmass", 10., 1000., 2., 10000., "M(ll) (GeV)", true);
-  draw_histogram("h_OS_leadingLeptonPt", 0., 1000., 2., 10000., "Pt(1st lepton) (GeV)", true);
-  draw_histogram("h_OS_secondLeptonPt", 0., 1000., 2.,10000.,"Pt(1st lepton) (GeV)", true);
-  draw_histogram("h_OS_leadingjet_pt", 0., 1000., 2.,10000.,"Pt(1st jet) (GeV)", true);
-  draw_histogram("h_OS_secondjet_pt", 0., 1000., 2.,10000.,"Pt(1st jet) (GeV)", true);
-  */
-  
-    
   draw_signal_VS_bkg("h_SS_lljjjjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(Z') (GeV)");
   draw_signal_VS_bkg("h_SS_leadingljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(1st N) (GeV)");
   draw_signal_VS_bkg("h_SS_secondljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(2nd N) (GeV)");
-
+  */
   
   /*
   // -- make file contains m(Z') plots, comment out draw_signal_VS_bkg function above
-  TFile *MyFile = new TFile("Bkg_VS_signal_cutbased_e.root","RECREATE");
+  TFile *MyFile = new TFile("Bkg_VS_signal_SS_cutbased_e.root","RECREATE");
   gDirectory -> mkdir("MuMu");
   gDirectory -> Cd("MuMu");
-
+  
   int N_bin = N_bin_lljjjjmass;
   double binx[15];
   for(int i = 0; i < 11; i++){
@@ -929,9 +950,9 @@ void plot(){
   for(map<TString, TFile*>::iterator mapit = mapfile.begin(); mapit != mapfile.end(); mapit ++){
     mapit->second->Close();
   }
-
-
   */
 
+ 
 
-}// End of Main Function ////////////////////////////////////////////////////// 
+
+}// end of Main Function ////////////////////////////////////////////////////// 

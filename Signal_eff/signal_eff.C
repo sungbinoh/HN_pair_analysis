@@ -85,7 +85,7 @@ void openfile_signal(TString samplename, TString channel){
   
   gDirectory -> cd("../");
 
-  TString directories[] = {"SR1_DiMu", "SR1_DiEle"};
+  TString directories[] = {"SR1_SS_DiMu", "SR1_SS_DiEle"};
   int n_directories = 2;
   for(int i = 0; i < n_directories; i++){
     gDirectory -> cd(directories[i]);
@@ -440,12 +440,12 @@ void plot(){
   
   TString content[27] = {"Empty", "after_skim", "MET_filter", "good_PV", "HLT_mu", "HLT_ele", "DiEle_lepton_N_cut", "DiMu_lepton_N_cut", "EMu_lepton_N_cut", "DiEle_lepton_Pt_cut", "DiMu_lepton_Pt_cut", "EMu_leptn_Pt_cut",
 			 "DiEle_Mll_cut", "DiMu_Mll_cut", "EMu_Mll_cut", "DiEle_jet_N_cut", "DiMu_jet_N_cut", "EMu jet N cut", "DiEle_Mlljjjj_cut", "DiMu_Mlljjjj_cut", "EMu_Mlljjjj_cut", "DiEle_CR1", "DiMu_CR1", "EMu_CR1", "DiEle_CR2", "DiMu_CR2", "EMu CR2"};
-
+  
   //draw_signal_shape("h_OS_lljjjjmass_SR1_DiEle", "ElEl", 50.);
   //draw_signal_shape("h_OS_lljjjjmass_SR1_DiMu", "MuMu", 50.);
-
-  draw_signal_shape_normalized("h_OS_lljjjjmass_SR1_DiEle", "ElEl", 50.);
-  draw_signal_shape_normalized("h_OS_lljjjjmass_SR1_DiMu", "MuMu", 50.);
+  
+  draw_signal_shape_normalized("h_SS_lljjjjmass_SR1_SS_DiEle", "ElEl", 50.);
+  draw_signal_shape_normalized("h_SS_lljjjjmass_SR1_SS_DiMu", "MuMu", 50.);
   
   
 
