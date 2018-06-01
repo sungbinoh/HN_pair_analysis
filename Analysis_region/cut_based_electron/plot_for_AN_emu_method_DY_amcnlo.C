@@ -109,38 +109,59 @@ void openfile(TString cyclename, TString samplename){
   cout << "opening : " << filename << endl;
   
   mapfile[filename] = new TFile ((filename)) ;
-  TString regions[6] = {"CR1", "CR2", "CR3", "CR4", "CR5", "SR1"};
+  TString regions[7] = {"CR1", "CR2", "CR3", "CR4", "CR5", "CR6", "SR1"};
   TString channels[3] = {"DiEle", "DiMu", "EMu"};
   TString charges[2] = {"OS", "SS"};
   int i_dir = 0;
-  TString directories[36];
-  for(int i = 0; i < 6; i++){
-    for(int j = 0; j < 3; j++){
-      for(int k = 0; k < 2; k++){
-	directories[i_dir] = regions[i] + "_" + charges[k] + "_" + channels[j];
-	i_dir++;
-      }
+  TString directories[6];
+  for(int j = 0; j < 3; j++){
+    for(int k = 0; k < 2; k++){
+      directories[i_dir] = charges[k] + "_" + channels[j];
+      i_dir++;
     }
   }
-
-  int N_directories = 36;
   
-  for(int i = 0; i < N_directories; i++){
-    gDirectory->cd(directories[i]);
-    TIter next(gDirectory->GetListOfKeys());
-    TKey *key;
-    vector<TString> histnames;
-    while ((key = (TKey*)next())) {
-      TClass *cl = gROOT->GetClass(key->GetClassName());
-      if (!cl->InheritsFrom("TH1")) continue;
-      histnames.push_back(key -> GetName());
-    }
+  int N_regions = 7;
+  int N_directories = 6;
+  
+  for(int i = 0; i < N_regions; i++){
+    gDirectory->cd(regions[i]);
+    for(int j = 0; j < N_directories; j++){
+      gDirectory->cd(regions[i] + "_" + directories[j]);
+      TIter next(gDirectory->GetListOfKeys());
+      TKey *key;
+      vector<TString> histnames;
+      while ((key = (TKey*)next())) {
+	TClass *cl = gROOT->GetClass(key->GetClassName());
+	if (!cl->InheritsFrom("TH1")) continue;
+	histnames.push_back(key -> GetName());
+      }
+      
+      for(int k = 0; k < histnames.size(); k ++){
+	maphist[histnames.at(k) + cyclename + samplename] = (TH1*)gDirectory -> Get(histnames.at(k));
+      }
+      gDirectory->cd("../");
+    }//for dir
+    if(regions[i].Contains("SR")){
+      for(int j = 0; j < N_directories; j++){
+	gDirectory->cd(regions[i] + "_" + directories[j] + "_HNcut");
+	TIter next(gDirectory->GetListOfKeys());
+	TKey *key;
+	vector<TString> histnames;
+	while ((key = (TKey*)next())) {
+	  TClass *cl = gROOT->GetClass(key->GetClassName());
+	  if (!cl->InheritsFrom("TH1")) continue;
+	  histnames.push_back(key -> GetName());
+	}
 
-    for(int i = 0; i < histnames.size(); i ++){
-      maphist[histnames.at(i) + cyclename + samplename] = (TH1*)gDirectory -> Get(histnames.at(i));
-    }
+	for(int k = 0; k < histnames.size(); k ++){
+	  maphist[histnames.at(k) + cyclename + samplename] = (TH1*)gDirectory -> Get(histnames.at(k));
+	}
+	gDirectory->cd("../");
+      }
+    }// if SR
     gDirectory->cd("../");
-  }
+  }//for region
 }
 //////////////////////////////////////////////////////////////////////////////
 
@@ -158,39 +179,60 @@ void openfile_signal(TString cyclename, TString samplename, TString channel){
   cout << "opening : " << filename << endl;
   mapfile[filename] = new TFile (("./signal/" + directory + "/" + filename)) ;
 
-  TString regions[6] = {"CR1", "CR2", "CR3", "CR4", "CR5", "SR1"};
+  TString regions[7] = {"CR1", "CR2", "CR3", "CR4", "CR5", "CR6", "SR1"};
   TString channels[3] = {"DiEle", "DiMu", "EMu"};
   TString charges[2] = {"OS", "SS"};
   int i_dir = 0;
-  TString directories[36];
-  for(int i = 0; i < 6; i++){
-    for(int j = 0; j < 3; j++){
-      for(int k = 0; k < 2; k++){
-        directories[i_dir] = regions[i] + "_" + charges[k] + "_" + channels[j];
-        i_dir++;
-      }
+  TString directories[6];
+  for(int j = 0; j < 3; j++){
+    for(int k = 0; k < 2; k++){
+      directories[i_dir] = charges[k] + "_" + channels[j];
+      i_dir++;
     }
   }
 
-  int N_directories = 36;
+  int N_regions = 7;
+  int N_directories = 6;
 
-  for(int i = 0; i < N_directories; i++){
-    gDirectory->cd(directories[i]);
-    TIter next(gDirectory->GetListOfKeys());
-    TKey *key;
-    vector<TString> histnames;
-    while ((key = (TKey*)next())) {
-      TClass *cl = gROOT->GetClass(key->GetClassName());
-      if (!cl->InheritsFrom("TH1")) continue;
-      histnames.push_back(key -> GetName());
+  for(int i = 0; i < N_regions; i++){
+    gDirectory->cd(regions[i]);
+    for(int j = 0; j < N_directories; j++){
+      gDirectory->cd(regions[i] + "_" + directories[j]);
+      TIter next(gDirectory->GetListOfKeys());
+      TKey *key;
+      vector<TString> histnames;
+      while ((key = (TKey*)next())) {
+        TClass *cl = gROOT->GetClass(key->GetClassName());
+	if (!cl->InheritsFrom("TH1")) continue;
+	histnames.push_back(key -> GetName());
+      }
+
+      for(int k = 0; k < histnames.size(); k ++){
+	maphist[histnames.at(k) + channel + samplename] = (TH1*)gDirectory -> Get(histnames.at(k));
+      }
+      gDirectory->cd("../");
     }
+    if(regions[i].Contains("SR")){
+      for(int j = 0; j < N_directories; j++){
+        gDirectory->cd(regions[i] + "_" + directories[j] + "_HNcut");
+        TIter next(gDirectory->GetListOfKeys());
+        TKey *key;
+        vector<TString> histnames;
+        while ((key = (TKey*)next())) {
+          TClass *cl = gROOT->GetClass(key->GetClassName());
+          if (!cl->InheritsFrom("TH1")) continue;
+	  histnames.push_back(key -> GetName());
+	}
 
-    for(int i = 0; i < histnames.size(); i ++){
-      maphist[histnames.at(i) + channel + samplename] = (TH1*)gDirectory -> Get(histnames.at(i));
+        for(int k = 0; k < histnames.size(); k ++){
+          maphist[histnames.at(k) + channel + samplename] = (TH1*)gDirectory -> Get(histnames.at(k));
+        }
+        gDirectory->cd("../");
+      }
     }
     gDirectory->cd("../");
   }
-
+  
   gDirectory->cd("Hists");
   TIter next(gDirectory->GetListOfKeys());
   TKey *key;
@@ -223,13 +265,16 @@ void make_hist_after_emu_method(TString nameofhistogram, TString channel, TStrin
   TString current_data = SingleMuon;
   TString cyclename = Cycle_name;
 
-  cout << "making data driven plot of " + nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu" << endl;
+  cout << "making data driven plot of " + nameofhistogram + "_" + region + "_" + channel +  cyclename + "emu" << endl;
+  
+  TString EMu = "_EMu";
+  if(channel.Contains("HNcut")) EMu = EMu + "_HNcut";
   
   //clone emu data plot
-  mapfunc[nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu"] = (TH1F*)GetHist(nameofhistogram +"_" + region + "_EMu" + Cycle_name + current_data) -> Clone(nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu");
+  mapfunc[nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu"] = (TH1F*)GetHist(nameofhistogram +"_" + region + EMu + Cycle_name + current_data) -> Clone(nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu");
   
   TString name_cycle = nameofhistogram + "_" + region + "_EMu" +  + Cycle_name;
-  
+  if(channel.Contains("HNcut")) name_cycle = nameofhistogram + "_" + region + "_EMu_HNcut" +  + Cycle_name;
   //subtract non flavour symmetric bkgs
   mapfunc[nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu"] -> Add(GetHist(name_cycle +  WZ), -1);
   mapfunc[nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu"] -> Add(GetHist(name_cycle +  ZZ), -1);
@@ -380,7 +425,7 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
       mapfunc[func + "rebin"] -> Add(GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin"));
     }
   }//for loop                                                                                                                                                                                                                                                                   
-
+  
   cout << "4" << endl;
   
   maphist[nameofhistogram + Cycle_name + current_data + overflow] = new TH1F("", "", nx_func, x1_func, x2_func);
@@ -396,6 +441,8 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
     maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + current_data + "rebin"), "data", "lp");
   }
   double data_max = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetMaximum();
+  
+  cout << "5" << endl;
 
 
   maphstack[hstack] -> Draw("hist");
@@ -420,6 +467,7 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
 
   mappad[pad1] -> Update();
 
+  
   if(!blind){
     GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Draw("epsame");
   }
@@ -427,11 +475,13 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   maplegend[legend] -> SetLineColor(kBlack);
   maplegend[legend] -> SetBorderSize(1);
   maplegend[legend] -> SetFillStyle(1001);
-  maplegend[legend] -> SetShadowColor(0); // 0 = transparent                                                                                                                                                                                                                    
+  maplegend[legend] -> SetShadowColor(0); // 0 = transparent                                                                                                                                                                                                                   
+  
   maplegend[legend] -> SetEntrySeparation(0.3);
   maplegend[legend] -> Draw("same");
-
+  
   //maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + data), "data", "p");                                                                                                                                                                                   
+  cout << "6" << endl;
 
   mapcanvas[canvas] -> cd();
 
@@ -446,6 +496,9 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   mapfunc[clone] = (TH1F*)GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Clone(clone);
 
   mapfunc["stat" + nameofhistogram] = (TH1F*)GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Clone(clone);
+
+  cout << "7" << endl;
+
 
   mapline[line] = new TLine(xmin, 1, xmax, 1);
   mapline[line] -> Draw();
@@ -469,6 +522,10 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   mapfunc["stat" + nameofhistogram] -> SetMinimum(0.0);
   mapfunc["stat" + nameofhistogram] -> SetMaximum(2.0);
   mapfunc["stat" + nameofhistogram] -> SetStats(0);
+
+  cout << "8" << endl;
+
+
   
   mapfunc["stat" + nameofhistogram] -> Divide(mapfunc[func + "rebin"]);
   Int_t ncells = mapfunc["stat" + nameofhistogram] -> GetSize();
@@ -498,6 +555,9 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   latex_Lumi.SetTextSize(0.035);
   latex_Lumi.DrawLatex(0.7, 0.96, "35.9 fb^{-1} (13 TeV)");
 
+  cout << "9" << endl;
+
+  
   TString pdfname;
   if(channel.Contains("EMu")){
     pdfname = "./plots_emu_method/EMu/";
@@ -514,8 +574,12 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
 
   pdfname.Append(nameofhistogram);
   pdfname.Append("_DY_amcnlo.pdf");
+  cout << "9.1" << endl;
+
   mapcanvas[canvas] -> SaveAs(pdfname);
   
+  cout << "10" << endl;
+
 
 }
 //////////////////////////////////////////////////////////////////////////////
@@ -556,7 +620,7 @@ void makehistogram_signal_VS_bkg(TString nameofhistogram, double binx[], int N_b
   TString signal_legend[] = {"Z' M=1000, N M=200", "Z' M=2000, N M=500", "Z' M=3000, N M=1000", "Z' M=4000, N M=1500"};
   
   Int_t colour_array[] = {623, 900, 432 , 600};
-
+  
   TString overflow = "overflow";
   for(int i = 0; i < N_signal; i++){
     Int_t nx    = GetHist(nameofhistogram + channel + signal_points[i]) -> GetNbinsX()+1;
@@ -629,12 +693,14 @@ void draw_histogram_variable_bin(TString nameofhistogram, float xmin, float xmax
   for(int i = 0; i < 6; i++){//for regions
     for(int j = 0; j < 2; j++){//for channels
       make_hist_after_emu_method(nameofhistogram, channels_OS[j], regions_OS[i]);
+      if(regions_OS[i].Contains("SR")) make_hist_after_emu_method(nameofhistogram, channels_OS[j] + "_HNcut", regions_OS[i]);
     }
   } 
   
   
   for(int i = 0; i < N_directories; i++){
     makehistogram_variable_bin(nameofhistogram + "_" + directories[i], xmin, xmax, ymax, binx, N_bin, name_x, name_y, directories[i]);
+    if(directories[i].Contains("SR")) makehistogram_variable_bin(nameofhistogram + "_" + directories[i] + "_HNcut", xmin, xmax, ymax, binx, N_bin, name_x, name_y, directories[i] + "_HNcut");
   }
 
 }
@@ -643,9 +709,10 @@ void draw_histogram_variable_bin(TString nameofhistogram, float xmin, float xmax
 void draw_signal_VS_bkg(TString nameofhistogram, double binx[], int N_bin, TString yaxis_name){
   TString directories[2] = {"SR1_OS_DiEle", "SR1_OS_DiMu"};
   int N_directories = 2;
-
+  
   for(int i = 0; i < N_directories; i++){
     makehistogram_signal_VS_bkg(nameofhistogram+ "_" + directories[i], binx, N_bin, yaxis_name);
+    makehistogram_signal_VS_bkg(nameofhistogram+ "_" + directories[i] + "_HNcut", binx, N_bin, yaxis_name);
   }
   
 }
@@ -658,7 +725,7 @@ void plot(){
   openfile(Cycle_name, DoubleEG);
   openfile(Cycle_name, DY_low);
   openfile(Cycle_name, DY_high);
-  openfile(Cycle_name, Wjets);
+  //openfile(Cycle_name, Wjets);
   openfile(Cycle_name, SingleTbar_tW);
   openfile(Cycle_name, SingleTbar_t);
   openfile(Cycle_name, SingleTop_s);
@@ -732,6 +799,9 @@ void plot(){
   N_bin_pt += 3;
 
   draw_histogram_variable_bin("h_OS_lljjjjmass", 0., 5500., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(Z') (GeV)", true);
+  draw_histogram_variable_bin("h_OS_lljjjjmass_AK8_0", 0., 5500., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(Z') (GeV)", true);
+  draw_histogram_variable_bin("h_OS_lljjjjmass_AK8_1", 0., 5500., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(Z') (GeV)", true);
+  draw_histogram_variable_bin("h_OS_lljjjjmass_AK8_2", 0., 5500., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(Z') (GeV)", true);
   draw_histogram_variable_bin("h_OS_leadingljjmass", 0., 5000., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(1st N) (GeV)", true);
   draw_histogram_variable_bin("h_OS_secondljjmass", 0., 5000., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(2nd N) (GeV)", true);
   draw_histogram_variable_bin("h_OS_llmass", 50., 1000., bin_llmass, N_bin_llmass, 10000., "m(ll) (GeV)", true);
@@ -739,7 +809,8 @@ void plot(){
   draw_histogram_variable_bin("h_OS_secondLeptonPt", 0., 1000., bin_2nd_lep_pt, N_bin_2nd_lep_pt, 10000.,"Pt(2nd lepton) (GeV)", true);
   draw_histogram_variable_bin("h_OS_leadingjet_pt", 0., 1000., bin_pt, N_bin_pt, 10000.,"Pt(1st jet) (GeV)", true);
   draw_histogram_variable_bin("h_OS_secondjet_pt", 0., 1000., bin_pt, N_bin_pt, 10000.,"Pt(2nd jet) (GeV)", true);
-  
+
+  /*
   draw_histogram_variable_bin("h_SS_lljjjjmass", 0., 5500., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(Z') (GeV)", true);
   draw_histogram_variable_bin("h_SS_leadingljjmass", 0., 5000., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(1st N) (GeV)", true);
   draw_histogram_variable_bin("h_SS_secondljjmass", 0., 5000., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(2nd N) (GeV)", true);
@@ -748,6 +819,8 @@ void plot(){
   draw_histogram_variable_bin("h_SS_secondLeptonPt", 0., 1000., bin_pt, N_bin_pt, 10000.,"Pt(2nd lepton) (GeV)", true);
   draw_histogram_variable_bin("h_SS_leadingjet_pt", 0., 1000., bin_pt, N_bin_pt, 10000.,"Pt(1st jet) (GeV)", true);
   draw_histogram_variable_bin("h_SS_secondjet_pt", 0., 1000., bin_pt, N_bin_pt, 10000.,"Pt(2nd jet) (GeV)", true);
+  */
+  
   /*
   draw_histogram("h_OS_Njets", 0., 20., 1., 100000., "Njets", false);
   draw_histogram("h_OS_Nbjets", 0., 20., 1., 100000., "Njets", false);
@@ -767,7 +840,8 @@ void plot(){
   draw_signal_VS_bkg("h_OS_lljjjjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(Z') (GeV)");
   draw_signal_VS_bkg("h_OS_leadingljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(1st N) (GeV)");
   draw_signal_VS_bkg("h_OS_secondljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(2nd N) (GeV)");
- 
+  */
+  /*
   draw_signal_VS_bkg("h_SS_lljjjjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(Z') (GeV)");
   draw_signal_VS_bkg("h_SS_leadingljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(1st N) (GeV)");
   draw_signal_VS_bkg("h_SS_secondljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(2nd N) (GeV)");
@@ -789,10 +863,12 @@ void plot(){
   binx[13] = 5000;
   binx[14] = 5500;//overflow bin    
   //cout << "0" << endl;
-
+  
   maphstack["hs_h_OS_lljjjjmass_SR1_OS_DiMu"] -> Write();
-  //cout << "0.1" << endl;
+  
 
+  //cout << "0.1" << endl;
+  
   for(int i = 0; i < 8; i++){
     int HNmass = 100;
     double ratio = (Zpmass[i] + 0.) / (HNmass + 0.);
@@ -836,14 +912,62 @@ void plot(){
       maphist["denom" + channel + current_name] -> Write();
     }
   }
+  
+  gDirectory -> Cd("../");
+  gDirectory -> mkdir("MuMu_HNcut");
+  gDirectory -> Cd("MuMu_HNcut");
+  maphstack["hs_h_OS_lljjjjmass_SR1_OS_DiMu_HNcut"] -> Write();
+  
+  for(int i = 0; i < 8; i++){
+    int HNmass = 100;
+    double ratio = (Zpmass[i] + 0.) / (HNmass + 0.);
+    TString channel = "MuMu";
+    while(ratio > 2){
+      TString current_name = "Zp" + TString::Itoa(Zpmass[i], 10) + "_HN" + TString::Itoa(HNmass, 10);
+      HNmass += 100;
+      ratio = (Zpmass[i] + 0.) / (HNmass + 0.);
+      //cout << "1" << endl;                                                                                                                                                                                                                                                    
+      Int_t nx    = GetHist("h_OS_lljjjjmass_SR1_OS_DiMu_HNcut" + channel + current_name) -> GetNbinsX()+1;
+      Double_t x1 = GetHist("h_OS_lljjjjmass_SR1_OS_DiMu_HNcut" + channel + current_name) -> GetBinLowEdge(1);
+      Double_t bw = GetHist("h_OS_lljjjjmass_SR1_OS_DiMu_HNcut" + channel + current_name) -> GetBinWidth(nx);
+      Double_t x2 = GetHist("h_OS_lljjjjmass_SR1_OS_DiMu_HNcut" + channel + current_name) -> GetBinLowEdge(nx)+bw;
 
+      TH1F *htmp = new TH1F("", "", nx, x1, x2);
+      //cout << "2" << endl;                                                                                                                                                                                                                                                    
 
+      for (Int_t j = 1; j <= nx; j++) {
+        htmp -> SetBinContent(j, GetHist("h_OS_lljjjjmass_SR1_OS_DiMu_HNcut" + channel + current_name) -> GetBinContent(j));
+        htmp -> SetBinError(j, GetHist("h_OS_lljjjjmass_SR1_OS_DiMu_HNcut" + channel + current_name) -> GetBinError(j));
+      }
+      //cout << "3" << endl;                                                                                                                                                                                                                                                    
 
+      maphist["h_OS_lljjjjmass_SR1_OS_DiMu_HNcut" + channel + current_name + "rebin"] = htmp -> Rebin(N_bin, "h_OS_lljjjjmass_SR1_OS_DiMu_HNcut" + channel + current_name + "rebin", binx);
+
+      maphist["h_OS_lljjjjmass_SR1_OS_DiMu_HNcut" + channel + current_name + "rebin"] -> SetName("h_OS_lljjjjmass_SR1_DiMu_" + current_name + "_HNcut");
+      maphist["h_OS_lljjjjmass_SR1_OS_DiMu_HNcut" + channel + current_name + "rebin"] -> Write();
+    }
+  }
+
+  for(int i = 0; i < 8; i++){
+    TString channel = "MuMu";
+    int HNmass = 100;
+    double ratio = (Zpmass[i] + 0.) / (HNmass + 0.);
+    while(ratio > 2){
+      TString current_name = "Zp" + TString::Itoa(Zpmass[i], 10) + "_HN" + TString::Itoa(HNmass, 10);
+      cout << current_name << endl;
+      HNmass += 100;
+      ratio = (Zpmass[i] + 0.) / (HNmass + 0.);
+      maphist["denom" + channel + current_name] -> SetName("Den_" + current_name + "_h_OS_lljjjjmass_SR1_DiMu_HNcut");
+      maphist["denom" + channel + current_name] -> Write();
+    }
+  }
+  // -- 
+  
   gDirectory -> Cd("../");
   gDirectory -> mkdir("ElEl");
   gDirectory -> Cd("ElEl");
   maphstack["hs_h_OS_lljjjjmass_SR1_OS_DiEle"] -> Write();
-
+  
   
   for(int i = 0; i < 8; i++){
     int HNmass = 100;
@@ -887,18 +1011,74 @@ void plot(){
     }
   }
 
+  gDirectory -> Cd("../");
+  gDirectory -> mkdir("ElEl_HNcut");
+  gDirectory -> Cd("ElEl_HNcut");
+  maphstack["hs_h_OS_lljjjjmass_SR1_OS_DiEle_HNcut"] -> Write();
+
+
+  for(int i = 0; i < 8; i++){
+    int HNmass = 100;
+    double ratio = (Zpmass[i] + 0.) / (HNmass + 0.);
+    TString channel = "ElEl";
+    while(ratio > 2){
+      TString current_name = "Zp" + TString::Itoa(Zpmass[i], 10) + "_HN" + TString::Itoa(HNmass, 10);
+      HNmass += 100;
+      ratio = (Zpmass[i] + 0.) / (HNmass + 0.);
+
+      Int_t nx    = GetHist("h_OS_lljjjjmass_SR1_OS_DiEle_HNcut" + channel + current_name) -> GetNbinsX()+1;
+      Double_t x1 = GetHist("h_OS_lljjjjmass_SR1_OS_DiEle_HNcut" + channel + current_name) -> GetBinLowEdge(1);
+      Double_t bw = GetHist("h_OS_lljjjjmass_SR1_OS_DiEle_HNcut" + channel + current_name) -> GetBinWidth(nx);
+      Double_t x2 = GetHist("h_OS_lljjjjmass_SR1_OS_DiEle_HNcut" + channel + current_name) -> GetBinLowEdge(nx)+bw;
+
+      TH1F *htmp = new TH1F("", "", nx, x1, x2);
+
+      for (Int_t j = 1; j <= nx; j++) {
+        htmp -> SetBinContent(j, GetHist("h_OS_lljjjjmass_SR1_OS_DiEle_HNcut" + channel + current_name) -> GetBinContent(j));
+        htmp -> SetBinError(j, GetHist("h_OS_lljjjjmass_SR1_OS_DiEle_HNcut" + channel + current_name) -> GetBinError(j));
+      }
+
+      maphist["h_OS_lljjjjmass_SR1_OS_DiEle_HNcut" + channel + current_name + "rebin"] = htmp -> Rebin(N_bin, "h_OS_lljjjjmass_SR1_OS_DiEle_HNcut" + channel + current_name + "rebin", binx);
+
+      maphist["h_OS_lljjjjmass_SR1_OS_DiEle_HNcut" + channel + current_name + "rebin"] -> SetName("h_OS_lljjjjmass_SR1_DiEle_" + current_name + "_HNcut");
+      maphist["h_OS_lljjjjmass_SR1_OS_DiEle_HNcut" + channel + current_name + "rebin"] -> Write();
+    }
+  }
+
+  for(int i = 0; i < 8; i++){
+    TString channel = "ElEl";
+    int HNmass = 100;
+    double ratio = (Zpmass[i] + 0.) / (HNmass + 0.);
+    while(ratio > 2){
+      TString current_name = "Zp" + TString::Itoa(Zpmass[i], 10) + "_HN" + TString::Itoa(HNmass, 10);
+      cout << current_name << endl;
+      HNmass += 100;
+      ratio = (Zpmass[i] + 0.) / (HNmass + 0.);
+      maphist["denom" + channel + current_name] -> SetName("Den_" + current_name + "_h_OS_lljjjjmass_SR1_DiMu_HNcut");
+      maphist["denom" + channel + current_name] -> Write();
+    }
+  }
+  
+
+
+
+
+
+
+
+
   
   MyFile -> Close();
 
 
   cout << "myfile closed" << endl;
 
-
+  
 
   for(map<TString, TFile*>::iterator mapit = mapfile.begin(); mapit != mapfile.end(); mapit ++){
     mapit->second->Close();
   }
-
+ 
 
 
 

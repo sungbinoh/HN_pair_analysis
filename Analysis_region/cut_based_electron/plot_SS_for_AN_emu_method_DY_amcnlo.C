@@ -111,44 +111,98 @@ void openfile(TString cyclename, TString samplename){
   cout << "opening : " << filename << endl;
   
   mapfile[filename] = new TFile ((filename)) ;
-  TString regions[6] = {"CR1", "CR2", "CR3", "CR4", "CR5", "SR1"};
+  TString regions[7] = {"CR1", "CR2", "CR3", "CR4", "CR5", "CR6", "SR1"};
   TString channels[3] = {"DiEle", "DiMu", "EMu"};
   TString charges[2] = {"OS", "SS"};
   int i_dir = 0;
-  TString directories[54];
-  for(int i = 0; i < 6; i++){
-    for(int j = 0; j < 3; j++){
-      for(int k = 0; k < 2; k++){
-	directories[i_dir] = regions[i] + "_" + charges[k] + "_" + channels[j];
-	i_dir++;
-      }
-    }
-  }
-  for(int i = 0; i < 6; i++){
-    for(int j = 0; j < 3; j++){
-      directories[i_dir] = regions[i] + "_SS_" + channels[j] + "_CF";
+  TString directories[6];
+  for(int j = 0; j < 3; j++){
+    for(int k = 0; k < 2; k++){
+      directories[i_dir] = charges[k] + "_" + channels[j];
       i_dir++;
     }
   }
   
-  int N_directories = 54;
-  
-  for(int i = 0; i < N_directories; i++){
-    gDirectory->cd(directories[i]);
-    TIter next(gDirectory->GetListOfKeys());
-    TKey *key;
-    vector<TString> histnames;
-    while ((key = (TKey*)next())) {
-      TClass *cl = gROOT->GetClass(key->GetClassName());
-      if (!cl->InheritsFrom("TH1")) continue;
-      histnames.push_back(key -> GetName());
-    }
+  int N_regions = 7;
+  int N_directories = 6;
 
-    for(int i = 0; i < histnames.size(); i ++){
-      maphist[histnames.at(i) + cyclename + samplename] = (TH1*)gDirectory -> Get(histnames.at(i));
-    }
+  for(int i = 0; i < N_regions; i++){
+    gDirectory->cd(regions[i]);
+    for(int j = 0; j < N_directories; j++){
+      gDirectory->cd(regions[i] + "_" + directories[j]);
+      TIter next(gDirectory->GetListOfKeys());
+      TKey *key;
+      vector<TString> histnames;
+      while ((key = (TKey*)next())) {
+        TClass *cl = gROOT->GetClass(key->GetClassName());
+        if (!cl->InheritsFrom("TH1")) continue;
+        histnames.push_back(key -> GetName());
+      }
+
+      for(int k = 0; k < histnames.size(); k ++){
+        maphist[histnames.at(k) + cyclename + samplename] = (TH1*)gDirectory -> Get(histnames.at(k));
+      }
+      gDirectory->cd("../");
+      
+      // -- open CF directory
+      if(directories[j].Contains("SS_DiEle") || directories[j].Contains("SS_EMu")){
+	gDirectory->cd(regions[i] + "_" + directories[j] + "_CF");
+	TIter next_CF(gDirectory->GetListOfKeys());
+	TKey *key_CF;
+	vector<TString> histnames_CF;
+	while ((key = (TKey*)next())) {
+	  TClass *cl_CF = gROOT->GetClass(key_CF->GetClassName());
+	  if (!cl_CF->InheritsFrom("TH1")) continue;
+	  histnames_CF.push_back(key_CF -> GetName());
+	}
+
+	for(int k = 0; k < histnames_CF.size(); k ++){
+	  maphist[histnames_CF.at(k) + cyclename + samplename] = (TH1*)gDirectory -> Get(histnames_CF.at(k));
+	}
+	gDirectory->cd("../");
+      }//if CF
+      
+    }//for dir
+    if(regions[i].Contains("SR")){
+      for(int j = 0; j < N_directories; j++){
+        gDirectory->cd(regions[i] + "_" + directories[j] + "_HNcut");
+        TIter next(gDirectory->GetListOfKeys());
+        TKey *key;
+        vector<TString> histnames;
+        while ((key = (TKey*)next())) {
+          TClass *cl = gROOT->GetClass(key->GetClassName());
+          if (!cl->InheritsFrom("TH1")) continue;
+          histnames.push_back(key -> GetName());
+        }
+	
+        for(int k = 0; k < histnames.size(); k ++){
+          maphist[histnames.at(k) + cyclename + samplename] = (TH1*)gDirectory -> Get(histnames.at(k));
+	}
+        gDirectory->cd("../");
+      
+	if(directories[j].Contains("SS_DiEle") || directories[j].Contains("SS_EMu")){
+
+	  gDirectory->cd(regions[i] + "_" + directories[j] + "_CF");
+	  TIter next_CF(gDirectory->GetListOfKeys());
+	  TKey *key_CF;
+	  vector<TString> histnames_CF;
+	  while ((key = (TKey*)next())) {
+          TClass *cl_CF = gROOT->GetClass(key_CF->GetClassName());
+          if (!cl_CF->InheritsFrom("TH1")) continue;
+          histnames_CF.push_back(key_CF -> GetName());
+	  }
+	  
+	  for(int k = 0; k < histnames_CF.size(); k ++){
+	    maphist[histnames_CF.at(k) + cyclename + samplename] = (TH1*)gDirectory -> Get(histnames_CF.at(k));
+	  }
+	  gDirectory->cd("../");
+	}//if CF
+	
+      }
+    }// if SR
+
     gDirectory->cd("../");
-  }
+  }//for region
 }
 //////////////////////////////////////////////////////////////////////////////
 
@@ -166,45 +220,97 @@ void openfile_signal(TString cyclename, TString samplename, TString channel){
   cout << "opening : " << filename << endl;
   mapfile[filename] = new TFile (("./signal/" + directory + "/" + filename)) ;
 
-  TString regions[6] = {"CR1", "CR2", "CR3", "CR4", "CR5", "SR1"};
+  TString regions[7] = {"CR1", "CR2", "CR3", "CR4", "CR5", "CR6", "SR1"};
   TString channels[3] = {"DiEle", "DiMu", "EMu"};
   TString charges[2] = {"OS", "SS"};
   int i_dir = 0;
-  TString directories[54];
-  for(int i = 0; i < 6; i++){
-    for(int j = 0; j < 3; j++){
-      for(int k = 0; k < 2; k++){
-        directories[i_dir] = regions[i] + "_" + charges[k] + "_" + channels[j];
-        i_dir++;
-      }
-    }
-  }
-  for(int i = 0; i < 6; i++){
-    for(int j = 0; j < 3; j++){
-      directories[i_dir] = regions[i] + "_SS_" + channels[j] + "_CF";
+  TString directories[6];
+  for(int j = 0; j < 3; j++){
+    for(int k = 0; k < 2; k++){
+      directories[i_dir] = charges[k] + "_" + channels[j];
       i_dir++;
     }
   }
-  
-  int N_directories = 54;
 
-  for(int i = 0; i < N_directories; i++){
-    gDirectory->cd(directories[i]);
-    TIter next(gDirectory->GetListOfKeys());
-    TKey *key;
-    vector<TString> histnames;
-    while ((key = (TKey*)next())) {
-      TClass *cl = gROOT->GetClass(key->GetClassName());
-      if (!cl->InheritsFrom("TH1")) continue;
-      histnames.push_back(key -> GetName());
+  int N_regions = 7;
+  int N_directories = 6;
+
+  for(int i = 0; i < N_regions; i++){
+    gDirectory->cd(regions[i]);
+    for(int j = 0; j < N_directories; j++){
+      gDirectory->cd(regions[i] + "_" + directories[j]);
+      TIter next(gDirectory->GetListOfKeys());
+      TKey *key;
+      vector<TString> histnames;
+      while ((key = (TKey*)next())) {
+        TClass *cl = gROOT->GetClass(key->GetClassName());
+        if (!cl->InheritsFrom("TH1")) continue;
+        histnames.push_back(key -> GetName());
+      }
+
+      for(int k = 0; k < histnames.size(); k ++){
+        maphist[histnames.at(k) + channel + samplename] = (TH1*)gDirectory -> Get(histnames.at(k));
+      }
+      gDirectory->cd("../");
+    
+      if(directories[j].Contains("SS_DiEle") || directories[j].Contains("SS_EMu")){
+        gDirectory->cd(regions[i] + "_" + directories[j] + "_CF");
+        TIter next_CF(gDirectory->GetListOfKeys());
+        TKey *key_CF;
+        vector<TString> histnames_CF;
+        while ((key = (TKey*)next())) {
+          TClass *cl_CF = gROOT->GetClass(key_CF->GetClassName());
+          if (!cl_CF->InheritsFrom("TH1")) continue;
+          histnames_CF.push_back(key_CF -> GetName());
+        }
+
+        for(int k = 0; k < histnames_CF.size(); k ++){
+          maphist[histnames_CF.at(k) + cyclename + samplename] = (TH1*)gDirectory -> Get(histnames_CF.at(k));
+        }
+        gDirectory->cd("../");
+      }//if CF 
+      
     }
+    if(regions[i].Contains("SR")){
+      for(int j = 0; j < N_directories; j++){
+        gDirectory->cd(regions[i] + "_" + directories[j] + "_HNcut");
+        TIter next(gDirectory->GetListOfKeys());
+        TKey *key;
+        vector<TString> histnames;
+        while ((key = (TKey*)next())) {
+          TClass *cl = gROOT->GetClass(key->GetClassName());
+          if (!cl->InheritsFrom("TH1")) continue;
+          histnames.push_back(key -> GetName());
+        }
 
-    for(int i = 0; i < histnames.size(); i ++){
-      maphist[histnames.at(i) + channel + samplename] = (TH1*)gDirectory -> Get(histnames.at(i));
+        for(int k = 0; k < histnames.size(); k ++){
+          maphist[histnames.at(k) + channel + samplename] = (TH1*)gDirectory -> Get(histnames.at(k));
+        }
+        gDirectory->cd("../");
+	
+	if(directories[j].Contains("SS_DiEle") || directories[j].Contains("SS_EMu")){
+	  gDirectory->cd(regions[i] + "_" + directories[j] + "_CF");
+	  TIter next_CF(gDirectory->GetListOfKeys());
+	  TKey *key_CF;
+	  vector<TString> histnames_CF;
+	  while ((key = (TKey*)next())) {
+	    TClass *cl_CF = gROOT->GetClass(key_CF->GetClassName());
+	    if (!cl_CF->InheritsFrom("TH1")) continue;
+	    histnames_CF.push_back(key_CF -> GetName());
+	  }
+
+	  for(int k = 0; k < histnames_CF.size(); k ++){
+	    maphist[histnames_CF.at(k) + cyclename + samplename] = (TH1*)gDirectory -> Get(histnames_CF.at(k));
+	  }
+	  gDirectory->cd("../");
+	}//if CF 
+		
+      }
     }
     gDirectory->cd("../");
   }
-
+  
+  
   gDirectory->cd("Hists");
   TIter next(gDirectory->GetListOfKeys());
   TKey *key;
@@ -240,11 +346,15 @@ void make_hist_after_emu_method(TString nameofhistogram, TString channel, TStrin
   TString cyclename = Cycle_name;
   
   cout << "making data driven plot of " + nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu" << endl;
-  
+  TString EMu = "_EMu_CF";
+  if(channel.Contains("HNcut")) EMu = EMu + "_HNcut";
+    
   //clone emu data plot
-  mapfunc[nameofhistogram_SS + "_" + region + "_" + channel +  + cyclename + "emu"] = (TH1F*)GetHist(nameofhistogram_OS + "_" + region + "_EMu_CF" + Cycle_name + current_data) -> Clone(nameofhistogram_OS + "_" + region + "_" + channel +  + cyclename + "emu");
+  mapfunc[nameofhistogram_SS + "_" + region + "_" + channel +  + cyclename + "emu"] = (TH1F*)GetHist(nameofhistogram_OS + "_" + region + EMu + Cycle_name + current_data) -> Clone(nameofhistogram_OS + "_" + region + "_" + channel +  + cyclename + "emu");
   
-  TString name_cycle = nameofhistogram_OS + "_" + region + "_EMu_CF" +  + Cycle_name;
+  
+  
+  TString name_cycle = nameofhistogram_OS + "_" + region + EMu + Cycle_name;
   
   //subtract non flavour symmetric bkgs
   mapfunc[nameofhistogram_SS + "_" + region + "_" + channel +  + cyclename + "emu"] -> Add(GetHist(name_cycle +  WZ), -1);
@@ -262,6 +372,8 @@ void make_hist_after_emu_method(TString nameofhistogram, TString channel, TStrin
   mapfunc[nameofhistogram_SS + "_" + region + "_" + channel +  + cyclename + "emu"] -> Scale(current_emu_ratio);
   
   name_cycle = nameofhistogram_OS + "_" + region + "_DiEle_CF" +  + Cycle_name;
+  if(channel.Contains("HNcut")) name_cycle = nameofhistogram_OS + "_" + region + "_DiEle_CF_HNcut" +  + Cycle_name;
+  
   cout << name_cycle + DY_high << endl;
   mapfunc[nameofhistogram_SS + "_" + region + "_" + channel +  + cyclename + "emu"] -> Add(GetHist(name_cycle + DY_low));
   
@@ -284,13 +396,13 @@ void make_hist_after_emu_method(TString nameofhistogram, TString channel, TStrin
 
 //////////////////////////////////////////////////////////////////////////////
 void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax, float ymax, double binx[], int N_bin, TString name_x, bool name_y, TString channel){
-
+  
   double additional_weight = 1.;
   //if(channel.Contains("DiEle")) additional_weight = 20150.390 / 35820.052000;
-
+  
   bool blind = false;
   blind = (channel.Contains("SR")) && (!channel.Contains("EMu"));
-  
+  blind = blind || channel.Contains("CR5"); 
   TString current_data;
   if(channel.Contains("EMu") || channel.Contains("DiMu")) current_data = SingleMuon;
   if(channel.Contains("DiEle")) current_data = DoubleEG;
@@ -332,7 +444,7 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   mappad[pad1] -> SetRightMargin( 0.03 );
   mappad[pad1] -> Draw();
   mappad[pad1] -> cd();
-  //mappad[pad1] -> SetLogy();
+  mappad[pad1] -> SetLogy();
 
   maplegend[legend] = new TLegend(0.60, 0.60, 0.96, 0.92);
   
@@ -699,10 +811,12 @@ void draw_histogram_variable_bin(TString nameofhistogram, float xmin, float xmax
   TString regions_SS[6] = {"CR1_SS", "CR2_SS", "CR3_SS", "CR4_SS", "CR5_SS", "SR1_SS"};
   for(int i = 0; i < 6; i++){//for regions
     make_hist_after_emu_method(nameofhistogram, "DiEle", regions_SS[i]);
+    if(regions_SS[i].Contains("SR")) make_hist_after_emu_method(nameofhistogram, "DiEle_HNcut", regions_SS[i]);
   } 
   
   for(int i = 0; i < N_directories; i++){
     makehistogram_variable_bin("h_SS_" + nameofhistogram + "_" + directories[i], xmin, xmax, ymax, binx, N_bin, name_x, name_y, directories[i]);
+    if(directories[i].Contains("SR")) makehistogram_variable_bin("h_SS_" + nameofhistogram + "_" + directories[i] + "_HNcut", xmin, xmax, ymax, binx, N_bin, name_x, name_y, directories[i] + "_HNcut");
   }
 
 }
@@ -766,7 +880,7 @@ void plot(){
   cout << "open files complete" << endl;
 
   //make bins for each variables
-  double bin_llmass[32], bin_lljjjjmass[15], bin_pt[17], bin_2nd_lep_pt[15], bin_integ[2] = {0., 5500};
+  double bin_llmass[32], bin_lljjjjmass[15], bin_pt[17], bin_2nd_lep_pt[15], bin_integ[2] = {0., 1000};
   int N_bin_llmass = 0, N_bin_lljjjjmass = 0, N_bin_pt = 0, N_bin_2nd_lep_pt = 0, N_bin_integ = 1;
   for(int i = 0; i < 31; i++){
     N_bin_llmass++;
@@ -798,15 +912,21 @@ void plot(){
   bin_pt[8] = 270;
   bin_pt[9] = 330;
   bin_pt[10] = 390;
-  bin_pt[11] = 1000;
-  N_bin_pt += 3;
+  bin_pt[11] = 500;
+  bin_pt[12] = 700;
+  bin_pt[13] = 1000;
+  N_bin_pt += 5;
 
   
   
   
-  draw_histogram_variable_bin("lljjjjmass", 0., 5500., bin_integ, N_bin_integ, 100000., "m(Z') (GeV)", true);
-  /*
+  //draw_histogram_variable_bin("llmass", 0., 5500., bin_integ, N_bin_integ, 100000., "m(Z') (GeV)", true);
+  
   draw_histogram_variable_bin("lljjjjmass", 0., 5500., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(Z') (GeV)", true);
+  draw_histogram_variable_bin("lljjjjmass_AK8_0", 0., 5500., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(Z') (GeV)", true);
+  draw_histogram_variable_bin("lljjjjmass_AK8_1", 0., 5500., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(Z') (GeV)", true);
+  draw_histogram_variable_bin("lljjjjmass_AK8_2", 0., 5500., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(Z') (GeV)", true);
+
   draw_histogram_variable_bin("leadingljjmass", 0., 5000., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(1st N) (GeV)", true);
   draw_histogram_variable_bin("secondljjmass", 0., 5000., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(2nd N) (GeV)", true);
   draw_histogram_variable_bin("llmass", 50., 1000., bin_llmass, N_bin_llmass, 10000., "m(ll) (GeV)", true);
@@ -814,7 +934,7 @@ void plot(){
   draw_histogram_variable_bin("secondLeptonPt", 0., 1000., bin_2nd_lep_pt, N_bin_2nd_lep_pt, 10000.,"Pt(2nd lepton) (GeV)", true);
   draw_histogram_variable_bin("leadingjet_pt", 0., 1000., bin_pt, N_bin_pt, 10000.,"Pt(1st jet) (GeV)", true);
   draw_histogram_variable_bin("secondjet_pt", 0., 1000., bin_pt, N_bin_pt, 10000.,"Pt(2nd jet) (GeV)", true);
-  */
+  
   //draw_histogram_variable_bin("pass_jetcondition_SS", 0., 5., bin_count, N_bin_count, 10000., "pass jet sel", true); 
 
 
@@ -950,9 +1070,9 @@ void plot(){
   for(map<TString, TFile*>::iterator mapit = mapfile.begin(); mapit != mapfile.end(); mapit ++){
     mapit->second->Close();
   }
-  */
+  
 
- 
+  */
 
 
 }// end of Main Function ////////////////////////////////////////////////////// 

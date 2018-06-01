@@ -12,6 +12,7 @@ plot() : main working function
 #include <TStyle.h>
 #include <TCanvas.h>
 #include <iostream>
+//#include <fstream>
 //#include <stdlib.h>
 #include <TMath.h>
 #include <TLorentzVector.h>
@@ -154,7 +155,6 @@ void make_2D_hist_needed_Nevt(TString content, TString stat_error, TString chann
   if(stat_error.Contains("5_percent")) N_stat = 400.0;
   else if(stat_error.Contains("2_percent")) N_stat = 1600.0;
   else if(stat_error.Contains("1_percent")) N_stat = 10000.0;
-  else return;
   
   Float_t xbins[9] = {500, 750, 1000, 1500, 2000, 2500, 3000, 4000, 5000};
   Float_t ybins[20];
@@ -162,23 +162,41 @@ void make_2D_hist_needed_Nevt(TString content, TString stat_error, TString chann
     ybins[i] = 100. + 100.0 * i;
   }
 
+  
   maphist_2D[ content  + channel] = new TH2D(content + channel, content + channel, 8, xbins, 19, ybins);
-  gStyle->SetPaintTextFormat("4.0f");
+  gStyle->SetPaintTextFormat("4.2f");
 
   maphist_2D[ content + channel ] -> SetMarkerSize(0.9);
-
+  
+  double xs[8][20] = {
+    {14.5500000, 4.2620000},
+    {3.6520000, 2.5030000, 0.9201000},
+    {1.2090000, 0.9949000, 0.6696000, 0.2879000},
+    {0.2092000, 0.1916000, 0.1649000, 0.1299000, 0.0894900, 0.0471000, 0.0108600},
+    {0.0497600, 0.0469600, 0.0430000, 0.0381200, 0.0321400, 0.0254000, 0.0180900, 0.0107900, 0.0042160},
+    {0.0138500, 0.0132200, 0.0124600, 0.0114400, 0.0103300, 0.0090020, 0.0075630, 0.0060430, 0.0044480, 0.0028810, 0.0014400, 0.0003358},
+    {0.0042800, 0.0040610, 0.0038290, 0.0035880, 0.0033330, 0.0030400, 0.0027110, 0.0023620, 0.0019940, 0.0016080, 0.0012190, 0.0008341, 0.0004795, 0.0001837},
+    {0.0005023, 0.0004540, 0.0004212, 0.0003897, 0.0003619, 0.0003393, 0.0003130, 0.0002890, 0.0002640, 0.0002369, 0.0002114, 0.0001836, 0.0001560, 0.0001285, 0.0001011, 0.0000748, 0.0000503, 0.0000284, 0.0000108}
+  };
+  
+  
   int Zpmass[8] = {500, 750, 1000, 1500, 2000, 2500, 3000, 4000};
   for(int i = 0; i < 8; i++){
     int HNmass = 100;
     double ratio = (Zpmass[i] + 0.) / (HNmass + 0.);
+    int i_xs = 0;
     while(ratio > 2){
       TString current_name = "Zp" + TString::Itoa(Zpmass[i], 10) + "_HN" + TString::Itoa(HNmass, 10);
       //cout << current_name + content << endl;
       double accep_X_eff =  map_eff[current_name + content + channel] / map_eff[current_name + "after_skim" + channel];
-      maphist_2D[ content + channel ] -> Fill(Zpmass[i] + 1., HNmass + 1., N_stat / accep_X_eff);
+      double weight_xs = (xs[i][i_xs]) / 0.1;
+      
+      //maphist_2D[ content + channel ] -> Fill(Zpmass[i] + 1., HNmass + 1., N_stat / accep_X_eff);
+      maphist_2D[ content + channel ] -> Fill(Zpmass[i] + 1., HNmass + 1., map_eff[current_name + content + channel] * weight_xs);
       
       HNmass += 100;
       ratio = (Zpmass[i] + 0.) / (HNmass + 0.);
+      i_xs++;
     }
   }
 
@@ -187,7 +205,7 @@ void make_2D_hist_needed_Nevt(TString content, TString stat_error, TString chann
   mapcanvas[ content + channel] -> cd();
 
   gStyle -> SetOptStat(0);
-  maphist_2D[ content + channel ] -> Draw("COLZTEXT");
+  maphist_2D[ content + channel ] -> Draw("TEXT");
 
   mapcanvas[ content + channel ] -> Update();
   mapcanvas[ content + channel ] -> SaveAs("./pdfs/" + channel + "_" + stat_error + "_stat_error.pdf");
@@ -213,6 +231,7 @@ void make_1D_hist(int Zpmass, TString channel){
   while(ratio > 2){
     N_HN++;
     TString current_name = "Zp" + TString::Itoa(Zpmass, 10) + "_HN" + TString::Itoa(HNmass, 10);
+    
     HNmass += 100;
     ratio = (Zpmass + 0.) / (HNmass + 0.);
     maphist["eff" + current_name + channel] = new TH1D("eff" + current_name + channel, "eff" + current_name + channel, 15, 0., 15.);
@@ -220,6 +239,9 @@ void make_1D_hist(int Zpmass, TString channel){
       maphist["eff" + current_name + channel] -> SetBinContent(i + 2, map_eff[current_name + content[i] + channel] / map_eff[current_name + "after_skim" + channel]);
       //maphist["eff" + current_name] -> SetBinError(i + 2, map_eff_err[current_name + content[i]]);
     }
+
+
+
     for(int i = 0; i < 12; i++){
       maphist["eff" + current_name + channel] -> GetXaxis() -> SetBinLabel(i + 2, content[i]);
     }
@@ -435,7 +457,9 @@ void plot(){
     make_1D_hist(Zpmass[i], "ElEl");
   }
 
+    
   cout << "open files complete" << endl;
+  
   
   
   TString content[27] = {"Empty", "after_skim", "MET_filter", "good_PV", "HLT_mu", "HLT_ele", "DiEle_lepton_N_cut", "DiMu_lepton_N_cut", "EMu_lepton_N_cut", "DiEle_lepton_Pt_cut", "DiMu_lepton_Pt_cut", "EMu_leptn_Pt_cut",
@@ -454,11 +478,21 @@ void plot(){
     make_2D_hist(content[i]);
   }
   */
+  //"DiMu_CR1", "DiMu_CR2", "DiMu_CR3"};
+  //"DiEle_CR1", "DiEle_CR2", "DiEle_CR3"};
   /*
-  make_2D_hist_needed_Nevt("DiMu_Mlljjjj_cut", "5_percent");
+  make_2D_hist_needed_Nevt("DiMu_Mlljjjj_cut", "5_percent", );
   make_2D_hist_needed_Nevt("DiMu_Mlljjjj_cut", "2_percent");
   make_2D_hist_needed_Nevt("DiMu_Mlljjjj_cut", "1_percent");
   */
+  make_2D_hist_needed_Nevt("DiMu_CR1", "5_percent", "MuMu");
+  make_2D_hist_needed_Nevt("DiMu_CR2", "2_percent", "MuMu");
+  make_2D_hist_needed_Nevt("DiMu_CR3", "1_percent", "MuMu");
+  make_2D_hist_needed_Nevt("DiEle_CR1", "5_percent", "ElEl");
+  make_2D_hist_needed_Nevt("DiEle_CR2", "2_percent", "ElEl");
+  make_2D_hist_needed_Nevt("DiEle_CR3", "1_percent", "ElEl");
+
+ 
   //make_1D_hist(500);
 
 }// End of Main Function ////////////////////////////////////////////////////// 
