@@ -436,7 +436,7 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   
   maphist[nameofhistogram + Cycle_name + current_data + "rebin"] = GetHist(nameofhistogram + Cycle_name + current_data + overflow) -> Rebin(N_bin, nameofhistogram + Cycle_name + current_data + "rebin", binx);
   GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerStyle(20);
-  GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerSize(1.0);
+  GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerSize(0);
   if(!channel.Contains("SR")){
     maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + current_data + "rebin"), "data", "lp");
   }
@@ -836,18 +836,19 @@ void plot(){
   */
   
 
-  /*
+
   draw_signal_VS_bkg("h_OS_lljjjjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(Z') (GeV)");
   draw_signal_VS_bkg("h_OS_leadingljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(1st N) (GeV)");
   draw_signal_VS_bkg("h_OS_secondljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(2nd N) (GeV)");
-  */
+
   /*
   draw_signal_VS_bkg("h_SS_lljjjjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(Z') (GeV)");
   draw_signal_VS_bkg("h_SS_leadingljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(1st N) (GeV)");
   draw_signal_VS_bkg("h_SS_secondljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(2nd N) (GeV)");
   */
   
-  
+
+  /*
   // -- make file contains m(Z') plots, comment out draw_signal_VS_bkg function above
   TFile *MyFile = new TFile("Bkg_VS_signal_cutbased_e.root","RECREATE");
   gDirectory -> mkdir("MuMu");
@@ -1078,8 +1079,8 @@ void plot(){
   for(map<TString, TFile*>::iterator mapit = mapfile.begin(); mapit != mapfile.end(); mapit ++){
     mapit->second->Close();
   }
- 
-
+  
+  */
 
 
 
