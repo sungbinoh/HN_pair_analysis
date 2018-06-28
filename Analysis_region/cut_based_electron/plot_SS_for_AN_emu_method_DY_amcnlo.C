@@ -16,6 +16,7 @@ plot() : main working function
 #include <TLorentzVector.h>
 #include <TROOT.h>
 #include <TGraph.h>
+#include <TGraphAsymmErrors.h>
 #include <TFile.h>
 #include <TChain.h>
 #include <THStack.h>
@@ -26,10 +27,12 @@ plot() : main working function
 #include <TObject.h>
 #include <TCollection.h>
 #include <TLatex.h>
+#include <Math/DistFunc.h>
 
 using namespace std;
 
 map<TString, TH1*> maphist;
+map<TString, TGraphAsymmErrors*> map_asym_gr;
 map<TString, TFile*> mapfile;
 map<TString, TCanvas*> mapcanvas;
 map<TString, TPad*> mappad;
@@ -83,8 +86,10 @@ TString ZGto2LG = "SKZGto2LG";
 
 
 //emu ratio results
-double emu_over_ee = 0.501;
-double emu_over_mumu = 0.576;
+double emu_over_ee = 0.451;
+double emu_over_mumu = 0.647;
+
+const double alpha = 1 - 0.6827;
 
 
 /// Getting Histogram Function ///////////////////////////////////////////////
@@ -111,7 +116,7 @@ void openfile(TString cyclename, TString samplename){
   cout << "opening : " << filename << endl;
   
   mapfile[filename] = new TFile ((filename)) ;
-  TString regions[7] = {"CR1", "CR2", "CR3", "CR4", "CR5", "CR6", "SR1"};
+  TString regions[3] = {"CR3", "CR5", "SR1"};
   TString channels[3] = {"DiEle", "DiMu", "EMu"};
   TString charges[2] = {"OS", "SS"};
   int i_dir = 0;
@@ -123,7 +128,7 @@ void openfile(TString cyclename, TString samplename){
     }
   }
   
-  int N_regions = 7;
+  int N_regions = 3;
   int N_directories = 6;
 
   for(int i = 0; i < N_regions; i++){
@@ -139,24 +144,27 @@ void openfile(TString cyclename, TString samplename){
         histnames.push_back(key -> GetName());
       }
 
-      for(int k = 0; k < histnames.size(); k ++){
+      for(unsigned int k = 0; k < histnames.size(); k ++){
         maphist[histnames.at(k) + cyclename + samplename] = (TH1*)gDirectory -> Get(histnames.at(k));
       }
       gDirectory->cd("../");
       
       // -- open CF directory
       if(directories[j].Contains("SS_DiEle") || directories[j].Contains("SS_EMu")){
+	//cout << "SS diele, emu" << endl;
 	gDirectory->cd(regions[i] + "_" + directories[j] + "_CF");
 	TIter next_CF(gDirectory->GetListOfKeys());
 	TKey *key_CF;
 	vector<TString> histnames_CF;
-	while ((key = (TKey*)next())) {
+	while ((key_CF = (TKey*)next_CF())) {
 	  TClass *cl_CF = gROOT->GetClass(key_CF->GetClassName());
+	  //cout << key_CF -> GetName() << endl;
 	  if (!cl_CF->InheritsFrom("TH1")) continue;
 	  histnames_CF.push_back(key_CF -> GetName());
 	}
 
-	for(int k = 0; k < histnames_CF.size(); k ++){
+	for(unsigned int k = 0; k < histnames_CF.size(); k ++){
+	  //cout << histnames_CF.at(k) + cyclename + samplename << endl;
 	  maphist[histnames_CF.at(k) + cyclename + samplename] = (TH1*)gDirectory -> Get(histnames_CF.at(k));
 	}
 	gDirectory->cd("../");
@@ -175,7 +183,7 @@ void openfile(TString cyclename, TString samplename){
           histnames.push_back(key -> GetName());
         }
 	
-        for(int k = 0; k < histnames.size(); k ++){
+        for(unsigned int k = 0; k < histnames.size(); k ++){
           maphist[histnames.at(k) + cyclename + samplename] = (TH1*)gDirectory -> Get(histnames.at(k));
 	}
         gDirectory->cd("../");
@@ -186,13 +194,14 @@ void openfile(TString cyclename, TString samplename){
 	  TIter next_CF(gDirectory->GetListOfKeys());
 	  TKey *key_CF;
 	  vector<TString> histnames_CF;
-	  while ((key = (TKey*)next())) {
+	  while ((key_CF = (TKey*)next_CF())) {
           TClass *cl_CF = gROOT->GetClass(key_CF->GetClassName());
           if (!cl_CF->InheritsFrom("TH1")) continue;
           histnames_CF.push_back(key_CF -> GetName());
 	  }
 	  
-	  for(int k = 0; k < histnames_CF.size(); k ++){
+	  for(unsigned int k = 0; k < histnames_CF.size(); k ++){
+	    //cout << histnames_CF.at(k) + cyclename + samplename << endl;
 	    maphist[histnames_CF.at(k) + cyclename + samplename] = (TH1*)gDirectory -> Get(histnames_CF.at(k));
 	  }
 	  gDirectory->cd("../");
@@ -220,7 +229,7 @@ void openfile_signal(TString cyclename, TString samplename, TString channel){
   cout << "opening : " << filename << endl;
   mapfile[filename] = new TFile (("./signal/" + directory + "/" + filename)) ;
 
-  TString regions[7] = {"CR1", "CR2", "CR3", "CR4", "CR5", "CR6", "SR1"};
+  TString regions[3] = {"CR3", "CR5", "SR1"};
   TString channels[3] = {"DiEle", "DiMu", "EMu"};
   TString charges[2] = {"OS", "SS"};
   int i_dir = 0;
@@ -232,7 +241,7 @@ void openfile_signal(TString cyclename, TString samplename, TString channel){
     }
   }
 
-  int N_regions = 7;
+  int N_regions = 3;
   int N_directories = 6;
 
   for(int i = 0; i < N_regions; i++){
@@ -248,7 +257,7 @@ void openfile_signal(TString cyclename, TString samplename, TString channel){
         histnames.push_back(key -> GetName());
       }
 
-      for(int k = 0; k < histnames.size(); k ++){
+      for(unsigned int k = 0; k < histnames.size(); k ++){
         maphist[histnames.at(k) + channel + samplename] = (TH1*)gDirectory -> Get(histnames.at(k));
       }
       gDirectory->cd("../");
@@ -258,14 +267,15 @@ void openfile_signal(TString cyclename, TString samplename, TString channel){
         TIter next_CF(gDirectory->GetListOfKeys());
         TKey *key_CF;
         vector<TString> histnames_CF;
-        while ((key = (TKey*)next())) {
+        while ((key_CF = (TKey*)next_CF())) {
           TClass *cl_CF = gROOT->GetClass(key_CF->GetClassName());
           if (!cl_CF->InheritsFrom("TH1")) continue;
           histnames_CF.push_back(key_CF -> GetName());
         }
 
-        for(int k = 0; k < histnames_CF.size(); k ++){
-          maphist[histnames_CF.at(k) + cyclename + samplename] = (TH1*)gDirectory -> Get(histnames_CF.at(k));
+        for(unsigned int k = 0; k < histnames_CF.size(); k ++){
+          cout << histnames_CF.at(k) + cyclename + samplename << endl;
+	  maphist[histnames_CF.at(k) + cyclename + samplename] = (TH1*)gDirectory -> Get(histnames_CF.at(k));
         }
         gDirectory->cd("../");
       }//if CF 
@@ -283,7 +293,7 @@ void openfile_signal(TString cyclename, TString samplename, TString channel){
           histnames.push_back(key -> GetName());
         }
 
-        for(int k = 0; k < histnames.size(); k ++){
+        for(unsigned int k = 0; k < histnames.size(); k ++){
           maphist[histnames.at(k) + channel + samplename] = (TH1*)gDirectory -> Get(histnames.at(k));
         }
         gDirectory->cd("../");
@@ -293,13 +303,13 @@ void openfile_signal(TString cyclename, TString samplename, TString channel){
 	  TIter next_CF(gDirectory->GetListOfKeys());
 	  TKey *key_CF;
 	  vector<TString> histnames_CF;
-	  while ((key = (TKey*)next())) {
+	  while ((key_CF = (TKey*)next_CF())) {
 	    TClass *cl_CF = gROOT->GetClass(key_CF->GetClassName());
 	    if (!cl_CF->InheritsFrom("TH1")) continue;
 	    histnames_CF.push_back(key_CF -> GetName());
 	  }
 
-	  for(int k = 0; k < histnames_CF.size(); k ++){
+	  for(unsigned int k = 0; k < histnames_CF.size(); k ++){
 	    maphist[histnames_CF.at(k) + cyclename + samplename] = (TH1*)gDirectory -> Get(histnames_CF.at(k));
 	  }
 	  gDirectory->cd("../");
@@ -321,7 +331,7 @@ void openfile_signal(TString cyclename, TString samplename, TString channel){
     histnames.push_back(key -> GetName());
   }
 
-  for(int i = 0; i < histnames.size(); i ++){
+  for(unsigned int i = 0; i < histnames.size(); i ++){
     maphist[histnames.at(i) + channel + samplename] = (TH1*)gDirectory -> Get(histnames.at(i));
   }
 
@@ -334,7 +344,7 @@ void openfile_signal(TString cyclename, TString samplename, TString channel){
 //////////////////////////////////////////////////////////////////////////////
 
 
-void make_hist_after_emu_method(TString nameofhistogram, TString channel, TString region){
+void make_hist_after_emu_method(TString nameofhistogram, TString channel, TString region){//call CF background
   
   double current_emu_ratio = 1.;
   if(channel.Contains("DiEle")) current_emu_ratio = emu_over_ee;
@@ -347,7 +357,7 @@ void make_hist_after_emu_method(TString nameofhistogram, TString channel, TStrin
   
   cout << "making data driven plot of " + nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu" << endl;
   TString EMu = "_EMu_CF";
-  if(channel.Contains("HNcut")) EMu = EMu + "_HNcut";
+  //if(channel.Contains("HNcut")) EMu = EMu + "_HNcut";
     
   //clone emu data plot
   mapfunc[nameofhistogram_SS + "_" + region + "_" + channel +  + cyclename + "emu"] = (TH1F*)GetHist(nameofhistogram_OS + "_" + region + EMu + Cycle_name + current_data) -> Clone(nameofhistogram_OS + "_" + region + "_" + channel +  + cyclename + "emu");
@@ -355,7 +365,7 @@ void make_hist_after_emu_method(TString nameofhistogram, TString channel, TStrin
   
   
   TString name_cycle = nameofhistogram_OS + "_" + region + EMu + Cycle_name;
-  
+  //cout << name_cycle + WZ << endl;
   //subtract non flavour symmetric bkgs
   mapfunc[nameofhistogram_SS + "_" + region + "_" + channel +  + cyclename + "emu"] -> Add(GetHist(name_cycle +  WZ), -1);
   mapfunc[nameofhistogram_SS + "_" + region + "_" + channel +  + cyclename + "emu"] -> Add(GetHist(name_cycle +  ZZ), -1);
@@ -371,10 +381,10 @@ void make_hist_after_emu_method(TString nameofhistogram, TString channel, TStrin
   
   mapfunc[nameofhistogram_SS + "_" + region + "_" + channel +  + cyclename + "emu"] -> Scale(current_emu_ratio);
   
-  name_cycle = nameofhistogram_OS + "_" + region + "_DiEle_CF" +  + Cycle_name;
-  if(channel.Contains("HNcut")) name_cycle = nameofhistogram_OS + "_" + region + "_DiEle_CF_HNcut" +  + Cycle_name;
+  name_cycle = nameofhistogram_OS + "_" + region + "_DiEle_CF"  + Cycle_name;
+  //if(channel.Contains("HNcut")) name_cycle = nameofhistogram_OS + "_" + region + "_DiEle_CF_HNcut" +  + Cycle_name;
   
-  cout << name_cycle + DY_high << endl;
+  //cout << name_cycle + DY_high << endl;
   mapfunc[nameofhistogram_SS + "_" + region + "_" + channel +  + cyclename + "emu"] -> Add(GetHist(name_cycle + DY_low));
   
   mapfunc[nameofhistogram_SS + "_" + region + "_" + channel +  + cyclename + "emu"] -> Add(GetHist(name_cycle + DY_high));
@@ -391,6 +401,7 @@ void make_hist_after_emu_method(TString nameofhistogram, TString channel, TStrin
   mapfunc[nameofhistogram_SS + "_" + region + "_" + channel +  + cyclename + "emu"] -> Add(GetHist(name_cycle +  ZZZ));
   
   maphist[nameofhistogram_SS + "_" + region + "_" + channel +  + cyclename + "emu"] = mapfunc[nameofhistogram_SS + "_" + region + "_" + channel +  + cyclename + "emu"];
+  //if(region.Contains("CR5")) maphist[nameofhistogram_OS + "_" + region + "_" + channel +  + cyclename + "emu"] = mapfunc[nameofhistogram_SS + "_" + region + "_" + channel +  + cyclename + "emu"];;
 }
 
 
@@ -402,7 +413,7 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   
   bool blind = false;
   blind = (channel.Contains("SR")) && (!channel.Contains("EMu"));
-  blind = blind || channel.Contains("CR5"); 
+  //blind = blind || channel.Contains("CR5"); 
   TString current_data;
   if(channel.Contains("EMu") || channel.Contains("DiMu")) current_data = SingleMuon;
   if(channel.Contains("DiEle")) current_data = DoubleEG;
@@ -458,6 +469,7 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   TString fake_string;
   if(channel.Contains("DiEle")) fake_string = DoubleEG_fake;
   else if(channel.Contains("DiMu")) fake_string = SingleMuon_fake;
+  else fake_string = SingleMuon_fake;
   TString samples_array[3] = {WZ, fake_string};
   Int_t colour_array[3] = {419, 416};
   TString samples_legend[3] = {"SM bkg", "non-prmopt"};
@@ -573,9 +585,48 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   //maphstack[hstack] -> GetYaxis() -> SetTitle("Entries / 25 GeV");                                                                                                                                                                                                            
   maphstack[hstack] -> GetYaxis() -> SetTitle(title_y);
   maphstack[hstack] -> Draw("histsame");
-  
+
+  vector<double> vx, vy, vexl, vexh, veyl, veyh;
   if(!blind){
-    GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Draw("epsame");
+    GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Draw("histsamep9");
+    
+    map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] = new TGraphAsymmErrors(GetHist(nameofhistogram + Cycle_name + current_data + "rebin"));
+    //make correct error bars
+    for(unsigned int i = 0; i < N_bin; i++){
+      int N = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetBinContent(i + 1);
+      double L =  (N==0) ? 0  : (ROOT::Math::gamma_quantile(alpha/2,N,1.));
+      double U =  (N==0) ? ( ROOT::Math::gamma_quantile_c(alpha,N+1,1) ) : ( ROOT::Math::gamma_quantile_c(alpha/2,N+1,1) );
+      if( N!=0 ){
+        map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEYlow(i, N-L );
+        map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEXlow(i, 0);
+        map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEYhigh(i, U-N );
+        map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEXhigh(i, 0);
+
+        veyl.push_back(N-L);
+        veyh.push_back(U-N);
+      }
+      else{
+        double zerodata_err_low = 0.1;
+        double zerodata_err_high = 1.8;
+
+        veyl.push_back(zerodata_err_low);
+        veyh.push_back(zerodata_err_high);
+
+        double current_x = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetBinCenter(i + 1);
+        double current_ex = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetBinWidth(i + 1) /2.;
+
+        map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEYlow(i, zerodata_err_low);
+        map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEXlow(i, 0.);
+        map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEYhigh(i, zerodata_err_high);
+        map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEXhigh(i, 0.);
+
+        vx.push_back(current_x);
+        vexl.push_back(current_ex);
+        vexh.push_back(current_ex);
+      }
+    }//end for i on N_bin
+
+    map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> Draw("p0same");
   }
   GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetXaxis() -> SetRangeUser(xmin, xmax);
   GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMinimum(0.01);
@@ -603,7 +654,7 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   }
 
   if(!blind){
-    GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Draw("epsame");
+    GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Draw("histsamep");
   }
   maplegend[legend] -> SetFillColor(kWhite);
   maplegend[legend] -> SetLineColor(kBlack);
@@ -637,7 +688,7 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   mapfunc["stat" + nameofhistogram] -> SetTitle("");
   mapfunc["stat" + nameofhistogram] -> SetYTitle("#frac{Obs.}{Pred.}");
   mapfunc["stat" + nameofhistogram] -> SetFillColor(kOrange);
-  mapfunc["stat" + nameofhistogram] -> SetMarkerSize(0);
+  mapfunc["stat" + nameofhistogram] -> SetMarkerSize(1);
   mapfunc["stat" + nameofhistogram] -> SetMarkerStyle(0);
   mapfunc["stat" + nameofhistogram] -> SetLineColor(kWhite);
   mapfunc["stat" + nameofhistogram] -> GetXaxis() -> SetTitle(name_x);
@@ -658,10 +709,41 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
     mapfunc["stat" + nameofhistogram] -> SetBinContent(i, 1.);
   }
   mapfunc["stat" + nameofhistogram] -> Draw("CE2");
+  cout << "ratio" << endl;
+
   mapfunc[clone] -> Divide(mapfunc[func + "rebin"]);
   if(!blind){
-    mapfunc[clone] ->Draw("PE1same");
+    for(unsigned int i = 0; i < N_bin; i++){
+      double bkg_value = mapfunc[func + "rebin"] -> GetBinContent(i + 1);
+      int data_value = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetBinContent(i + 1);
+      if(bkg_value < 10e-7){
+	mapfunc[clone] -> SetBinContent(i + 1, 999.);
+      }
+      else if(data_value < 1) mapfunc[clone] -> SetBinContent(i + 1, 0.);
+    }
+    
+    //make correct error bars
+    map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error_ratio"] = new TGraphAsymmErrors(mapfunc[clone]);
+
+    for(unsigned int i = 0; i < N_bin; i++){
+      double bkg_i = mapfunc[func + "rebin"] -> GetBinContent(i+1);
+      map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error_ratio"] -> SetPointEYlow(i, veyl.at(i) / bkg_i);
+      map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error_ratio"] -> SetPointEXlow(i, 0.);
+      map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error_ratio"] -> SetPointEYhigh(i, veyh.at(i) / bkg_i);
+      map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error_ratio"] -> SetPointEXhigh(i, 0.);
+      if(bkg_i < 10e-7){
+        map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error_ratio"] -> SetPointEYlow(i, 0.);
+        map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error_ratio"] -> SetPointEXlow(i, 0.);
+        map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error_ratio"] -> SetPointEYhigh(i, 0.);
+        map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error_ratio"] -> SetPointEXhigh(i, 0.);
+      }
+
+    }//end for i on N_bin
+    map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error_ratio"] -> Draw("p0same");
   }
+
+  cout << "ratio end" << endl;
+
   mapline[line] -> Draw("same");
 
   maplegend["bottom" + legend] = new TLegend(0.2, 0.85, 0.4, 0.95);
@@ -693,7 +775,9 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
     pdfname = "./plots_emu_method/DiMu/";
   }
   else return;
-
+  
+  cout << "??" << endl;
+  
   pdfname.Append(nameofhistogram);
   pdfname.Append("_DY_amcnlo.pdf");
   mapcanvas[canvas] -> SaveAs(pdfname);
@@ -794,29 +878,33 @@ void makehistogram_signal_VS_bkg(TString nameofhistogram, double binx[], int N_b
 
 void draw_histogram_variable_bin(TString nameofhistogram, float xmin, float xmax, double binx[], int N_bin,  float ymax, TString name_x, bool name_y){
 
-  TString regions[6] = {"CR1", "CR2", "CR3", "CR4", "CR5", "SR1"};
+  TString regions[3] = {"CR3", "CR5", "SR1"};
   TString channels[3] = {"DiEle", "DiMu", "EMu"};
   int i_dir = 0;
-  TString directories[36];
-  for(int i = 0; i < 6; i++){
+  TString directories[9];
+  for(int i = 0; i < 3; i++){
     for(int j = 0; j < 3; j++){
       directories[i_dir] = regions[i] + "_SS_" + channels[j];
       i_dir++;
     }
   }
 
-  int N_directories = 18;
+  int N_directories = 9;
   
   //make emu method applied hists
-  TString regions_SS[6] = {"CR1_SS", "CR2_SS", "CR3_SS", "CR4_SS", "CR5_SS", "SR1_SS"};
-  for(int i = 0; i < 6; i++){//for regions
+  TString regions_SS[3] = {"CR3_SS", "CR5_SS", "SR1_SS"};
+  for(int i = 0; i < 3; i++){//for regions
     make_hist_after_emu_method(nameofhistogram, "DiEle", regions_SS[i]);
-    if(regions_SS[i].Contains("SR")) make_hist_after_emu_method(nameofhistogram, "DiEle_HNcut", regions_SS[i]);
+    //if(regions_SS[i].Contains("SR")) make_hist_after_emu_method(nameofhistogram, "DiEle_HNcut", regions_SS[i]);
   } 
   
   for(int i = 0; i < N_directories; i++){
-    makehistogram_variable_bin("h_SS_" + nameofhistogram + "_" + directories[i], xmin, xmax, ymax, binx, N_bin, name_x, name_y, directories[i]);
-    if(directories[i].Contains("SR")) makehistogram_variable_bin("h_SS_" + nameofhistogram + "_" + directories[i] + "_HNcut", xmin, xmax, ymax, binx, N_bin, name_x, name_y, directories[i] + "_HNcut");
+    if(!directories[i].Contains("CR5")) makehistogram_variable_bin("h_SS_" + nameofhistogram + "_" + directories[i], xmin, xmax, ymax, binx, N_bin, name_x, name_y, directories[i]);
+    else{
+      if(directories[i].Contains("EMu")) makehistogram_variable_bin("h_SS_" + nameofhistogram + "_" + directories[i], xmin, xmax, ymax, binx, N_bin, name_x, name_y, directories[i]);
+    }
+    //if(directories[i].Contains("CR5")) makehistogram_variable_bin("h_OS_" + nameofhistogram + "_" + directories[i], xmin, xmax, ymax, binx, N_bin, name_x, name_y, directories[i]);
+    //if(directories[i].Contains("SR")) makehistogram_variable_bin("h_SS_" + nameofhistogram + "_" + directories[i] + "_HNcut", xmin, xmax, ymax, binx, N_bin, name_x, name_y, directories[i] + "_HNcut");
   }
 
 }
@@ -876,7 +964,7 @@ void plot(){
     }
   }
   */
-  
+
   cout << "open files complete" << endl;
 
   //make bins for each variables

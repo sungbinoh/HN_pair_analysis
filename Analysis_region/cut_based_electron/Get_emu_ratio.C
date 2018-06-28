@@ -79,26 +79,41 @@ void openfile(TString filename){
   else samplename = "TT";
   
   //cout << samplename << "'s histograms are" << endl;
-  TString directories[18] = {"CR1_OS_DiEle", "CR1_OS_DiMu", "CR1_OS_EMu", "CR2_OS_DiEle", "CR2_OS_DiMu", "CR2_OS_EMu", "CR3_OS_DiEle", "CR3_OS_DiMu", "CR3_OS_EMu", "CR4_OS_DiEle", "CR4_OS_DiMu", "CR4_OS_EMu", "CR5_OS_DiEle", "CR5_OS_DiMu", "CR5_OS_EMu",
-                             "SR1_OS_DiEle", "SR1_OS_DiMu", "SR1_OS_EMu"};
-  int N_directories = 18;
-  
-  for(int i = 0; i < N_directories; i++){
-    gDirectory->cd(directories[i]);
-    TIter next(gDirectory->GetListOfKeys());
-    TKey *key;
-    vector<TString> histnames;
-    while ((key = (TKey*)next())) {
-      TClass *cl = gROOT->GetClass(key->GetClassName());
-      if (!cl->InheritsFrom("TH1")) continue;
-      histnames.push_back(key -> GetName());
+  TString regions[7] = {"CR1", "CR2", "CR3", "CR4", "CR5", "CR6", "SR1"};
+  TString channels[3] = {"DiEle", "DiMu", "EMu"};
+  TString charges[2] = {"OS", "SS"};
+  int i_dir = 0;
+  TString directories[6];
+  for(int j = 0; j < 3; j++){
+    for(int k = 0; k < 2; k++){
+      directories[i_dir] = charges[k] + "_" + channels[j];
+      i_dir++;
     }
-
-    for(int i = 0; i < histnames.size(); i ++){
-      maphist[histnames.at(i) + samplename] = (TH1*)gDirectory -> Get(histnames.at(i));
-    }
-    gDirectory->cd("../");
   }
+  
+  int N_regions = 7;
+  int N_directories = 6;
+  
+  for(int i = 0; i < N_regions; i++){
+    gDirectory->cd(regions[i]);
+    for(int j = 0; j < N_directories; j++){
+      gDirectory->cd(regions[i] + "_" + directories[j]);
+      TIter next(gDirectory->GetListOfKeys());
+      TKey *key;
+      vector<TString> histnames;
+      while ((key = (TKey*)next())) {
+        TClass *cl = gROOT->GetClass(key->GetClassName());
+        if (!cl->InheritsFrom("TH1")) continue;
+        histnames.push_back(key -> GetName());
+      }
+
+      for(int k = 0; k < histnames.size(); k ++){
+        maphist[histnames.at(k) + samplename] = (TH1*)gDirectory -> Get(histnames.at(k));
+      }
+      gDirectory->cd("../");
+    }//for dir
+    gDirectory->cd("../");
+  }//for region
     
 }
 //////////////////////////////////////////////////////////////////////////////

@@ -16,6 +16,7 @@ plot() : main working function
 #include <TLorentzVector.h>
 #include <TROOT.h>
 #include <TGraph.h>
+#include <TGraphAsymmErrors.h>
 #include <TFile.h>
 #include <TChain.h>
 #include <THStack.h>
@@ -26,10 +27,12 @@ plot() : main working function
 #include <TObject.h>
 #include <TCollection.h>
 #include <TLatex.h>
+#include <Math/DistFunc.h>
 
 using namespace std;
 
 map<TString, TH1*> maphist;
+map<TString, TGraphAsymmErrors*> map_asym_gr;
 map<TString, TFile*> mapfile;
 map<TString, TCanvas*> mapcanvas;
 map<TString, TPad*> mappad;
@@ -81,9 +84,10 @@ TString ZGto2LG = "SKZGto2LG";
 
 
 //emu ratio results
-double emu_over_ee = 0.501;
-double emu_over_mumu = 0.576;
+double emu_over_ee = 0.451;
+double emu_over_mumu = 0.647;
 
+const double alpha = 1 - 0.6827;
 
 /// Getting Histogram Function ///////////////////////////////////////////////
 TH1 * GetHist(TString hname){
@@ -109,7 +113,7 @@ void openfile(TString cyclename, TString samplename){
   cout << "opening : " << filename << endl;
   
   mapfile[filename] = new TFile ((filename)) ;
-  TString regions[7] = {"CR1", "CR2", "CR3", "CR4", "CR5", "CR6", "SR1"};
+  TString regions[7] = {"CR1", "CR2", "CR3", "CR4", "SR1"};
   TString channels[3] = {"DiEle", "DiMu", "EMu"};
   TString charges[2] = {"OS", "SS"};
   int i_dir = 0;
@@ -121,7 +125,7 @@ void openfile(TString cyclename, TString samplename){
     }
   }
   
-  int N_regions = 7;
+  int N_regions = 5;
   int N_directories = 6;
   
   for(int i = 0; i < N_regions; i++){
@@ -137,7 +141,7 @@ void openfile(TString cyclename, TString samplename){
 	histnames.push_back(key -> GetName());
       }
       
-      for(int k = 0; k < histnames.size(); k ++){
+      for(unsigned int k = 0; k < histnames.size(); k ++){
 	maphist[histnames.at(k) + cyclename + samplename] = (TH1*)gDirectory -> Get(histnames.at(k));
       }
       gDirectory->cd("../");
@@ -154,7 +158,7 @@ void openfile(TString cyclename, TString samplename){
 	  histnames.push_back(key -> GetName());
 	}
 
-	for(int k = 0; k < histnames.size(); k ++){
+	for(unsigned int k = 0; k < histnames.size(); k ++){
 	  maphist[histnames.at(k) + cyclename + samplename] = (TH1*)gDirectory -> Get(histnames.at(k));
 	}
 	gDirectory->cd("../");
@@ -179,7 +183,7 @@ void openfile_signal(TString cyclename, TString samplename, TString channel){
   cout << "opening : " << filename << endl;
   mapfile[filename] = new TFile (("./signal/" + directory + "/" + filename)) ;
 
-  TString regions[7] = {"CR1", "CR2", "CR3", "CR4", "CR5", "CR6", "SR1"};
+  TString regions[7] = {"CR1", "CR2", "CR3", "CR4", "SR1"};
   TString channels[3] = {"DiEle", "DiMu", "EMu"};
   TString charges[2] = {"OS", "SS"};
   int i_dir = 0;
@@ -191,7 +195,7 @@ void openfile_signal(TString cyclename, TString samplename, TString channel){
     }
   }
 
-  int N_regions = 7;
+  int N_regions = 5;
   int N_directories = 6;
 
   for(int i = 0; i < N_regions; i++){
@@ -207,7 +211,7 @@ void openfile_signal(TString cyclename, TString samplename, TString channel){
 	histnames.push_back(key -> GetName());
       }
 
-      for(int k = 0; k < histnames.size(); k ++){
+      for(unsigned int k = 0; k < histnames.size(); k ++){
 	maphist[histnames.at(k) + channel + samplename] = (TH1*)gDirectory -> Get(histnames.at(k));
       }
       gDirectory->cd("../");
@@ -224,7 +228,7 @@ void openfile_signal(TString cyclename, TString samplename, TString channel){
 	  histnames.push_back(key -> GetName());
 	}
 
-        for(int k = 0; k < histnames.size(); k ++){
+        for(unsigned int k = 0; k < histnames.size(); k ++){
           maphist[histnames.at(k) + channel + samplename] = (TH1*)gDirectory -> Get(histnames.at(k));
         }
         gDirectory->cd("../");
@@ -243,7 +247,7 @@ void openfile_signal(TString cyclename, TString samplename, TString channel){
     histnames.push_back(key -> GetName());
   }
 
-  for(int i = 0; i < histnames.size(); i ++){
+  for(unsigned int i = 0; i < histnames.size(); i ++){
     maphist[histnames.at(i) + channel + samplename] = (TH1*)gDirectory -> Get(histnames.at(i));
   }
 
@@ -433,10 +437,10 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
     maphist[nameofhistogram + Cycle_name + current_data +overflow] -> SetBinContent(i, GetHist(nameofhistogram + Cycle_name + current_data) -> GetBinContent(i));
     maphist[nameofhistogram + Cycle_name + current_data +overflow] -> SetBinError(i, GetHist(nameofhistogram + Cycle_name + current_data) -> GetBinError(i));
   }
-  
+   
   maphist[nameofhistogram + Cycle_name + current_data + "rebin"] = GetHist(nameofhistogram + Cycle_name + current_data + overflow) -> Rebin(N_bin, nameofhistogram + Cycle_name + current_data + "rebin", binx);
   GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerStyle(20);
-  GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerSize(1.0);
+  GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerSize(1);
   if(!channel.Contains("SR")){
     maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + current_data + "rebin"), "data", "lp");
   }
@@ -459,17 +463,56 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   maphstack[hstack] -> GetYaxis() -> SetTitle(title_y);
   maphstack[hstack] -> Draw("histsame");
   
+  vector<double> vx, vy, vexl, vexh, veyl, veyh;
   if(!blind){
-    GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Draw("epsame");
+    GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Draw("histsamep9");
+    
+    map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] = new TGraphAsymmErrors(GetHist(nameofhistogram + Cycle_name + current_data + "rebin"));
+    //make correct error bars
+    
+    for(unsigned int i = 0; i < N_bin; i++){
+      int N = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetBinContent(i + 1);
+      double L =  (N==0) ? 0  : (ROOT::Math::gamma_quantile(alpha/2,N,1.));
+      double U =  (N==0) ? ( ROOT::Math::gamma_quantile_c(alpha,N+1,1) ) : ( ROOT::Math::gamma_quantile_c(alpha/2,N+1,1) );
+      if( N!=0 ){
+	map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEYlow(i, N-L );
+	map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEXlow(i, 0);
+	map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEYhigh(i, U-N );
+	map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEXhigh(i, 0);
+	
+	veyl.push_back(N-L);
+	veyh.push_back(U-N);
+      }
+      else{
+	double zerodata_err_low = 0.1;
+	double zerodata_err_high = 1.8;
+	
+	veyl.push_back(zerodata_err_low);
+	veyh.push_back(zerodata_err_high);
+	
+	double current_x = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetBinCenter(i + 1);
+	double current_ex = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetBinWidth(i + 1) /2.;
+	
+	map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEYlow(i, zerodata_err_low);
+	map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEXlow(i, 0.);
+	map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEYhigh(i, zerodata_err_high);
+	map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEXhigh(i, 0.);
+	
+	vx.push_back(current_x);
+	vexl.push_back(current_ex);
+	vexh.push_back(current_ex);
+      }  
+    }//end for i on N_bin
+    map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> Draw("p0same");
   }
   GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetXaxis() -> SetRangeUser(xmin, xmax);
   GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMinimum(1.0);
-
+  
   mappad[pad1] -> Update();
-
+  
   
   if(!blind){
-    GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Draw("epsame");
+    GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Draw("histsamep");
   }
   maplegend[legend] -> SetFillColor(kWhite);
   maplegend[legend] -> SetLineColor(kBlack);
@@ -494,7 +537,7 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   mappad[pad2] -> cd();
 
   mapfunc[clone] = (TH1F*)GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Clone(clone);
-
+   
   mapfunc["stat" + nameofhistogram] = (TH1F*)GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Clone(clone);
 
   cout << "7" << endl;
@@ -522,10 +565,10 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   mapfunc["stat" + nameofhistogram] -> SetMinimum(0.0);
   mapfunc["stat" + nameofhistogram] -> SetMaximum(5.0);
   mapfunc["stat" + nameofhistogram] -> SetStats(0);
-
+  
   cout << "8" << endl;
 
-
+  
   
   mapfunc["stat" + nameofhistogram] -> Divide(mapfunc[func + "rebin"]);
   Int_t ncells = mapfunc["stat" + nameofhistogram] -> GetSize();
@@ -535,7 +578,38 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   mapfunc["stat" + nameofhistogram] -> Draw("CE2");
   mapfunc[clone] -> Divide(mapfunc[func + "rebin"]);
   if(!blind){
-    mapfunc[clone] ->Draw("PE1same");
+    for(unsigned int i = 0; i < N_bin; i++){
+      double bkg_value = mapfunc[func + "rebin"] -> GetBinContent(i + 1);
+      int data_value = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetBinContent(i + 1);
+      //cout << "bkg_value : " << bkg_value << endl;
+      if(bkg_value < 10e-7){ 
+	//cout << "pass zero" << endl;
+	mapfunc[clone] -> SetBinContent(i + 1, 999.);
+      }
+      else if(data_value < 1) mapfunc[clone] -> SetBinContent(i + 1, 0.);
+      //cout << "ratio : " << mapfunc[clone] -> GetBinContent(i + 1) << endl;
+    }
+    //mapfunc[clone] ->Draw("histp9same");
+    
+    //make correct error bars
+    map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error_ratio"] = new TGraphAsymmErrors(mapfunc[clone]);
+    
+    for(unsigned int i = 0; i < N_bin; i++){
+      double bkg_i = mapfunc[func + "rebin"] -> GetBinContent(i+1);
+      map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error_ratio"] -> SetPointEYlow(i, veyl.at(i) / bkg_i);
+      map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error_ratio"] -> SetPointEXlow(i, 0.);
+      map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error_ratio"] -> SetPointEYhigh(i, veyh.at(i) / bkg_i);
+      map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error_ratio"] -> SetPointEXhigh(i, 0.);
+      if(bkg_i < 10e-7){
+        map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error_ratio"] -> SetPointEYlow(i, 0.);
+	map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error_ratio"] -> SetPointEXlow(i, 0.);
+	map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error_ratio"] -> SetPointEYhigh(i, 0.);
+	map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error_ratio"] -> SetPointEXhigh(i, 0.);
+      }
+      
+    }//end for i on N_bin
+    
+    map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error_ratio"] -> Draw("p0same");
   }
   mapline[line] -> Draw("same");
 
@@ -674,33 +748,33 @@ void makehistogram_signal_VS_bkg(TString nameofhistogram, double binx[], int N_b
 
 void draw_histogram_variable_bin(TString nameofhistogram, float xmin, float xmax, double binx[], int N_bin,  float ymax, TString name_x, bool name_y){
 
-  TString regions[6] = {"CR1", "CR2", "CR3", "CR4", "CR5", "SR1"};
+  TString regions[5] = {"CR1", "CR2", "CR3", "CR4", "SR1"};
   TString channels[3] = {"DiEle", "DiMu", "EMu"};
   int i_dir = 0;
-  TString directories[36];
-  for(int i = 0; i < 6; i++){
+  TString directories[15];
+  for(int i = 0; i < 5; i++){
     for(int j = 0; j < 3; j++){
       directories[i_dir] = regions[i] + "_OS_" + channels[j];
       i_dir++;
     }
   }
 
-  int N_directories = 18;
+  int N_directories = 15;
   
   //make emu method applied hists
-  TString regions_OS[6] = {"CR1_OS", "CR2_OS", "CR3_OS", "CR4_OS", "CR5_OS", "SR1_OS"};
+  TString regions_OS[5] = {"CR1_OS", "CR2_OS", "CR3_OS", "CR4_OS", "SR1_OS"};
   TString channels_OS[2] = {"DiMu", "DiEle"};
-  for(int i = 0; i < 6; i++){//for regions
+  for(int i = 0; i < 5; i++){//for regions
     for(int j = 0; j < 2; j++){//for channels
       make_hist_after_emu_method(nameofhistogram, channels_OS[j], regions_OS[i]);
-      if(regions_OS[i].Contains("SR")) make_hist_after_emu_method(nameofhistogram, channels_OS[j] + "_HNcut", regions_OS[i]);
+      //if(regions_OS[i].Contains("SR")) make_hist_after_emu_method(nameofhistogram, channels_OS[j] + "_HNcut", regions_OS[i]);
     }
   } 
   
   
   for(int i = 0; i < N_directories; i++){
-    makehistogram_variable_bin(nameofhistogram + "_" + directories[i], xmin, xmax, ymax, binx, N_bin, name_x, name_y, directories[i]);
-    if(directories[i].Contains("SR")) makehistogram_variable_bin(nameofhistogram + "_" + directories[i] + "_HNcut", xmin, xmax, ymax, binx, N_bin, name_x, name_y, directories[i] + "_HNcut");
+    if(!directories[i].Contains("EMu"))makehistogram_variable_bin(nameofhistogram + "_" + directories[i], xmin, xmax, ymax, binx, N_bin, name_x, name_y, directories[i]);
+    //if(directories[i].Contains("SR")) makehistogram_variable_bin(nameofhistogram + "_" + directories[i] + "_HNcut", xmin, xmax, ymax, binx, N_bin, name_x, name_y, directories[i] + "_HNcut");
   }
 
 }
@@ -712,7 +786,7 @@ void draw_signal_VS_bkg(TString nameofhistogram, double binx[], int N_bin, TStri
   
   for(int i = 0; i < N_directories; i++){
     makehistogram_signal_VS_bkg(nameofhistogram+ "_" + directories[i], binx, N_bin, yaxis_name);
-    makehistogram_signal_VS_bkg(nameofhistogram+ "_" + directories[i] + "_HNcut", binx, N_bin, yaxis_name);
+    //makehistogram_signal_VS_bkg(nameofhistogram+ "_" + directories[i] + "_HNcut", binx, N_bin, yaxis_name);
   }
   
 }
@@ -744,6 +818,7 @@ void plot(){
   
 
   //open signal samples
+  
   int Zpmass[8] = {500, 750, 1000, 1500, 2000, 2500, 3000, 4000};
   for(int i = 0; i < 8; i++){
     int HNmass = 100;
@@ -799,6 +874,7 @@ void plot(){
   N_bin_pt += 3;
 
   draw_histogram_variable_bin("h_OS_lljjjjmass", 0., 5500., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(Z') (GeV)", true);
+
   draw_histogram_variable_bin("h_OS_lljjjjmass_AK8_0", 0., 5500., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(Z') (GeV)", true);
   draw_histogram_variable_bin("h_OS_lljjjjmass_AK8_1", 0., 5500., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(Z') (GeV)", true);
   draw_histogram_variable_bin("h_OS_lljjjjmass_AK8_2", 0., 5500., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(Z') (GeV)", true);
@@ -809,45 +885,16 @@ void plot(){
   draw_histogram_variable_bin("h_OS_secondLeptonPt", 0., 1000., bin_2nd_lep_pt, N_bin_2nd_lep_pt, 10000.,"Pt(2nd lepton) (GeV)", true);
   draw_histogram_variable_bin("h_OS_leadingjet_pt", 0., 1000., bin_pt, N_bin_pt, 10000.,"Pt(1st jet) (GeV)", true);
   draw_histogram_variable_bin("h_OS_secondjet_pt", 0., 1000., bin_pt, N_bin_pt, 10000.,"Pt(2nd jet) (GeV)", true);
-
-  /*
-  draw_histogram_variable_bin("h_SS_lljjjjmass", 0., 5500., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(Z') (GeV)", true);
-  draw_histogram_variable_bin("h_SS_leadingljjmass", 0., 5000., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(1st N) (GeV)", true);
-  draw_histogram_variable_bin("h_SS_secondljjmass", 0., 5000., bin_lljjjjmass, N_bin_lljjjjmass, 100000., "m(2nd N) (GeV)", true);
-  draw_histogram_variable_bin("h_SS_llmass", 50., 1000., bin_llmass, N_bin_llmass, 10000., "m(ll) (GeV)", true);
-  draw_histogram_variable_bin("h_SS_leadingLeptonPt", 0., 1000., bin_pt, N_bin_pt, 10000., "Pt(1st lepton) (GeV)", true);
-  draw_histogram_variable_bin("h_SS_secondLeptonPt", 0., 1000., bin_pt, N_bin_pt, 10000.,"Pt(2nd lepton) (GeV)", true);
-  draw_histogram_variable_bin("h_SS_leadingjet_pt", 0., 1000., bin_pt, N_bin_pt, 10000.,"Pt(1st jet) (GeV)", true);
-  draw_histogram_variable_bin("h_SS_secondjet_pt", 0., 1000., bin_pt, N_bin_pt, 10000.,"Pt(2nd jet) (GeV)", true);
-  */
   
-  /*
-  draw_histogram("h_OS_Njets", 0., 20., 1., 100000., "Njets", false);
-  draw_histogram("h_OS_Nbjets", 0., 20., 1., 100000., "Njets", false);
-  draw_histogram("h_OS_Nfatjets", 0., 20., 1., 100000., "Njets", false);
-  */
-  /*
-  draw_histogram("h_OS_lljjjjmass", 10., 5000., 50., 100000., "M(ll jjjj) (GeV)", true);   
-  draw_histogram("h_OS_llmass", 10., 1000., 2., 10000., "M(ll) (GeV)", true);
-  draw_histogram("h_OS_leadingLeptonPt", 0., 1000., 2., 10000., "Pt(1st lepton) (GeV)", true);
-  draw_histogram("h_OS_secondLeptonPt", 0., 1000., 2.,10000.,"Pt(1st lepton) (GeV)", true);
-  draw_histogram("h_OS_leadingjet_pt", 0., 1000., 2.,10000.,"Pt(1st jet) (GeV)", true);
-  draw_histogram("h_OS_secondjet_pt", 0., 1000., 2.,10000.,"Pt(1st jet) (GeV)", true);
-  */
   
 
-  /*
+  
   draw_signal_VS_bkg("h_OS_lljjjjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(Z') (GeV)");
   draw_signal_VS_bkg("h_OS_leadingljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(1st N) (GeV)");
   draw_signal_VS_bkg("h_OS_secondljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(2nd N) (GeV)");
-  */
+  
+
   /*
-  draw_signal_VS_bkg("h_SS_lljjjjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(Z') (GeV)");
-  draw_signal_VS_bkg("h_SS_leadingljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(1st N) (GeV)");
-  draw_signal_VS_bkg("h_SS_secondljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(2nd N) (GeV)");
-  */
-  
-  
   // -- make file contains m(Z') plots, comment out draw_signal_VS_bkg function above
   TFile *MyFile = new TFile("Bkg_VS_signal_cutbased_e.root","RECREATE");
   gDirectory -> mkdir("MuMu");
@@ -1078,8 +1125,8 @@ void plot(){
   for(map<TString, TFile*>::iterator mapit = mapfile.begin(); mapit != mapfile.end(); mapit ++){
     mapit->second->Close();
   }
- 
-
+  
+  */
 
 
 
