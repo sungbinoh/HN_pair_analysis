@@ -46,7 +46,7 @@ map<TString, TList*> maplist;
 //TString Cycle_name = "ExampleAnalyzerDiMuon";
 TString Cycle_name = "Muon_FR_cal_all";
 //sample names                          
-TString data = "data_DoubleMuon";
+TString data = "data_SingleMuon";
 //TString periodC = "periodC_SKMuonEG";
 //TString periodD = "periodD_SKMuonEG";
 
@@ -125,12 +125,12 @@ void openfile(TString cyclename, TString samplename){
     histnames.push_back(key -> GetName());
   }
   
-  for(int i = 0; i < histnames.size(); i ++){
+  for(unsigned int i = 0; i < histnames.size(); i ++){
     //cout << histnames.at(i) << endl;
     maphist[histnames.at(i) + cyclename + samplename] = (TH1*)gDirectory -> Get(histnames.at(i));
     //cout << histnames.at(i) + cyclename + samplename << endl;
   }
-  for(int i = 0; i < histnames_2D.size(); i ++){
+  for(unsigned int i = 0; i < histnames_2D.size(); i ++){
     //cout << histnames_2D.at(i) << endl; 
     maphist_2D[histnames_2D.at(i) + cyclename + samplename] = (TH2*)gDirectory -> Get(histnames_2D.at(i));
   }
@@ -212,6 +212,27 @@ void makehistogram(TString nameofhistogram){
 }
 //////////////////////////////////////////////////////////////////////////////
 
+void draw_colz(TString histname){
+
+  TString canvas = "c1_" + histname;
+  
+  mapcanvas[canvas] = new TCanvas(canvas,"",800,800);
+  gStyle -> SetOptStat(0);
+
+  mapcanvas[canvas] -> SetTopMargin( 0.05 );
+  mapcanvas[canvas] -> SetBottomMargin( 0.13 );
+  mapcanvas[canvas] -> SetRightMargin( 0.05 );
+  mapcanvas[canvas] -> SetLeftMargin( 0.16 );
+  
+  gStyle->SetPaintTextFormat("4.4f");
+  maphist_2D[histname] -> GetXaxis()->SetRangeUser(35., 150.);
+  maphist_2D[histname] -> Draw("colztexte1");
+  
+  mapcanvas[canvas] -> SaveAs("./Fake_Rate/" + histname + ".pdf");
+  
+}
+
+
 
 /// Main Function ////////////////////////////////////////////////////////////
 void plot(){
@@ -238,14 +259,14 @@ void plot(){
   openfile(Cycle_name, ZGto2LG);
   openfile(Cycle_name, fake);
   */
-
+  
   cout << "open files complete" << endl;
   
   vector<TString> plot_names = gethistnames(Cycle_name, data);
-
+  
   vector<TString> plots_names_F;
   vector<TString> plots_names_F0;
-  for(int i = 0; i < plot_names.size(); i++){
+  for(unsigned int i = 0; i < plot_names.size(); i++){
     TString current_name = plot_names.at(i);
     bool ID_syst = current_name.Contains("pt_cone_vs_eta_F0");
     bool ID_syst_else =current_name.Contains("pt_cone_vs_eta");
@@ -255,44 +276,36 @@ void plot(){
     if(ID_syst) plots_names_F0.push_back(current_name);
     else if(ID_syst_else) plots_names_F.push_back(current_name);
   }
-
+  
   cout << "F 2D hists" << endl;
-  for(int i = 0; i < plots_names_F.size(); i++){
+  for(unsigned int i = 0; i < plots_names_F.size(); i++){
     cout << plots_names_F.at(i) << endl;
   }
   cout << "F0 2D hists" << endl;
-  for(int i = 0; i < plots_names_F0.size(); i++){
+  for(unsigned int i = 0; i < plots_names_F0.size(); i++){
     cout << plots_names_F0.at(i) << endl;
   }
 
   
-  for(int i = 0; i < plots_names_F.size(); i++){
+  for(unsigned int i = 0; i < plots_names_F.size(); i++){
     makehistogram(plots_names_F.at(i));
     makehistogram(plots_names_F0.at(i));
   }
   
-  for(int i = 0; i < plots_names_F.size();i++){
+  for(unsigned int i = 0; i < plots_names_F.size();i++){
     GetHist_2D(plots_names_F.at(i) + "data_fr") -> Divide(GetHist_2D(plots_names_F0.at(i) + "data_fr"));
   }
   
   
   TFile *MyFile = new TFile("Data_driven_FR_syst_DoubleMuon_Nvtx_Reweight.root","RECREATE");
-  for(int i = 0; i < plots_names_F.size(); i++){
+  for(unsigned int i = 0; i < plots_names_F.size(); i++){
     cout << "Writing : " << plots_names_F.at(i) + "data_fr" << endl;;
     maphist_2D[plots_names_F.at(i) + "data_fr"] -> Write();
     //maphist_2D[plots_names_F0.at(i) + "data_fr"] -> Write();
+    draw_colz(plots_names_F.at(i) + "data_fr");
   }
   
   MyFile->Close();
-
-  /*
-  draw_histogram("SingleMuonTrigger_Dijet_Awayjet_40_pt_F0", 0., 500., 1., 8000.); 
-  draw_histogram("SingleMuonTrigger_Dijet_Awayjet_40_pt_F", 0., 500., 1., 500.);
-  draw_histogram("SingleMuonTrigger_Dijet_Awayjet_40_eta_F", -3., 3., 1., 500.);
-  draw_histogram("SingleMuonTrigger_Dijet_Awayjet_40_eta_F0", -3., 3., 1., 4000.);
-  */
-  //draw_histogram("h_tri_Z_tag_dimu_mass", 0., 500., 1., 1000.);
-  //draw_histogram("h_tri_non_Z_tag_pt", 0., 500., 5., 1500.);
   
-
+  
 }// End of Main Function ////////////////////////////////////////////////////// 

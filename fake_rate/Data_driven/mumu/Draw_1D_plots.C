@@ -251,7 +251,7 @@ void draw_pj_over_pl_plots(){
 void plot(){
     
   //openfile("Data_driven_FR_syst_DoubleMuon_Nvtx_Reweight.root");
-  openfile("FakeRate_muon_QCD.root");
+  openfile("Data_driven_FR_syst_DoubleMuon_Nvtx_Reweight.root");
   cout << "open files complete" << endl;
   
   draw_dphi_plots();
