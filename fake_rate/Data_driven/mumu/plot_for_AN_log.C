@@ -170,9 +170,9 @@ void makehistogram(TString nameofhistogram, float xmin, float xmax, float rebin,
   //gStyle -> SetPadTickX(1);
   mappad[pad1] -> Draw();
   mappad[pad1] -> cd();
-  //mappad[pad1] -> SetLogy();
+  mappad[pad1] -> SetLogy();
   
-  maplegend[legend] = new TLegend(0.69, 0.35, 0.96, 0.92);
+  maplegend[legend] = new TLegend(0.69, 0.70, 0.96, 0.92);
   cout << "0" << endl;
   //cout << nameofhistogram + Cycle_name + data << endl;
   //mapfunc[func] = new TH1F("", "", GetHist(nameofhistogram + Cycle_name + periodC) -> GetNbinsX(),  GetHist(nameofhistogram + Cycle_name + periodC) -> GetXaxis() -> GetXmin(), GetHist(nameofhistogram + Cycle_name + periodC) -> GetXaxis() -> GetXmax());
@@ -287,7 +287,7 @@ void makehistogram(TString nameofhistogram, float xmin, float xmax, float rebin,
   cout << "5.0.1" << endl;
   
   
-  maphstack[hstack] -> SetMaximum(MC_stack_max * 1.5);
+  maphstack[hstack] -> SetMaximum(MC_stack_max * 1000);
   maphstack[hstack] -> SetMinimum(1.0);
   //maphstack[hstack] -> SetMinimum(0.001); 
   
@@ -366,7 +366,7 @@ void makehistogram(TString nameofhistogram, float xmin, float xmax, float rebin,
   mapfunc["stat" + nameofhistogram] -> GetXaxis() -> SetTitleSize(0.15);
   mapfunc["stat" + nameofhistogram] -> GetYaxis() -> SetTitleSize(0.12);
   mapfunc["stat" + nameofhistogram] -> SetMinimum(0.0);
-  mapfunc["stat" + nameofhistogram] -> SetMaximum(2.0);
+  mapfunc["stat" + nameofhistogram] -> SetMaximum(10.0);
   mapfunc["stat" + nameofhistogram] -> SetStats(0);
   cout << "data integral , MC integral" << endl;
   cout << mapfunc["stat" + nameofhistogram] -> Integral() << endl;
@@ -445,44 +445,10 @@ void plot(){
 
   cout << "open files complete" << endl;
 
-  //draw_histogram("SingleMuonTrigger_Dijet_Awayjet_40_all_MUON_HN_LOOSEv7_SIP3_pt_cone_F0", 0., 200., 1., 5000., "P_{T}^{cone}(1st #mu) (GeV)", true);
-  //draw_histogram("SingleMuonTrigger_Dijet_Awayjet_40_all_MUON_HN_LOOSEv7_SIP3_Nvtx_reweight_pt_cone_F0", 0., 200., 1., 5000., "P_{T}^{cone}(1st #mu) (GeV)", true);
-  
-  draw_histogram("HLT_Mu50_v_ZPeak_mll_Nvtx_reweight_central", 70., 110., 1., 20000., "M(#mu#mu) (GeV)", true);
-  draw_histogram("HLT_Mu27_v_ZPeak_mll_Nvtx_reweight_central", 70., 110., 1., 1000., "M(#mu#mu) (GeV)", true);
-  draw_histogram("HLT_Mu20_v_ZPeak_mll_Nvtx_reweight_central", 70., 110., 1., 60., "M(#mu#mu) (GeV)", true);
-  
-  draw_histogram("HLT_Mu50_v_ZPeak_leadpt_Nvtx_reweight_central", 0., 200., 1., 20., "P_{T}(1st #mu) (GeV)", true);
-  draw_histogram("HLT_Mu27_v_ZPeak_leadpt_Nvtx_reweight_central", 0., 200., 1., 400., "P_{T}(1st #mu) (GeV)", true);
-  draw_histogram("HLT_Mu20_v_ZPeak_leadpt_Nvtx_reweight_central", 0., 200., 1., 8000., "P_{T}(1st #mu) (GeV)", true);
+  draw_histogram("Ptcone_UseEvent_loose", 0., 200., 5., 5000., "P_{T}^{cone}(#mu) (GeV)", true);
+  draw_histogram("Ptcone_UseEvent_tight", 0., 200., 5., 200., "P_{T}^{cone}(#mu) (GeV)", true);
+  draw_histogram("Eta_UseEvent_loose", -3., 3., 10., 5000., "#eta(#mu)", false);
+  draw_histogram("Eta_UseEvent_tight", 3., 3., 10., 200., "#eta(#mu)", false);
 
-  draw_histogram("HLT_Mu50_v_ZPeak_Nvtx_Nvtx_reweight_central", 0., 50., 1., 8000., "N(vertice)", false);
-  draw_histogram("HLT_Mu27_v_ZPeak_Nvtx_Nvtx_reweight_central", 0., 50., 1., 4000., "N(vertice)", false);
-  draw_histogram("HLT_Mu20_v_ZPeak_Nvtx_Nvtx_reweight_central", 0., 50., 1., 1000., "N(vertice)", false);
-    
-  //John's W dominant region
-  draw_histogram("HLT_Mu50_v_W_John_MT_Nvtx_reweight_central", 0., 200., 1., 30000., "M_{T}(#mu, METvec) (GeV)", true);
-  draw_histogram("HLT_Mu27_v_W_John_MT_Nvtx_reweight_central", 0., 200., 1., 2000., "M_{T}(#mu, METvec) (GeV)", true);
-  draw_histogram("HLT_Mu20_v_W_John_MT_Nvtx_reweight_central", 0., 200., 1., 60., "M_{T}(#mu, METvec) (GeV)", true);
-  draw_histogram("HLT_Mu50_v_W_John_PFMET_Nvtx_reweight_central", 0., 200., 5., 200000., "MET (GeV)", true);
-  draw_histogram("HLT_Mu27_v_W_John_PFMET_Nvtx_reweight_central", 0., 200., 5., 10000., "MET (GeV)", true);
-  draw_histogram("HLT_Mu20_v_W_John_PFMET_Nvtx_reweight_central", 0., 200., 5., 1000., "MET (GeV)", true);
-  draw_histogram("HLT_Mu50_v_W_John_leadpt_Nvtx_reweight_central", 0., 200., 1., 50000., "P_{T}(1st #mu) (GeV)", true);
-  draw_histogram("HLT_Mu27_v_W_John_leadpt_Nvtx_reweight_central", 0., 200., 1., 2000., "P_{T}(1st #mu) (GeV)", true);
-  draw_histogram("HLT_Mu20_v_W_John_leadpt_Nvtx_reweight_central", 0., 200., 1., 200., "P_{T}(1st #mu) (GeV)", true);
-  
-  draw_histogram("HLT_Mu50_v_W_John_Nvtx_Nvtx_reweight_central", 0., 50., 1., 8000., "N(vertice)", false);
-  draw_histogram("HLT_Mu27_v_W_John_Nvtx_Nvtx_reweight_central", 0., 50., 1., 8000., "N(vertice)", false);
-  draw_histogram("HLT_Mu20_v_W_John_Nvtx_Nvtx_reweight_central", 0., 50., 1., 8000., "N(vertice)", false);
-
-
-  draw_histogram("HLT_Mu50_v_MT_MET_inclusive_tight", 0., 200., 1., 30000., "M_{T}(#mu, METvec) (GeV)", true);
-  draw_histogram("HLT_Mu27_v_MT_MET_inclusive_tight", 0., 200., 1., 2000., "M_{T}(#mu, METvec) (GeV)", true);
-  draw_histogram("HLT_Mu20_v_MT_MET_inclusive_tight", 0., 200., 1., 60., "M_{T}(#mu, METvec) (GeV)", true);
-
-  draw_histogram("HLT_Mu50_v_MT_MET_inclusive_tight_loose", 0., 200., 1., 30000., "M_{T}(#mu, METvec) (GeV)", true);
-  draw_histogram("HLT_Mu27_v_MT_MET_inclusive_tight_loose", 0., 200., 1., 2000., "M_{T}(#mu, METvec) (GeV)", true);
-  draw_histogram("HLT_Mu20_v_MT_MET_inclusive_tight_loose", 0., 200., 1., 60., "M_{T}(#mu, METvec) (GeV)", true);
-  
 
 }// End of Main Function ////////////////////////////////////////////////////// 

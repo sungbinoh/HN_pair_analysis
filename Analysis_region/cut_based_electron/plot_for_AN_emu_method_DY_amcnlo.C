@@ -84,7 +84,7 @@ TString ZGto2LG = "SKZGto2LG";
 
 
 //emu ratio results
-double emu_over_ee = 0.451;
+double emu_over_ee = 0.450;
 double emu_over_mumu = 0.647;
 
 const double alpha = 1 - 0.6827;
@@ -166,96 +166,6 @@ void openfile(TString cyclename, TString samplename){
     }// if SR
     gDirectory->cd("../");
   }//for region
-}
-//////////////////////////////////////////////////////////////////////////////
-
-/// Open Signal sample root file
-void openfile_signal(TString cyclename, TString samplename, TString channel){
-  TString directory;
-  if(channel.Contains("MuMu")) directory = "MM";
-  else if(channel.Contains("ElEl")) directory = "EE";
-  else return;
-
-  TString underbar = "_";
-  TString version = "cat_v8-0-7.root";
-  TString filename = cyclename + underbar + "HNpair_" + channel + "_WR5000_" + samplename +  "_official_cat_v8-0-7.root";
-
-  cout << "opening : " << filename << endl;
-  mapfile[filename] = new TFile (("./signal/" + directory + "/" + filename)) ;
-
-  TString regions[7] = {"CR1", "CR2", "CR3", "CR4", "SR1"};
-  TString channels[3] = {"DiEle", "DiMu", "EMu"};
-  TString charges[2] = {"OS", "SS"};
-  int i_dir = 0;
-  TString directories[6];
-  for(int j = 0; j < 3; j++){
-    for(int k = 0; k < 2; k++){
-      directories[i_dir] = charges[k] + "_" + channels[j];
-      i_dir++;
-    }
-  }
-
-  int N_regions = 5;
-  int N_directories = 6;
-
-  for(int i = 0; i < N_regions; i++){
-    gDirectory->cd(regions[i]);
-    for(int j = 0; j < N_directories; j++){
-      gDirectory->cd(regions[i] + "_" + directories[j]);
-      TIter next(gDirectory->GetListOfKeys());
-      TKey *key;
-      vector<TString> histnames;
-      while ((key = (TKey*)next())) {
-        TClass *cl = gROOT->GetClass(key->GetClassName());
-	if (!cl->InheritsFrom("TH1")) continue;
-	histnames.push_back(key -> GetName());
-      }
-
-      for(unsigned int k = 0; k < histnames.size(); k ++){
-	maphist[histnames.at(k) + channel + samplename] = (TH1*)gDirectory -> Get(histnames.at(k));
-      }
-      gDirectory->cd("../");
-    }
-    if(regions[i].Contains("SR")){
-      for(int j = 0; j < N_directories; j++){
-        gDirectory->cd(regions[i] + "_" + directories[j] + "_HNcut");
-        TIter next(gDirectory->GetListOfKeys());
-        TKey *key;
-        vector<TString> histnames;
-        while ((key = (TKey*)next())) {
-          TClass *cl = gROOT->GetClass(key->GetClassName());
-          if (!cl->InheritsFrom("TH1")) continue;
-	  histnames.push_back(key -> GetName());
-	}
-
-        for(unsigned int k = 0; k < histnames.size(); k ++){
-          maphist[histnames.at(k) + channel + samplename] = (TH1*)gDirectory -> Get(histnames.at(k));
-        }
-        gDirectory->cd("../");
-      }
-    }
-    gDirectory->cd("../");
-  }
-  
-  gDirectory->cd("Hists");
-  TIter next(gDirectory->GetListOfKeys());
-  TKey *key;
-  vector<TString> histnames;
-  while ((key = (TKey*)next())) {
-    TClass *cl = gROOT->GetClass(key->GetClassName());
-    if (!cl->InheritsFrom("TH1")) continue;
-    histnames.push_back(key -> GetName());
-  }
-
-  for(unsigned int i = 0; i < histnames.size(); i ++){
-    maphist[histnames.at(i) + channel + samplename] = (TH1*)gDirectory -> Get(histnames.at(i));
-  }
-
-  double denom;
-  denom = maphist["signal_eff" + channel + samplename] -> GetBinContent(1);
-  maphist["denom" + channel + samplename] = new TH1D("denom", "denom", 1, 0., 1.);
-  maphist["denom" + channel + samplename] -> Fill(0.5, denom);
-  
 }
 //////////////////////////////////////////////////////////////////////////////
 
@@ -389,7 +299,7 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   
   
   cout << "3" << endl;
-
+  
   TString overflow = "overflow";
   Int_t nx_func    = GetHist(nameofhistogram + Cycle_name + current_data) -> GetNbinsX()+1;
   Double_t x1_func = GetHist(nameofhistogram + Cycle_name + current_data) -> GetBinLowEdge(1);
@@ -447,7 +357,6 @@ void makehistogram_variable_bin(TString nameofhistogram, float xmin, float xmax,
   double data_max = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetMaximum();
   
   cout << "5" << endl;
-
 
   maphstack[hstack] -> Draw("hist");
   maphstack[hstack] -> GetYaxis()->SetLabelSize(0.05);;
@@ -818,7 +727,7 @@ void plot(){
   
 
   //open signal samples
-  
+  /*
   int Zpmass[8] = {500, 750, 1000, 1500, 2000, 2500, 3000, 4000};
   for(int i = 0; i < 8; i++){
     int HNmass = 100;
@@ -832,7 +741,7 @@ void plot(){
       openfile_signal(Cycle_name, current_name, "ElEl");
     }
   }
-  
+  */
   
   
   cout << "open files complete" << endl;
@@ -889,9 +798,9 @@ void plot(){
   
 
   
-  draw_signal_VS_bkg("h_OS_lljjjjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(Z') (GeV)");
-  draw_signal_VS_bkg("h_OS_leadingljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(1st N) (GeV)");
-  draw_signal_VS_bkg("h_OS_secondljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(2nd N) (GeV)");
+  //draw_signal_VS_bkg("h_OS_lljjjjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(Z') (GeV)");
+  //draw_signal_VS_bkg("h_OS_leadingljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(1st N) (GeV)");
+  //draw_signal_VS_bkg("h_OS_secondljjmass", bin_lljjjjmass, N_bin_lljjjjmass, "m(2nd N) (GeV)");
   
 
   /*

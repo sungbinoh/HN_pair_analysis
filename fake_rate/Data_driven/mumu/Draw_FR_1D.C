@@ -12,7 +12,7 @@ plot() : main working function
 #include <TStyle.h>
 #include <TCanvas.h>
 #include <iostream>
-//#include <stdlib.h>
+#include <stdlib.h>
 #include <TMath.h>
 #include <TLorentzVector.h>
 #include <TROOT.h>
@@ -50,9 +50,9 @@ map<TString, TGraphAsymmErrors*> mapTGraphAsymmErrors;
 //TString Cycle_name = "ExampleAnalyzerElectronMuon";
 //TString Cycle_name = "ExampleAnalyzerDiMuon";
 TString Cycle_name = "FR_syst_cal";
-//sample names                          
-TString data = "data_DoubleMuon";
-//TString data = "data_SingleMuon";
+//sample names
+//TString data = "data_DoubleMuon";
+TString data = "data_SingleMuon";
 
 //TString periodC = "periodC_SKMuonEG";
 //TString periodD = "periodD_SKMuonEG";
@@ -106,42 +106,40 @@ TH2 * GetHist_2D(TString hname){
 }
 
 
- /// Open ROOT file ///////////////////////////////////////////////////////////
- void openfile(TString filename){
+/// Open ROOT file ///////////////////////////////////////////////////////////
+void openfile(TString filename){
   
-   cout << "opening : " << filename << endl;
-   
-   mapfile[filename] = new TFile ((filename)) ;
-   
-   TIter next(gDirectory->GetListOfKeys());
-   TKey *key;
-   vector<TString> histnames;
-   vector<TString> histnames_2D;
-   while ((key = (TKey*)next())) {
-     TClass *cl = gROOT->GetClass(key->GetClassName());
-     if (cl->InheritsFrom("TH2D")) histnames_2D.push_back(key -> GetName());
-     if (!cl->InheritsFrom("TH1")) continue;
-     histnames.push_back(key -> GetName());
-   }
-   
-   for(int i = 0; i < histnames.size(); i ++){
-     //cout << histnames.at(i) << endl;
-     maphist[histnames.at(i)] = (TH1*)gDirectory -> Get(histnames.at(i));
-     //cout << histnames.at(i) + cyclename + samplename << endl;
-   }
-   for(int i = 0; i < histnames_2D.size(); i ++){
-     //cout << histnames_2D.at(i) << endl;
-     maphist_2D[histnames_2D.at(i)] = (TH2*)gDirectory -> Get(histnames_2D.at(i));
-   }
-
-
-   gDirectory -> cd();
-   
- }
+  cout << "opening : " << filename << endl;
+  
+  mapfile[filename] = new TFile ((filename)) ;
+  
+  TIter next(gDirectory->GetListOfKeys());
+  TKey *key;
+  vector<TString> histnames;
+  vector<TString> histnames_2D;
+  while ((key = (TKey*)next())) {
+    TClass *cl = gROOT->GetClass(key->GetClassName());
+    if (cl->InheritsFrom("TH2D")) histnames_2D.push_back(key -> GetName());
+    if (!cl->InheritsFrom("TH1")) continue;
+    histnames.push_back(key -> GetName());
+  }
+  
+  for(unsigned int i = 0; i < histnames.size(); i ++){
+    cout << histnames.at(i) << endl;
+    maphist[histnames.at(i)] = (TH1*)gDirectory -> Get(histnames.at(i));
+    //cout << histnames.at(i) + cyclename + samplename << endl;
+  }
+  for(unsigned int i = 0; i < histnames_2D.size(); i ++){
+    cout << histnames_2D.at(i) << endl;
+    maphist_2D[histnames_2D.at(i)] = (TH2*)gDirectory -> Get(histnames_2D.at(i));
+  }
+    
+  gDirectory -> cd();
+}
 //////////////////////////////////////////////////////////////////////////////
 
 
- /// Make Output Histogram ////////////////////////////////////////////////////
+/// Make Output Histogram ////////////////////////////////////////////////////
 void makehistogram(TString map_string, TString MC_scale){
   
   mapcanvas[map_string] = new TCanvas(map_string,"",800,800);
@@ -188,7 +186,7 @@ void makehistogram(TString map_string, TString MC_scale){
   latex_Lumi.DrawLatex(0.7, 0.96, "35.9 fb^{-1} (13 TeV)");
 
     
-  TString pdfname = "./pdfs/";
+  TString pdfname = "./Fake_Rate/";
   pdfname.Append("FR_mu" + MC_scale);
   //pdfname.Append(".pdf");
   pdfname.Append("_Trigger_SF.pdf");
@@ -245,7 +243,7 @@ void same_eta_bin(TString map_string, TString Eta_bin){
   latex_Lumi.DrawLatex(0.7, 0.96, "35.9 fb^{-1} (13 TeV)");
 
 
-  TString pdfname = "./pdfs/";
+  TString pdfname = "./Fake_Rate/";
   pdfname.Append("FR_mu_" + Eta_bin);
   //pdfname.Append(".pdf");
   pdfname.Append("_Trigger_SF.pdf");
@@ -282,7 +280,7 @@ void draw_FR_plot(TString nameofhistogram){
   latex_Lumi.SetTextSize(0.035);
   latex_Lumi.DrawLatex(0.7, 0.96, "35.9 fb^{-1} (13 TeV)");
 
-  TString pdfname = "./pdfs/";
+  TString pdfname = "./Fake_Rate/";
   //pdfname.Append("FR_mu_Nvtx");
   pdfname.Append("FR_mu_Nvtx_trigger_SF");
   pdfname.Append(".pdf");
@@ -307,7 +305,7 @@ void draw_prompt_syst(TString map_string, TString Eta_bin){
   gStyle -> SetOptStat(0);
   mapTGraphAsymmErrors["FR_" + Eta_bin + "_syst"] -> GetXaxis() -> SetTitle("P_{T}^{cone} (#mu)");
   mapTGraphAsymmErrors["FR_" + Eta_bin + "_syst"] -> GetYaxis() -> SetTitle("Fate Rate");
-  mapTGraphAsymmErrors["FR_" + Eta_bin + "_syst"] -> GetYaxis() -> SetRange(10., 60.);
+  mapTGraphAsymmErrors["FR_" + Eta_bin + "_syst"] -> GetYaxis() -> SetRange(35., 110.);
   mapTGraphAsymmErrors["FR_" + Eta_bin + "_syst"] -> SetMinimum(0.);
   mapTGraphAsymmErrors["FR_" + Eta_bin + "_syst"] -> SetMaximum(0.2);
   mapTGraphAsymmErrors["FR_" + Eta_bin + "_syst"] -> SetMarkerColor(kRed);
@@ -336,7 +334,7 @@ void draw_prompt_syst(TString map_string, TString Eta_bin){
   latex_Lumi.DrawLatex(0.7, 0.96, "35.9 fb^{-1} (13 TeV)");
 
 
-  TString pdfname = "./pdfs/";
+  TString pdfname = "./Fake_Rate/";
   pdfname.Append("FR_mu_" + Eta_bin);
   //pdfname.Append(".pdf");                                                                                                                                                        
   pdfname.Append("_syst.pdf");
@@ -383,26 +381,25 @@ void draw_all_eta(TString map_string){
   mapcanvas[map_string] -> SetRightMargin( 0.05 );
   mapcanvas[map_string] -> SetLeftMargin( 0.16 );
   mapcanvas[map_string] -> cd();
-
   
   mapTGraphAsymmErrors["FR_IB_syst"] -> SetTitle("");
   gStyle -> SetOptStat(0);
   mapTGraphAsymmErrors["FR_IB_syst"] -> GetXaxis() -> SetTitle("P_{T}^{cone} (#mu)");
   mapTGraphAsymmErrors["FR_IB_syst"] -> GetYaxis() -> SetTitle("Fate Rate");
-  mapTGraphAsymmErrors["FR_IB_syst"] -> GetYaxis() -> SetRange(10., 60.);
+  mapTGraphAsymmErrors["FR_IB_syst"] -> GetXaxis() -> SetRangeUser(10., 140.);
   mapTGraphAsymmErrors["FR_IB_syst"] -> SetMinimum(0.);
-  mapTGraphAsymmErrors["FR_IB_syst"] -> SetMaximum(0.2);
+  mapTGraphAsymmErrors["FR_IB_syst"] -> SetMaximum(0.3);
   mapTGraphAsymmErrors["FR_IB_syst"] -> SetMarkerColor(kRed);
   mapTGraphAsymmErrors["FR_IB_syst"] -> SetMarkerSize(10.);
   mapTGraphAsymmErrors["FR_IB_syst"] -> SetLineColor(kRed);
   mapTGraphAsymmErrors["FR_IB_syst"] -> SetFillColorAlpha(kRed,0.35);
   mapTGraphAsymmErrors["FR_IB_syst"] -> Draw("E1AP");
-   
+  
   mapTGraphAsymmErrors["FR_OB_syst"] -> SetLineColor(kGreen);
-  mapTGraphAsymmErrors["FR_OB_syst"] -> Draw("E1AP");
-
+  mapTGraphAsymmErrors["FR_OB_syst"] -> Draw("E1same");
+  
   mapTGraphAsymmErrors["FR_EC_syst"] -> SetLineColor(kBlue);
-  mapTGraphAsymmErrors["FR_EC_syst"] -> Draw("E1AP");
+  mapTGraphAsymmErrors["FR_EC_syst"] -> Draw("E1same");
 
   
   maplegend[map_string] = new TLegend(0.5, 0.8, 0.8, 0.95);
@@ -410,7 +407,7 @@ void draw_all_eta(TString map_string){
   maplegend[map_string] -> AddEntry(mapTGraphAsymmErrors["FR_OB_syst"], "Fake Rate, Outer Barrel", "lp");
   maplegend[map_string] -> AddEntry(mapTGraphAsymmErrors["FR_EC_syst"], "Fake Rate, Endcap", "lp");
   maplegend[map_string] -> Draw("same");
-
+  
   mapcanvas[map_string] -> cd();
   TLatex latex_CMSPriliminary, latex_Lumi;
   latex_CMSPriliminary.SetNDC();
@@ -419,8 +416,8 @@ void draw_all_eta(TString map_string){
   latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
   latex_Lumi.SetTextSize(0.035);
   latex_Lumi.DrawLatex(0.7, 0.96, "35.9 fb^{-1} (13 TeV)");
-
-  TString pdfname = "./pdfs/";
+  
+  TString pdfname = "./Fake_Rate/";
   pdfname.Append("FR_mu_");
   pdfname.Append("all_eta.pdf");
   mapcanvas[map_string] -> SaveAs(pdfname);
@@ -471,9 +468,9 @@ void draw_histogram(TString nameofhistogram){
   double FR_IB_p85_e[6], FR_OB_p85_e[6], FR_EC_p85_e[6];
   
   
-  double pt_bins[6] = {15., 25., 35., 45., 55., 65.};
+  double pt_bins[6] = {40., 50., 60., 72.5, 87.5, 102.5};
   //double pt_bins_e[6] = {2.5, 2.5, 2.5, 2.5, 2.5, 2.5}; 
-  double pt_bins_e[6] = {5., 5., 5., 5., 5., 5.};
+  double pt_bins_e[6] = {5., 5., 5., 7.5, 7.5, 7.5};
 
 
   cout << "for for TGraphError" << endl;
@@ -512,8 +509,6 @@ void draw_histogram(TString nameofhistogram){
 
   mapTGraphErrors["FR_IB"]  -> Draw();
   
-  
-  
   mapTGraphErrors["FR_IB_p85"] = new TGraphErrors(6, pt_bins, FR_IB_p85, pt_bins_e, FR_IB_p85_e);
   mapTGraphErrors["FR_OB_p85"] = new TGraphErrors(6, pt_bins, FR_OB_p85, pt_bins_e, FR_OB_p85_e);
   mapTGraphErrors["FR_EC_p85"] = new TGraphErrors(6, pt_bins, FR_EC_p85, pt_bins_e, FR_EC_p85_e);
@@ -522,15 +517,14 @@ void draw_histogram(TString nameofhistogram){
   mapTGraphErrors["FR_OB_1p15"] = new TGraphErrors(6, pt_bins, FR_OB_1p15, pt_bins_e, FR_OB_1p15_e);
   mapTGraphErrors["FR_EC_1p15"] = new TGraphErrors(6, pt_bins, FR_EC_1p15, pt_bins_e, FR_EC_1p15_e);
 
+  double FR_IB_syst_upper[6];
+  double FR_IB_syst_bellow[6];
+  double FR_OB_syst_upper[6];
+  double FR_OB_syst_bellow[6];
+  double FR_EC_syst_upper[6];
+  double FR_EC_syst_bellow[6];
 
-  double FR_IB_syst_upper[5];
-  double FR_IB_syst_bellow[5];
-  double FR_OB_syst_upper[5];
-  double FR_OB_syst_bellow[5];
-  double FR_EC_syst_upper[5];
-  double FR_EC_syst_bellow[5];
-
-  for(int i = 0; i < 5; i ++){
+  for(int i = 0; i < 6; i ++){
     FR_IB_syst_upper[i] = FR_IB_p85[i] - FR_IB[i];
     FR_IB_syst_bellow[i] = FR_IB[i] - FR_IB_1p15[i];
 
@@ -541,13 +535,13 @@ void draw_histogram(TString nameofhistogram){
     FR_EC_syst_bellow[i] = FR_EC[i] - FR_EC_1p15[i];
   }
   
-  FR_IB[3] = (FR_IB[2] / FR_IB_syst_bellow[2] + FR_IB[4] / FR_IB_syst_bellow[4]) / ( 1./FR_IB_syst_bellow[2] + 1./FR_IB_syst_bellow[4]);
-  FR_IB_syst_bellow[3] = sqrt(2) * (FR_IB_syst_bellow[2] * FR_IB_syst_bellow[4]) / ( FR_IB_syst_bellow[2] + FR_IB_syst_bellow[4] );
-  FR_IB_syst_upper[3] = FR_IB_syst_bellow[3];
+  //FR_IB[3] = (FR_IB[2] / FR_IB_syst_bellow[2] + FR_IB[4] / FR_IB_syst_bellow[4]) / ( 1./FR_IB_syst_bellow[2] + 1./FR_IB_syst_bellow[4]);
+  //FR_IB_syst_bellow[3] = sqrt(2) * (FR_IB_syst_bellow[2] * FR_IB_syst_bellow[4]) / ( FR_IB_syst_bellow[2] + FR_IB_syst_bellow[4] );
+  //FR_IB_syst_upper[3] = FR_IB_syst_bellow[3];
   
-  mapTGraphAsymmErrors["FR_IB_syst"] = new TGraphAsymmErrors(5, pt_bins, FR_IB, pt_bins_e, pt_bins_e, FR_IB_syst_bellow, FR_IB_syst_upper);
-  mapTGraphAsymmErrors["FR_OB_syst"] = new TGraphAsymmErrors(5, pt_bins, FR_OB, pt_bins_e, pt_bins_e, FR_OB_syst_bellow, FR_OB_syst_upper);
-  mapTGraphAsymmErrors["FR_EC_syst"] = new TGraphAsymmErrors(5, pt_bins, FR_EC, pt_bins_e, pt_bins_e, FR_EC_syst_bellow, FR_EC_syst_upper);
+  mapTGraphAsymmErrors["FR_IB_syst"] = new TGraphAsymmErrors(6, pt_bins, FR_IB, pt_bins_e, pt_bins_e, FR_IB_syst_bellow, FR_IB_syst_upper);
+  mapTGraphAsymmErrors["FR_OB_syst"] = new TGraphAsymmErrors(6, pt_bins, FR_OB, pt_bins_e, pt_bins_e, FR_OB_syst_bellow, FR_OB_syst_upper);
+  mapTGraphAsymmErrors["FR_EC_syst"] = new TGraphAsymmErrors(6, pt_bins, FR_EC, pt_bins_e, pt_bins_e, FR_EC_syst_bellow, FR_EC_syst_upper);
   
   /*
   makehistogram("sex", "");
@@ -574,12 +568,8 @@ void draw_histogram(TString nameofhistogram){
 /// Main Function ////////////////////////////////////////////////////////////
 void plot(){
     
-  //openfile("FR_muon_plots.root");
-  //openfile("FR_muon_plots_Trigger_SF.root");
-  openfile("Data_driven_FR_syst_DoubleMuon_Nvtx_Reweight.root");
-  //openfile("FR_muon_plots_final_v1.root");
-  //openfile("FR_electron_plots_Trigger_SF.root");
-
+  openfile("FR_muon_plots.root");
+  cout << "file open complete" << endl;
   
   //draw_histogram("SingleMuonTrigger_Dijet_Awayjet_40_all_MUON_HN_LOOSEv7_SIP3_events_pt_cone_vs_eta");
   //draw_histogram("SingleMuonTrigger_Dijet_Awayjet_40_all_MUON_HN_LOOSEv7_SIP3_Nvtx_reweight_events_pt_cone_vs_eta");

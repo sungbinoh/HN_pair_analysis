@@ -358,11 +358,9 @@ void make_hist_after_emu_method(TString nameofhistogram, TString channel, TStrin
   cout << "making data driven plot of " + nameofhistogram + "_" + region + "_" + channel +  + cyclename + "emu" << endl;
   TString EMu = "_EMu_CF";
   //if(channel.Contains("HNcut")) EMu = EMu + "_HNcut";
-    
+  
   //clone emu data plot
   mapfunc[nameofhistogram_SS + "_" + region + "_" + channel +  + cyclename + "emu"] = (TH1F*)GetHist(nameofhistogram_OS + "_" + region + EMu + Cycle_name + current_data) -> Clone(nameofhistogram_OS + "_" + region + "_" + channel +  + cyclename + "emu");
-  
-  
   
   TString name_cycle = nameofhistogram_OS + "_" + region + EMu + Cycle_name;
   //cout << name_cycle + WZ << endl;
