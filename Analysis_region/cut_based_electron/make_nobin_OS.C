@@ -210,17 +210,17 @@ void find_good_binning(TString nameofhistogram, int basis_bin, double bin_width,
   int zero_n = 0;
 
   while(i_current_x_high * basis_bin * bin_width < x_max){
-    double current_rel_error = cal_rel_stat_error(nameofhistogram, i_current_x_low * basis_bin, i_current_x_high * basis_bin);
+    double current_rel_error = fabs(cal_rel_stat_error(nameofhistogram, i_current_x_low * basis_bin, i_current_x_high * basis_bin));
     double next_bin_value = 0.;
     zero_n = 0; // -- stop merging bins if zero bin happens more than 4 times
     while( ((current_rel_error > rel_stat_error_cutoff && zero_n < zero_n_cutoff) || next_bin_value < 0 ) && (i_current_x_high + 1) * basis_bin * bin_width < x_max){
       if(debug) cout << "current_rel_error : " << current_rel_error << ", zero_n : " << zero_n << endl;
       
       i_current_x_high ++;
-      current_rel_error = cal_rel_stat_error(nameofhistogram, i_current_x_low * basis_bin, i_current_x_high * basis_bin);
+      current_rel_error = fabs(cal_rel_stat_error(nameofhistogram, i_current_x_low * basis_bin, i_current_x_high * basis_bin));
       double content_next_bin = 0.;
       content_next_bin = cal_content(nameofhistogram, (i_current_x_high - 1) * basis_bin, i_current_x_high * basis_bin);
-      if( content_next_bin < 0.000001 ) zero_n++;
+      if( fabs(content_next_bin) < 0.000001 ) zero_n++;
       next_bin_value = content_next_bin;
     }
     

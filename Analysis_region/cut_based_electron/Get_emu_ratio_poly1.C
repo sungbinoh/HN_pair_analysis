@@ -190,8 +190,8 @@ void save_ratio_plot(TString nameofhistogram, TString sample, TString region, TS
   mapfunc[nameofhistogram + channel + sample + region]  -> Fit(map_fitfunc[nameofhistogram + channel + sample + region], "R");
   double chi2, chi2_norm, Ndf, p0, p0_err, p1, p1_err;
   int ndf;
-  
-  
+
+    
   chi2 = map_fitfunc[nameofhistogram + channel + sample + region] -> GetChisquare();
   ndf = map_fitfunc[nameofhistogram + channel + sample + region] -> GetNDF();
   Ndf = 0. + ndf;
@@ -201,7 +201,12 @@ void save_ratio_plot(TString nameofhistogram, TString sample, TString region, TS
   p1 = map_fitfunc[nameofhistogram + channel + sample + region] -> GetParameter(1);
   p1_err = map_fitfunc[nameofhistogram + channel + sample + region] -> GetParError(1);
   
-  TString chi2_Str, chi2_norm_str, Ndf_str, p0_str, p0_err_str, p1_str, p1_err_str;
+  double y_for_syst_mZ400, y_for_syst_mZ5000, y_for_syst;
+  y_for_syst_mZ400 = p0 + p1 * 400.;
+  y_for_syst_mZ5000 = p0 + p1 * 5000.;
+  y_for_syst = fabs(y_for_syst_mZ5000 - y_for_syst_mZ400);
+
+  TString chi2_Str, chi2_norm_str, Ndf_str, p0_str, p0_err_str, p1_str, p1_err_str, y_for_syst_mZ400_str, y_for_syst_mZ5000_str, y_for_syst_str;
   chi2_Str = Form("%4.2f", chi2);
   chi2_norm_str = Form("%4.3f", chi2_norm);
   Ndf_str = Form("%4.0f", Ndf);
@@ -209,15 +214,31 @@ void save_ratio_plot(TString nameofhistogram, TString sample, TString region, TS
   p0_err_str = Form("%4.3f", p0_err);
   p1_str = Form("%4.5f", p1);
   p1_err_str = Form("%4.5f", p1_err);
+  y_for_syst_mZ400_str = Form("%4.4f", y_for_syst_mZ400);
+  y_for_syst_mZ5000_str = Form("%4.4f", y_for_syst_mZ5000);
+  y_for_syst_str = Form("%4.4f", y_for_syst);
+
   
   mapfunc[nameofhistogram + channel + sample + region] -> Draw();
+
+  TString line = nameofhistogram + channel + sample + region + "line";
+  mapline[line + "mZ400"] = new TLine(400, y_for_syst_mZ400, 5000, y_for_syst_mZ400);
+  mapline[line + "mZ5000"] = new TLine(400, y_for_syst_mZ5000, 5000, y_for_syst_mZ5000);
+  mapline[line + "y_direction"] = new TLine(400, y_for_syst_mZ400, 400, y_for_syst_mZ5000);
+  mapline[line + "mZ400"] -> SetLineStyle(7);
+  mapline[line + "mZ5000"] -> SetLineStyle(7);
+  mapline[line + "y_direction"] -> SetLineStyle(7);
+  mapline[line + "mZ400"] -> Draw();
+  mapline[line + "mZ5000"] -> Draw();
+  mapline[line + "y_direction"]	-> Draw();
+
   
-  
-  TLatex latex_CMSPriliminary, latex_Lumi, chi2_result, p0_result;
+  TLatex latex_CMSPriliminary, latex_Lumi, chi2_result, p0_result, systematics;
   latex_CMSPriliminary.SetNDC();
   latex_Lumi.SetNDC();
   chi2_result.SetNDC();
   p0_result.SetNDC();
+  systematics.SetNDC();
   latex_CMSPriliminary.SetTextSize(0.035);
   latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Simulation}}}");
   latex_Lumi.SetTextSize(0.035);
@@ -226,7 +247,9 @@ void save_ratio_plot(TString nameofhistogram, TString sample, TString region, TS
   chi2_result.DrawLatex(0.25, 0.7, "#chi^{2} / ndof = " + chi2_Str + "/" + Ndf_str + " = " + chi2_norm_str);
   p0_result.SetTextSize(0.035);
   p0_result.DrawLatex(0.25, 0.7 - 0.035, "ratio = " + p0_str + " #pm " + p0_err_str + " + (" + p1_str + " #pm " + p1_err_str + ") x" );
-
+  systematics.SetTextSize(0.035);
+  systematics.DrawLatex(0.25, 0.7 - 0.035 * 2, "Systematics : |" +  y_for_syst_mZ5000_str + " - " + y_for_syst_mZ400_str + "| = " + y_for_syst_str);
+    
   TString pdfname;
   pdfname = "./emu_ratio/" + directory + "/"+ channel + "_emu_ratio_" + sample + "_poly1.pdf";
   
@@ -253,13 +276,30 @@ void run_plots_with_overflow(TString nameofhistogram, int N_bin, double binx[]){
     make_ratio_plot(nameofhistogram, "TT", regions[i], regions[i] + "_OS_" + "DiEle");
     make_ratio_plot(nameofhistogram, "TTLL", regions[i], regions[i] + "_OS_" + "DiEle");
   }
+  
+  //void make_ratio_plot(TString nameofhistogram, TString sample, TString region, TString channel){
+  //mapfunc[nameofhistogram + channel + sample + region] = (TH1F*)GetHist(nameofhistogram + "_" + channel + sample + "rebin") -> Clone(nameofhistogram + channel + sample + region);
+  
+  mapfunc[nameofhistogram + "DiMu" + "TTLL" + "DiMu_sum"] = (TH1F*)mapfunc[nameofhistogram + "CR4_OS_DiMu" + "TTLL" + "CR4"] -> Clone(nameofhistogram + "TTLL_DiMu_sum");
+  cout << mapfunc[nameofhistogram + "CR4_OS_DiMu" + "TTLL" + "SR1"] -> GetBinContent(8) << endl;
+  mapfunc[nameofhistogram + "DiMu" + "TTLL" + "DiMu_sum"] -> Add(mapfunc[nameofhistogram + "CR4_OS_DiMu" + "TTLL" + "SR1"]);
+  mapfunc[nameofhistogram + "DiMu" + "TTLL" + "DiMu_sum"] -> Scale(0.5);
+  
+  mapfunc[nameofhistogram + "DiEle" + "TTLL" + "DiEle_sum"] = (TH1F*)mapfunc[nameofhistogram + "CR4_OS_DiEle" + "TTLL" + "CR4"] -> Clone(nameofhistogram + "TTLL_DiEle_sum");
+  mapfunc[nameofhistogram + "DiEle" + "TTLL" + "DiEle_sum"] -> Add(mapfunc[nameofhistogram + "CR4_OS_DiEle" + "TTLL" + "SR1"]);
+  mapfunc[nameofhistogram + "DiEle" + "TTLL" + "DiEle_sum"] -> Scale(0.5);
 
+  
   for(int i = 0; i < N_regions; i++){
     save_ratio_plot(nameofhistogram, "TT", regions[i], regions[i] + "_OS_" + "DiMu");
     save_ratio_plot(nameofhistogram, "TTLL", regions[i], regions[i] + "_OS_" + "DiMu");
     save_ratio_plot(nameofhistogram, "TT", regions[i], regions[i] + "_OS_" + "DiEle");
     save_ratio_plot(nameofhistogram, "TTLL", regions[i], regions[i] + "_OS_" + "DiEle");
   }
+  // mapfunc[nameofhistogram + channel + sample + region]
+  
+  save_ratio_plot(nameofhistogram, "TTLL", "DiMu_sum", "DiMu");
+  save_ratio_plot(nameofhistogram, "TTLL", "DiEle_sum", "DiEle");
 
 }
 
