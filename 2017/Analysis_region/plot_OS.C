@@ -508,11 +508,9 @@ void make_histogram(TString nameofhistogram, int N_bin, double binx[]){
   if(debug) cout << "9.1" << endl;
 
   mapcanvas[canvas] -> SaveAs(pdfname);
-
+  
   if(debug) cout << "10" << endl;
-  
-  
-  
+    
 }
 
 // -- Setup hist name and open files
@@ -526,19 +524,20 @@ void draw_histogram(TString histname){
     current_bins[i_bin] = map_bin_vector[histname].at(i_bin);
   }
   
-
+  
   // -- Get which region(CR1, CR2 , ...) and channel (DiEle, DiMu, ...)
-  int N_regions = 2;
+  int N_regions = 3;
   TString regions[] = {"CR_Zmass",
-		       "CR_ttbar"
+		       "CR_ttbar",
+		       "CR_inv_mll"
   };
-
+  
   int N_channels = 3;
   TString channels[] = {"DiEle",
                         "DiMu",
                         "EMu"
   };
-
+  
   TString current_dir = "empty";
   TString current_channel = "empty";
   
@@ -552,13 +551,14 @@ void draw_histogram(TString histname){
   current_dir = current_dir + "_" + current_channel;
   
   if(debug) cout << "current_dir : " << current_dir << "/" << histname << endl;
+  if(current_dir.Contains("empty") || current_channel.Contains("empty")) return;
 
   TString WW = "WWTo2L2Nu_powheg";
   TString WZ_2L = "WZTo2L2Q";
   TString WZ_3L = "WZTo3LNu";
   TString ZZ_2L = "ZZTo2L2Q";
   TString ZZ_4L = "ZZTo4L_powheg";
-
+  
   
   openfile(Cycle_name, DoubleEG, current_dir, histname);
   openfile(Cycle_name, SingleMuon, current_dir, histname);
@@ -569,8 +569,7 @@ void draw_histogram(TString histname){
   openfile(Cycle_name, ZZ_2L, current_dir, histname);
   openfile(Cycle_name, ZZ_4L, current_dir, histname);
   openfile(Cycle_name, ttbar, current_dir, histname);
-    
-  if(current_dir.Contains("empty") || current_channel.Contains("empty")) return;
+  
   make_histogram(histname, N_bin, current_bins);
   
 }

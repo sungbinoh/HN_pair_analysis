@@ -67,7 +67,7 @@ TString ttbar = "TTLL_powheg";
 
 const double alpha = 1 - 0.6827;
 
-bool debug = false;
+bool debug = true;
 
 double rel_stat_error_cutoff = 0.05;
 double basis_bin_fraction = 0.05;
@@ -96,6 +96,8 @@ void openfile(TString cyclename, TString samplename, TString dir,TString histnam
   TFile *current_file = new TFile ((filename)) ;
 
   cout << "[[openfile ]] Cd : " << dir << endl;
+  TDirectory *current_dir = (TDirectory *)current_file -> Get(dir); 
+  if(!current_dir) return;
   gDirectory->cd(dir);
   gDirectory -> ls();
 
@@ -241,11 +243,11 @@ void makehistogram(TString nameofhistogram, TString channel){
 
   TString hstack = "hstack" + nameofhistogram;
   
-  maphstack[hstack] = new THStack(hstack, "Stacked_" + nameofhistogram);
   gStyle->SetOptTitle(0);
   
   int n_kind = 3;
   TString samples_array[] = {WW, ttbar, DY_high};
+  bool hist_true[] = {false, false, false};
   
   if(debug) cout << "2" << endl;
   
@@ -254,15 +256,37 @@ void makehistogram(TString nameofhistogram, TString channel){
     
   if(debug) cout << "2.1" << endl;
   
-  GetHist(name_cycle +  WW) -> Add(GetHist(name_cycle + WZ_2L));
-  GetHist(name_cycle +  WW) -> Add(GetHist(name_cycle + WZ_3L));
-  GetHist(name_cycle +  WW) -> Add(GetHist(name_cycle + ZZ_2L));
-  GetHist(name_cycle +  WW) -> Add(GetHist(name_cycle + ZZ_4L));
+  if(!GetHist(name_cycle + current_data)){
+    map_outfile["outfile"]  << "############################## EMPTY DATA, resign! ##############################" << endl;
+    return;
+  }
   
   Int_t nx_func    = GetHist(name_cycle + current_data) -> GetNbinsX();
   Double_t x1_func = GetHist(name_cycle + current_data) -> GetBinLowEdge(1);
   Double_t bw_func = GetHist(name_cycle + current_data) -> GetBinWidth(nx_func);
   Double_t x2_func = GetHist(name_cycle + current_data) -> GetBinLowEdge(nx_func) + bw_func;
+   
+  for(int i_sample = 0; i_sample < n_kind; i_sample++){
+    mapfunc[samples_array[i_sample] + hstack] = new TH1F("", "", nx_func, x1_func, x2_func);
+  }
+  
+  TString WWs[] ={WW, WZ_2L, WZ_3L, ZZ_2L, ZZ_4L};
+  int N_WWs = 5;
+  for(int i_WW = 0; i_WW < N_WWs; i_WW++){
+    if(GetHist(name_cycle + WWs[i_WW])){
+      mapfunc[WW + hstack] -> Add(GetHist(name_cycle + WWs[i_WW]));
+      hist_true[0] = true;
+    }
+  }
+
+  if(GetHist(name_cycle + ttbar)){
+    mapfunc[ttbar + hstack] -> Add(GetHist(name_cycle + ttbar));
+    hist_true[1] = true;
+  }
+  if(GetHist(name_cycle + DY_high)){
+    mapfunc[DY_high + hstack] -> Add(GetHist(name_cycle + DY_high));
+    hist_true[2] = true;
+  }
   
   if(debug) cout << "nx_func : " << nx_func << ", x1_func : " << x1_func << ", x2_func : " << x2_func << endl;
   
@@ -272,7 +296,7 @@ void makehistogram(TString nameofhistogram, TString channel){
   mapfunc[hstack] = new TH1F("", "", nx_func, x1_func, x2_func);
   
   for(int i_stack = 0; i_stack < n_kind; i_stack++){
-    mapfunc[hstack] -> Add( GetHist(name_cycle + samples_array[i_stack]) );
+    if(hist_true[i_stack]) mapfunc[hstack] -> Add( GetHist(name_cycle + samples_array[i_stack]) );
   }
   
   find_good_binning(nameofhistogram, bin_basis, bw_func, x1_func, x2_func);
@@ -294,6 +318,8 @@ void run_for_hist(TString dir, TString histname, TString dir_2nd_tier){
   openfile(Cycle_name, ZZ_4L, dir, histname);
   openfile(Cycle_name, ttbar, dir, histname);
   
+  cout << "[[run_for_hist]] File Open Finished" << endl;
+  
   map_outfile["outfile"] << histname << "\t";
   makehistogram(histname, dir_2nd_tier);
   
@@ -304,12 +330,12 @@ void run_for_hist(TString dir, TString histname, TString dir_2nd_tier){
 void plot(){
 
   map_outfile["outfile"].open("binning_OS.txt");
-
-  
+    
   TDirectory* origDir = gDirectory;
   
-  int n_hist = 6;
+  int n_hist = 7;
   TString histograms[] = {"mZp",
+			  "mN",
 			  "mll",
                           "Lepton_0_Eta",
                           "Lepton_0_Pt",
@@ -318,12 +344,13 @@ void plot(){
 			  
   };
 
-  int N_regions = 3;
+  int N_regions = 4;
   TString regions[] = {"CR_Zmass",
 		       "CR_ttbar",
-		       "CR_inv_mll"
+		       "CR_inv_mll",
+		       "SR"
   };
-
+  
   int N_channels = 3;
   TString channels[] = {"DiEle",
 			"DiMu",
@@ -335,7 +362,16 @@ void plot(){
     for(int i = 0; i < N_regions; i++){
       for(int j = 0; j < N_channels; j++){//channel
 	TString dir = regions[i] + "_" + channels[j];
-        run_for_hist(dir, histograms[i_hist] + "_" + dir, channels[j]);
+        
+	if(regions[i].Contains("SR")){
+	  if(channels[j].Contains("DiEle") || channels[j].Contains("DiMu")){
+	    if(histograms[i_hist].Contains("mZp") || histograms[i_hist].Contains("mN")) run_for_hist(dir, histograms[i_hist] + "_" + dir, channels[j]);
+	  }
+	}
+	else if(histograms[i_hist].Contains("mN")){
+	  if(!regions[i].Contains("SR")) continue;
+	}
+	else run_for_hist(dir, histograms[i_hist] + "_" + dir, channels[j]);
 	
 	mapfunc.clear();
 	maphist.clear();
