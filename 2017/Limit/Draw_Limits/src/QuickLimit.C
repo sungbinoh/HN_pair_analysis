@@ -32,6 +32,11 @@ void QuickLimit(int xxx=0){
     method = "count";
   }
 
+  TString ATLAS_result_file;
+  if(channel.Contains("MuMu")) ATLAS_result_file = "script/ATLAS_Obs_Limit/ATLAS_mumu_limit.txt";
+  if(channel.Contains("ElEl")) ATLAS_result_file = "script/ATLAS_Obs_Limit/ATLAS_elel_limit.txt";
+
+  
   TString base_filepath = WORKING_DIR+"/rootfiles/"+dataset+"/Limit/"+dirname+"/";
   TString base_plotpath = ENV_PLOT_PATH+"/"+dataset+"/QuickLimit/"+dirname+"/"+channel+"/"+method;
 
@@ -45,7 +50,7 @@ void QuickLimit(int xxx=0){
   TFile *out = new TFile(base_plotpath+"/Limits.root","RECREATE");
 
   TString XSEC_file = "script/2017SampleXsec/values_MG_NLO.txt";
-
+  
 
   //=================================
   //==== 1) xsec vs mN, for each ZP
@@ -530,7 +535,7 @@ void QuickLimit(int xxx=0){
   //==== Okay, Now Draw Contour
   //=============================
   
-  TCanvas *c_ct = new TCanvas("c_ct", "", 600, 600);
+  TCanvas *c_ct = new TCanvas("c_ct", "", 750, 600);
   canvas_margin(c_ct);
   c_ct->cd();
   
@@ -540,7 +545,7 @@ void QuickLimit(int xxx=0){
   dummy_ct_ForEachZP->GetYaxis()->SetTitleSize(0.06);
   dummy_ct_ForEachZP->GetYaxis()->SetTitleOffset(1.25);
   dummy_ct_ForEachZP->Draw("hist");
-  dummy_ct_ForEachZP->GetYaxis()->SetRangeUser(100., 3000.);
+  dummy_ct_ForEachZP->GetYaxis()->SetRangeUser(100., 2500.);
   dummy_ct_ForEachZP->GetYaxis()->SetTitle("m_{N} (GeV)");
   dummy_ct_ForEachZP->GetXaxis()->SetRangeUser(400., 5000.);
   dummy_ct_ForEachZP->GetXaxis()->SetTitle("m_{Z'} (GeV)");
@@ -548,10 +553,12 @@ void QuickLimit(int xxx=0){
   double x_Z2N[2] = {0,10000};
   double y_Z2N[2] = {0,5000};
   TGraph *gr_Z2N = new TGraph(2,x_Z2N,y_Z2N);
-  gr_Z2N->SetLineStyle(3);
-  gr_Z2N->SetLineWidth(3);
+  gr_Z2N->SetLineStyle(4);
+  gr_Z2N->SetLineWidth(5);
   gr_Z2N->Draw("lsame");
-
+  
+  TH2D *exp_limit_2D = new TH2D("", "", 12 ,400., 5200., 16, 100., 3300); //for 2D xsec limit plot
+  
   
   //========================================
   //==== 1) Save Limits on Map
@@ -597,7 +604,7 @@ void QuickLimit(int xxx=0){
     is >> b;
     is >> b_68_up;
     is >> b_95_up;
-
+    
     TObjArray *tx = a.Tokenize("_");
     TString mZp = ((TObjString *)(tx->At(0)))->String();
     TString mN = ((TObjString *)(tx->At(1)))->String();
@@ -611,6 +618,10 @@ void QuickLimit(int xxx=0){
       limit_exp[mZp + "_" + mN] = b*0.001;
       limit_exp_68_up[mZp + "_" + mN] = b_68_up * 0.001;
       limit_exp_95_up[mZp + "_" + mN] = b_95_up * 0.001;
+    
+      double mZp_double = mZp.Atof() + 10.;
+      double mN_double = mN.Atof() + 10.;
+      exp_limit_2D -> Fill(mZp_double, mN_double, b*0.001);
     }
   }
 
@@ -618,7 +629,7 @@ void QuickLimit(int xxx=0){
   //==== 2) For loop over y = ax + 100(1 - 4a)
   //========================================
   
-  int N_a = 70; // how many different a's
+  int N_a = 50; // how many different a's
   int N_mZp = 12; // how many Zp mass points
   int mZp_array[] = {400, 800, 1200, 1600, 2000, 2400, 2800, 3200, 3600, 4000, 4400, 4800};
   mZP_crosses.clear();
@@ -635,7 +646,8 @@ void QuickLimit(int xxx=0){
   mN_crosses.push_back(100.);
   mN_crosses_68_up.push_back(100.);
   mN_crosses_95_up.push_back(100.);
-
+  
+  
   
   for(int i_a = 0; i_a < N_a; i_a++){
     
@@ -681,30 +693,37 @@ void QuickLimit(int xxx=0){
       double mN_low_xsec = limit_theory[current_mZp_str + "_" +current_mN_low_str];
       double mN_high_xsec = limit_theory[current_mZp_str + "_" +current_mN_high_str];
       
-      y_theory[i_N] = ((mN - mN_low) * mN_low_xsec + (mN_high - mN) * mN_high) / 200.;
+      //y_theory[i_N] = ((mN - mN_low) * mN_low_xsec + (mN_high - mN) * mN_high) / 200.;
+      y_theory[i_N] = mN_low_xsec - 0.005 * (mN_low_xsec - mN_high_xsec) * (mN - mN_low + 0.); 
       
       
       //Linear extrapolate cross section limits
       mN_low_xsec = limit_exp[current_mZp_str + "_" +current_mN_low_str];
       mN_high_xsec = limit_exp[current_mZp_str + "_" +current_mN_high_str];
-      y_exp[i_N] = ((mN - mN_low) * mN_low_xsec + (mN_high - mN) * mN_high) / 200.;
+      //y_exp[i_N] = ((mN - mN_low) * mN_low_xsec + (mN_high - mN) * mN_high) / 200.;
+      y_exp[i_N] = mN_low_xsec - 0.005 * (mN_low_xsec - mN_high_xsec) * (mN - mN_low + 0.);
       
       mN_low_xsec = limit_exp_95_down[current_mZp_str + "_" +current_mN_low_str];
       mN_high_xsec = limit_exp_95_down[current_mZp_str + "_" +current_mN_high_str];
-      y_exp_95_down[i_N] = ((mN - mN_low) * mN_low_xsec + (mN_high - mN) * mN_high) / 200.;
-      
+      //y_exp_95_down[i_N] = ((mN - mN_low) * mN_low_xsec + (mN_high - mN) * mN_high) / 200.;
+      y_exp_95_down[i_N] = mN_low_xsec - 0.005 * (mN_low_xsec - mN_high_xsec) * (mN - mN_low + 0.);
+
       mN_low_xsec = limit_exp_68_down[current_mZp_str + "_" +current_mN_low_str];
       mN_high_xsec = limit_exp_68_down[current_mZp_str + "_" +current_mN_high_str];
-      y_exp_68_down[i_N] = ((mN - mN_low) * mN_low_xsec + (mN_high - mN) * mN_high) / 200.;
+      //y_exp_68_down[i_N] = ((mN - mN_low) * mN_low_xsec + (mN_high - mN) * mN_high) / 200.;
+      y_exp_68_down[i_N] = mN_low_xsec - 0.005 * (mN_low_xsec - mN_high_xsec) * (mN - mN_low + 0.);
 
       mN_low_xsec = limit_exp_68_up[current_mZp_str + "_" +current_mN_low_str];
       mN_high_xsec = limit_exp_68_up[current_mZp_str + "_" +current_mN_high_str];
-      y_exp_68_up[i_N] = ((mN - mN_low) * mN_low_xsec + (mN_high - mN) * mN_high) / 200.;
+      //y_exp_68_up[i_N] = ((mN - mN_low) * mN_low_xsec + (mN_high - mN) * mN_high) / 200.;
+      y_exp_68_up[i_N] = mN_low_xsec - 0.005 * (mN_low_xsec - mN_high_xsec) * (mN - mN_low + 0.);
 
       mN_low_xsec = limit_exp_95_up[current_mZp_str + "_" +current_mN_low_str];
       mN_high_xsec = limit_exp_95_up[current_mZp_str + "_" +current_mN_high_str];
-      y_exp_95_up[i_N] = ((mN - mN_low) * mN_low_xsec + (mN_high - mN) * mN_high) / 200.;
+      //y_exp_95_up[i_N] = ((mN - mN_low) * mN_low_xsec + (mN_high - mN) * mN_high) / 200.;
+      y_exp_95_up[i_N] = mN_low_xsec - 0.005 * (mN_low_xsec - mN_high_xsec) * (mN - mN_low + 0.);
 
+      
       if(y_exp_95_down[i_N] < y_theory[i_N]) HasExclusion[0] = true;
       if(y_exp_68_down[i_N] < y_theory[i_N]) HasExclusion[1] = true;
       if(y_exp[i_N] < y_theory[i_N]) HasExclusion[2] = true;
@@ -822,83 +841,150 @@ void QuickLimit(int xxx=0){
   //========================================
   //==== 3) Let's draw found points 
   //========================================
-  
+  c_ct -> SetLogz();
+  //exp_limit_2D -> Draw("colzsame");
+    
   const int n_point_95_down = mZP_crosses_95_down.size();
   const int n_point_68_down = mZP_crosses_68_down.size();
   const int n_point = mZP_crosses.size();
   const int n_point_68_up = mZP_crosses_68_up.size();
   const int n_point_95_up = mZP_crosses_95_up.size();
   
-  double x_mZp_95_down[n_point_95_down+1];
-  double x_mZp_68_down[n_point_68_down+1];
-  double x_mZp[n_point+1];
-  double x_mZp_68_up[n_point_68_up+1];
-  double x_mZp_95_up[n_point_95_up+1];
+  double x_mZp_95_down[n_point_95_down];
+  double x_mZp_68_down[n_point_68_down];
+  double x_mZp[n_point];
+  double x_mZp_68_up[n_point_68_up];
+  double x_mZp_95_up[n_point_95_up];
 
-  double y_mZp_95_down[n_point_95_down+1];
-  double y_mZp_68_down[n_point_68_down+1];
-  double y_mZp[n_point+1];
-  double y_mZp_68_up[n_point_68_up+1];
-  double y_mZp_95_up[n_point_95_up+1];
-  for(int i_fill = 0; i_fill < n_point_95_down; i_fill++){
-    x_mZp_95_down[i_fill] = mZP_crosses_95_down.at(i_fill);
-    y_mZp_95_down[i_fill] = mN_crosses_95_down.at(i_fill);
+  double y_mZp_95_down[n_point_95_down];
+  double y_mZp_68_down[n_point_68_down];
+  double y_mZp[n_point];
+  double y_mZp_68_up[n_point_68_up];
+  double y_mZp_95_up[n_point_95_up];
+  for(int i_fill = 0; i_fill < n_point_95_down-1; i_fill++){
+    x_mZp_95_down[i_fill] = mZP_crosses_95_down.at(i_fill+1);
+    y_mZp_95_down[i_fill] = mN_crosses_95_down.at(i_fill+1);
   }
-  for(int i_fill = 0; i_fill < n_point_68_down; i_fill++){
-    x_mZp_68_down[i_fill] = mZP_crosses_68_down.at(i_fill);
-    y_mZp_68_down[i_fill] = mN_crosses_68_down.at(i_fill);
+  for(int i_fill = 0; i_fill < n_point_68_down-1; i_fill++){
+    x_mZp_68_down[i_fill] = mZP_crosses_68_down.at(i_fill+1);
+    y_mZp_68_down[i_fill] = mN_crosses_68_down.at(i_fill+1);
   }
-  for(int i_fill = 0; i_fill < n_point; i_fill++){
-    x_mZp[i_fill] = mZP_crosses.at(i_fill);
-    y_mZp[i_fill] = mN_crosses.at(i_fill);
+  for(int i_fill = 0; i_fill < n_point-1; i_fill++){
+    x_mZp[i_fill] = mZP_crosses.at(i_fill+1);
+    y_mZp[i_fill] = mN_crosses.at(i_fill+1);
   }
-  for(int i_fill = 0; i_fill < n_point_68_up; i_fill++){
-    x_mZp_68_up[i_fill] = mZP_crosses_68_up.at(i_fill);
-    y_mZp_68_up[i_fill] = mN_crosses_68_up.at(i_fill);
+  for(int i_fill = 0; i_fill < n_point_68_up-1; i_fill++){
+    x_mZp_68_up[i_fill] = mZP_crosses_68_up.at(i_fill+1);
+    y_mZp_68_up[i_fill] = mN_crosses_68_up.at(i_fill+1);
   }
-  for(int i_fill = 0; i_fill < n_point_95_up; i_fill++){
-    x_mZp_95_up[i_fill] = mZP_crosses_95_up.at(i_fill);
-    y_mZp_95_up[i_fill] = mN_crosses_95_up.at(i_fill);
+  for(int i_fill = 0; i_fill < n_point_95_up-1; i_fill++){
+    x_mZp_95_up[i_fill] = mZP_crosses_95_up.at(i_fill+1);
+    y_mZp_95_up[i_fill] = mN_crosses_95_up.at(i_fill+1);
   }
-  x_mZp_95_down[n_point_95_down] = mZP_crosses_95_down.at(0);
-  y_mZp_95_down[n_point_95_down] = mN_crosses_95_down.at(0);
-  x_mZp_68_down[n_point_68_down] = mZP_crosses_68_down.at(0);
-  y_mZp_68_down[n_point_68_down] = mN_crosses_68_down.at(0);
-  x_mZp[n_point] = mZP_crosses.at(0);
-  y_mZp[n_point] = mN_crosses.at(0);
-  x_mZp_68_up[n_point_68_up] = mZP_crosses_68_up.at(0);
-  y_mZp_68_up[n_point_68_up] = mN_crosses_68_up.at(0);
-  x_mZp_95_up[n_point_95_up] = mZP_crosses_95_up.at(0);
-  y_mZp_95_up[n_point_95_up] = mN_crosses_95_up.at(0);
+  x_mZp_95_down[n_point_95_down-1] = mZP_crosses_95_down.at(0);
+  y_mZp_95_down[n_point_95_down-1] = mN_crosses_95_down.at(0);
+  x_mZp_68_down[n_point_68_down-1] = mZP_crosses_68_down.at(0);
+  y_mZp_68_down[n_point_68_down-1] = mN_crosses_68_down.at(0);
+  x_mZp[n_point-1] = mZP_crosses.at(0);
+  y_mZp[n_point-1] = mN_crosses.at(0);
+  x_mZp_68_up[n_point_68_up-1] = mZP_crosses_68_up.at(0);
+  y_mZp_68_up[n_point_68_up-1] = mN_crosses_68_up.at(0);
+  x_mZp_95_up[n_point_95_up-1] = mZP_crosses_95_up.at(0);
+  y_mZp_95_up[n_point_95_up-1] = mN_crosses_95_up.at(0);
   
 
+ 
+  TGraph *gr_central = new TGraph(n_point, x_mZp, y_mZp);
+  TGraph *gr_central_fill = (TGraph*)gr_central->Clone();
+  gr_central_fill -> SetFillColor(kAzure + 8);
+  gr_central_fill -> Draw("fsame");
   
-  TGraph *gr_68_down = new TGraph(n_point_68_down+1, x_mZp_68_down, y_mZp_68_down);
+  gr_central->Print();
+  gr_central-> SetLineStyle(8);
+  gr_central->SetLineWidth(3);
+  gr_central->SetLineColor(kBlue);
+  gr_central->Draw("lsame");
+  
+  TGraph *gr_68_down = new TGraph(n_point_68_down, x_mZp_68_down, y_mZp_68_down);
   gr_68_down->Print();
   gr_68_down->SetLineStyle(2);
   gr_68_down->SetLineWidth(1);
-  gr_68_down->SetLineColor(kRed);
+  gr_68_down->SetLineColor(kBlue);
   gr_68_down->Draw("lsame");
   
-  TGraph *gr_68_up = new TGraph(n_point_68_up+1, x_mZp_68_up, y_mZp_68_up);
+  TGraph *gr_68_up = new TGraph(n_point_68_up, x_mZp_68_up, y_mZp_68_up);
   gr_68_up->Print();
   gr_68_up->SetLineStyle(2);
   gr_68_up->SetLineWidth(1);
-  gr_68_up->SetLineColor(kRed);
+  gr_68_up->SetLineColor(kBlue);
   gr_68_up->Draw("lsame");
   
-  TGraph *gr_central = new TGraph(n_point+1, x_mZp, y_mZp);
-  gr_central->Print();
-  gr_central->SetLineStyle(8);
-  gr_central->SetLineWidth(3);
-  gr_central->SetLineColor(kRed);
-  gr_central->Draw("lsame");
+ 
+  //========================================
+  //==== 4) Add ATLAS 8 TeV results 
+  //========================================
+  
+  string atlas_line;
+  vector<double> atlas_mZp, atlas_mN;
+  ifstream atlas_in(WORKING_DIR+"/"+ATLAS_result_file);
+  while(getline(atlas_in,atlas_line)){
+    std::istringstream is( atlas_line );
+    
+    //atlas_line
+    TString mark;
+    double a,b;
+    is >> mark;
+    is >> a;
+    is >> b;
+    
+    if(mark.Contains("TRUE")){
+      atlas_mZp.push_back(a);
+      atlas_mN.push_back(b);
+    }
+  }
+  
+  const int N_atlas = atlas_mZp.size();
+  double mZp_atlas[N_atlas+2], mN_atlas[N_atlas+2];
+  for(int i_atlas = 0; i_atlas < N_atlas; i_atlas++){
+    mZp_atlas[i_atlas] = atlas_mZp.at(i_atlas);
+    mN_atlas[i_atlas] = atlas_mN.at(i_atlas);
+  }
+  
+  mZp_atlas[N_atlas] = 400.;
+  mN_atlas[N_atlas] = 50.;
+  mZp_atlas[N_atlas+1] = atlas_mZp.at(0);
+  mN_atlas[N_atlas+1] = atlas_mN.at(0);
 
-  TLegend *lg = new TLegend(0.7, 0.7, 0.95, 0.95);
+  TGraph *gr_atlas = new TGraph(N_atlas + 2, mZp_atlas, mN_atlas);
+  gr_atlas->Print();
+  gr_atlas-> SetLineStyle(8);
+  gr_atlas->SetLineWidth(3);
+  gr_atlas->SetLineColor(kRed);
+  gr_atlas->Draw("lsame");
+  
+
+  //========================================
+  //==== 5) Draw Legend and Latex 
+  //========================================
+
+  TLegend *lg = new TLegend(0.2, 0.7, 0.6, 0.90);
   lg->SetBorderSize(0);
   lg->SetFillStyle(0);
-  lg->AddEntry(gr_central, "Expected", "l");
-  lg->Draw("same");
+  lg->AddEntry(gr_Z2N, "m_{N} = m_{Z'} / 2 ", "l");
+  lg->AddEntry(gr_central, "95% CL Expected Limit #pm 1 #sigma", "l");
+  lg->AddEntry(gr_atlas, "#splitline{95% CL Observed Limit}{ATLAS @ 8 TeV}", "l");
+  lg->Draw();
+
+  TLatex latex_CMSPriliminary, latex_Lumi;
+  latex_CMSPriliminary.SetNDC();
+  latex_Lumi.SetNDC();
+  latex_CMSPriliminary.SetTextSize(0.035);
+  latex_CMSPriliminary.DrawLatex(0.16, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
+  latex_Lumi.SetTextSize(0.035);
+  latex_Lumi.DrawLatex(0.68, 0.96, "41.3 fb^{-1} (13 TeV, 2017)");
+  
+  
+  dummy_ct_ForEachZP -> Draw("axissame");
   
   //==== Save
 
@@ -913,7 +999,7 @@ void QuickLimit(int xxx=0){
 }
 
 
-
+ 
 
 
 
