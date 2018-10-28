@@ -42,17 +42,13 @@ map<TString, TKey*> maphistcheck;
 map<TString, TList*> maplist;
 
 //cycle name
-//TString Cycle_name = "ExampleAnalyzerElectronMuon";
-//TString Cycle_name = "ExampleAnalyzerDiMuon";
-TString Cycle_name = "Muon_FR_cal_all";
+TString Cycle_name = "Electron_FR_cal_all";
 //sample names                          
-TString data = "data_SingleMuon";
-//TString periodC = "periodC_SKMuonEG";
-//TString periodD = "periodD_SKMuonEG";
+TString data = "data_SinglePhoton";
 
 //DY
-TString DY_low = "SKDYJets_10to50";
-TString DY_high = "SKDYJets";
+TString DY_low = "SKDY10to50";
+TString DY_high = "SKDY50plus";
 
 TString Wjets = "SKWJets";
 
@@ -66,9 +62,10 @@ TString SingleTop_t = "SKSingleTop_t";
 TString WGtoLNuG = "SKWGtoLNuG";
 
 //VV
-TString WW = "SKWW";
-TString WZ = "SKWZ";
-TString ZZ = "SKZZ";
+TString WW_lnuqq = "SKWWToLNuQQ";
+TString WW_2l2nu = "SKWWTo2L2Nu";
+TString WZ = "SKWZTo3LNu_powheg";
+TString ZZ = "SKZZTo4L_powheg";
 
 //TString ttbar = "SKTTJets_aMC";
 TString ttbar = "SKTT_powheg";
@@ -103,9 +100,9 @@ TH2 * GetHist_2D(TString hname){
 void openfile(TString cyclename, TString samplename){
   
   TString underbar = "_";
-  TString version = "cat_v8-0-7.root";
+  TString version = "cat_v8-0-8.root";
   TString filename = cyclename + underbar + samplename + underbar + version;
-  if(samplename == data) filename = cyclename + underbar + samplename + "_cat_v8-0-7.root";
+  if(samplename == data) filename = cyclename + underbar + samplename + "_cat_v8-0-8.root";
   
   cout << "opening : " << filename << endl;
   
@@ -144,9 +141,9 @@ void openfile(TString cyclename, TString samplename){
 vector<TString> gethistnames(TString cyclename, TString samplename){
 
   TString underbar = "_";
-  TString version = "cat_v8-0-7.root";
+  TString version = "cat_v8-0-8.root";
   TString filename = cyclename + underbar + samplename + underbar + version;
-  if(samplename == data) filename = cyclename + underbar + samplename + "_cat_v8-0-7.root";
+  if(samplename == data) filename = cyclename + underbar + samplename + "_cat_v8-0-8.root";
 
   cout << "opening : " << filename << endl;
 
@@ -200,7 +197,8 @@ void makehistogram(TString nameofhistogram){
   GetHist_2D(nameofhistogram + "MC_sum") -> Add(GetHist_2D(name_cycle +  Wjets));
   //GetHist_2D(nameofhistogram + "MC_sum") -> Add(GetHist_2D(name_cycle +  WGtoLNuG));
   //GetHist_2D(nameofhistogram + "MC_sum") -> Add(GetHist_2D(name_cycle +  ZGto2LG));
-  GetHist_2D(nameofhistogram + "MC_sum") -> Add(GetHist_2D(name_cycle +  WW));
+  GetHist_2D(nameofhistogram + "MC_sum") -> Add(GetHist_2D(name_cycle +  WW_lnuqq));
+  GetHist_2D(nameofhistogram + "MC_sum") -> Add(GetHist_2D(name_cycle +  WW_2l2nu));
   GetHist_2D(nameofhistogram + "MC_sum") -> Add(GetHist_2D(name_cycle +  WZ));
   GetHist_2D(nameofhistogram + "MC_sum") -> Add(GetHist_2D(name_cycle +  ZZ));
 
@@ -225,7 +223,7 @@ void draw_colz(TString histname){
   mapcanvas[canvas] -> SetLeftMargin( 0.16 );
   
   gStyle->SetPaintTextFormat("4.4f");
-  maphist_2D[histname] -> GetXaxis()->SetRangeUser(35., 150.);
+  maphist_2D[histname] -> GetXaxis()->SetRangeUser(40., 150.);
   maphist_2D[histname] -> Draw("colztexte1");
   
   mapcanvas[canvas] -> SaveAs("./Fake_Rate/" + histname + ".pdf");
@@ -246,9 +244,8 @@ void plot(){
   openfile(Cycle_name, SingleTop_s);
   openfile(Cycle_name, SingleTop_tW);
   openfile(Cycle_name, SingleTop_t);
-  //openfile(Cycle_name, WGtoLNuG);
-  //openfile(Cycle_name, ZGto2LG);
-  openfile(Cycle_name, WW);
+  openfile(Cycle_name, WW_lnuqq);
+  openfile(Cycle_name, WW_2l2nu);
   openfile(Cycle_name, WZ);
   openfile(Cycle_name, ZZ);
   openfile(Cycle_name, ttbar);

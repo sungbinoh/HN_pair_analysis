@@ -50,47 +50,28 @@ map<TString, TList*> maplist;
 TString Cycle_name = "HN_pair_all";
 //sample names
 //TString data = "data_DoubleMuon";
-TString SingleMuon = "data_SingleMuon";
-TString DoubleEG = "data_DoubleEG";
+TString SingleMuon = "SingleMuon";
+TString DoubleEG = "DoubleEG";
 
 //DY
-TString DY_low = "SKDYJets_10to50";
-TString DY_high = "SKDYJets";
-
-TString Wjets = "SKWJets";
-
-//single top
-TString SingleTbar_tW = "SKSingleTbar_tW";
-TString SingleTbar_t = "SKSingleTbar_t";
-TString SingleTop_s = "SKSingleTop_s";
-TString SingleTop_tW = "SKSingleTop_tW";
-TString SingleTop_t = "SKSingleTop_t";
-
-TString WGtoLNuG = "SKWGtoLNuG";
+TString DY_high = "DYJets";
 
 //VV
-TString WW = "SKWW";
-TString WZ = "SKWZ";
-TString ZZ = "SKZZ";
+TString WW = "WWTo2L2Nu_powheg";
+TString WZ_2L = "WZTo2L2Q";
+TString WZ_3L = "WZTo3LNu";
+TString ZZ_2L = "ZZTo2L2Q";
+TString ZZ_4L = "ZZTo4L_powheg";
 
-//VVV
-TString WWW = "SKWWW";
-TString WWZ = "SKWWZ";
-TString WZZ = "SKWZZ";
-TString ZZZ = "SKZZZ";
-
-//TString ttbar = "SKTTJets_aMC";
-TString ttbar = "SKTT_powheg";
-//TString ttbar = "SKTTLL_powheg";
-TString ZGto2LG = "SKZGto2LG";
-
-//data driven
-TString emu_method = "SKEMu_method";
-TString CF_bkg = "SKCF_bkg";
+TString ttbar = "TTLL_powheg";
 
 const double alpha = 1 - 0.6827;
 
 bool debug = true;
+
+double rel_stat_error_cutoff = 0.05;
+double basis_bin_fraction = 0.05;
+int zero_n_cutoff = 10;
 
 
 /// Getting Histogram Function ///////////////////////////////////////////////
@@ -107,26 +88,29 @@ TH1F * GetHist(TString hname){
 
 
 /// Open ROOT file ///////////////////////////////////////////////////////////
-void openfile(TString cyclename, TString samplename, TString dir_1st_tier, TString dir_2nd_tier, TString histname){
+void openfile(TString cyclename, TString samplename, TString dir,TString histname){
 
-  if(debug) cout << "[[openfile]] " << histname + cyclename + samplename << endl;    
-  
-  TString underbar = "_";
-  TString version = "dilep_cat_v8-0-7.root";
-  TString filename = cyclename + underbar + samplename + underbar + version;
-  if(samplename.Contains("data") || samplename.Contains("NNPDF30_13TeV-powheg")) filename = cyclename + underbar + samplename + "_cat_v8-0-7.root";
+  TString filename = cyclename + "_" + samplename + ".root";
+  cout << "[[openfile ]]opening : " << filename << endl;
   
   TFile *current_file = new TFile ((filename)) ;
 
-  gDirectory->cd(dir_1st_tier);
-  gDirectory->cd(dir_1st_tier + dir_2nd_tier);
+  cout << "[[openfile ]] Cd : " << dir << endl;
+  TDirectory *current_dir = (TDirectory *)current_file -> Get(dir); 
+  if(!current_dir) return;
+  gDirectory->cd(dir);
+  gDirectory -> ls();
+
+  cout << "[[openfile ]] Get : " << histname << endl;
 
   //if(debug && samplename.Contains("SingleMuon")) gDirectory -> ls();
   
   TH1F * current_hist = (TH1F*)gDirectory -> Get(histname);
-  current_hist -> SetDirectory(0);
+  if(current_hist){
+    current_hist -> SetDirectory(0);
+  }
   TH1::AddDirectory(kFALSE);
-
+  
   mapfunc[histname + cyclename + samplename] = current_hist;
   
   current_file -> Close();
@@ -139,7 +123,7 @@ void openfile(TString cyclename, TString samplename, TString dir_1st_tier, TStri
 
 /// -- Get Info from Hist
 double cal_rel_stat_error(TString nameofhistogram, int i_start, int i_end){
-
+  
   TString hstack = "hstack" + nameofhistogram;
   double sum_error_sq = 0.;
   double sum_content = 0.;
@@ -172,18 +156,20 @@ double cal_content(TString nameofhistogram, int i_start, int i_end){
 
 void find_good_binning(TString nameofhistogram, int basis_bin, double bin_width, double x_min, double x_max){
 
+  //if(nameofhistogram.Contains("h_OS_lljjjjmass_AK8_1_CR3_OS_DiEle")) debug = true;
+  
   TString hstack = "hstack" + nameofhistogram;
 
   // -- Start from zero : find the bin when MC starts to have non-zero value
   double bin_content = 0.;
   int first_bin = 0;
-  while(bin_content < 0.00001 && first_bin * basis_bin * bin_width < x_max ){
+  while(bin_content < 0.00001 && first_bin * basis_bin * bin_width + x_min < x_max ){
     bin_content = cal_content(nameofhistogram, first_bin * basis_bin, (first_bin + 1) * basis_bin);
     first_bin ++;
   }
 
   // -- Warning empty MC & return
-  if(debug) cout << "first bin_content : " << bin_content << ", first_bin : " << first_bin * basis_bin * bin_width << endl;
+  if(debug) cout << "first bin_content : " << bin_content << ", first_bin : " << first_bin * basis_bin * bin_width + x_min << endl;
   if(first_bin * basis_bin * bin_width + 1. > x_max ){
     map_outfile["outfile"] << "############################## EMPTY MC, resign! ##############################" << endl;
     return;
@@ -191,9 +177,11 @@ void find_good_binning(TString nameofhistogram, int basis_bin, double bin_width,
   
   if(debug) cout << "x_max : " << x_max << endl;
   
-  map_outfile["outfile"] << "{0";
+  if(nameofhistogram.Contains("Eta")) map_outfile["outfile"] << "{-3.0";
+  else map_outfile["outfile"] << "{0.";
+
   for(int i_low = 1; i_low < first_bin; i_low++){
-    map_outfile["outfile"] << ", " << i_low * basis_bin * bin_width ;
+    map_outfile["outfile"] << ", " << i_low * basis_bin * bin_width + x_min ;
   }
   
   if(debug) cout << "low end "<< endl;
@@ -202,27 +190,28 @@ void find_good_binning(TString nameofhistogram, int basis_bin, double bin_width,
   int i_current_x_low = first_bin;
   int i_current_x_high = first_bin + 1;
   int zero_n = 0;
-  
-  while(i_current_x_high * basis_bin * bin_width < x_max){
-    double current_rel_error = cal_rel_stat_error(nameofhistogram, i_current_x_low * basis_bin, i_current_x_high * basis_bin);
-    
+
+  while(i_current_x_high * basis_bin * bin_width + x_min < x_max){
+    double current_rel_error = fabs(cal_rel_stat_error(nameofhistogram, i_current_x_low * basis_bin , i_current_x_high * basis_bin));
+    double next_bin_value = 0.;
     zero_n = 0; // -- stop merging bins if zero bin happens more than 4 times
-    while(current_rel_error > 0.1 && zero_n < 5 && (i_current_x_high + 1) * basis_bin * bin_width < x_max){
+    while( ((current_rel_error > rel_stat_error_cutoff && zero_n < zero_n_cutoff) || next_bin_value < 0 ) && (i_current_x_high + 1) * basis_bin * bin_width + x_min < x_max){
       if(debug) cout << "current_rel_error : " << current_rel_error << ", zero_n : " << zero_n << endl;
       
       i_current_x_high ++;
-      current_rel_error = cal_rel_stat_error(nameofhistogram, i_current_x_low * basis_bin, i_current_x_high * basis_bin);
+      current_rel_error = fabs(cal_rel_stat_error(nameofhistogram, i_current_x_low * basis_bin, i_current_x_high * basis_bin));
       double content_next_bin = 0.;
       content_next_bin = cal_content(nameofhistogram, (i_current_x_high - 1) * basis_bin, i_current_x_high * basis_bin);
-      if( content_next_bin < 0.000001 ) zero_n++;
+      if( fabs(content_next_bin) < 0.000001 ) zero_n++;
+      next_bin_value = content_next_bin;
     }
     
-    if(zero_n == 5){
+    if(zero_n == zero_n_cutoff){
       if(debug) cout << "break" << endl;
       break;
     }
     
-    map_outfile["outfile"] << ", " << i_current_x_high * basis_bin * bin_width;
+    map_outfile["outfile"] << ", " << i_current_x_high * basis_bin * bin_width + x_min;
     
     i_current_x_low = i_current_x_high;
     i_current_x_high = i_current_x_high + 1;
@@ -230,16 +219,16 @@ void find_good_binning(TString nameofhistogram, int basis_bin, double bin_width,
 
   if(debug) cout << "while end" << endl;
   
-  if(zero_n > 4){
-    while(i_current_x_high * basis_bin * bin_width < x_max){
-      map_outfile["outfile"] << ", " << i_current_x_high * basis_bin * bin_width;
+  if(zero_n > zero_n_cutoff - 1){
+    while(i_current_x_high * basis_bin * bin_width + x_min < x_max){
+      map_outfile["outfile"] << ", " << i_current_x_high * basis_bin * bin_width + x_min;
       i_current_x_high++;
     }
   }
   
-  map_outfile["outfile"] << ", " << i_current_x_high * basis_bin * bin_width << " };" << endl;
+  map_outfile["outfile"] << ", " << i_current_x_high * basis_bin * bin_width + x_min << " };" << endl;
   
-  
+  debug = false;
   
 }
 
@@ -256,83 +245,83 @@ void makehistogram(TString nameofhistogram, TString channel){
 
   TString hstack = "hstack" + nameofhistogram;
   
-  maphstack[hstack] = new THStack(hstack, "Stacked_" + nameofhistogram);
   gStyle->SetOptTitle(0);
   
   int n_kind = 3;
-  TString samples_array[] = {WZ, emu_method, DY_high};
-  Int_t colour_array[] = {419, 416, 400};
-  TString samples_legend[] = {"Other backgrounds", "Data Driven Flavour symm. bkg", "Z/#gamma + jets"};
+  TString samples_array[] = {WW, ttbar, DY_high};
+  bool hist_true[] = {false, false, false};
   
   if(debug) cout << "2" << endl;
   
   TString name_cycle = nameofhistogram + Cycle_name;
   if(debug) cout << "check1" << endl;
-  GetHist(name_cycle +  DY_high) -> Add(GetHist(name_cycle + DY_low));
-  
+    
   if(debug) cout << "2.1" << endl;
   
-  GetHist(name_cycle +  SingleTop_s) -> Add(GetHist(name_cycle + SingleTbar_t));
-  GetHist(name_cycle +  SingleTop_s) -> Add(GetHist(name_cycle + SingleTop_t));
-  GetHist(name_cycle +  WZ) -> Add(GetHist(name_cycle + ZZ));
-  GetHist(name_cycle +  WGtoLNuG) -> Add(GetHist(name_cycle + ZGto2LG));
-  GetHist(name_cycle +  WWW) -> Add(GetHist(name_cycle + WWZ));
-  GetHist(name_cycle +  WWW) -> Add(GetHist(name_cycle + WZZ));
-  GetHist(name_cycle +  WWW) -> Add(GetHist(name_cycle + ZZZ));
-  GetHist(name_cycle + WZ) -> Add(GetHist(name_cycle +  SingleTop_s));
-  GetHist(name_cycle + WZ) -> Add(GetHist(name_cycle +  WWW));
-  GetHist(name_cycle + WZ) -> Add(GetHist(name_cycle +  WGtoLNuG));
-
+  if(!GetHist(name_cycle + current_data)){
+    map_outfile["outfile"]  << "############################## EMPTY DATA, resign! ##############################" << endl;
+    return;
+  }
+  
   Int_t nx_func    = GetHist(name_cycle + current_data) -> GetNbinsX();
   Double_t x1_func = GetHist(name_cycle + current_data) -> GetBinLowEdge(1);
   Double_t bw_func = GetHist(name_cycle + current_data) -> GetBinWidth(nx_func);
   Double_t x2_func = GetHist(name_cycle + current_data) -> GetBinLowEdge(nx_func) + bw_func;
+   
+  for(int i_sample = 0; i_sample < n_kind; i_sample++){
+    mapfunc[samples_array[i_sample] + hstack] = new TH1F("", "", nx_func, x1_func, x2_func);
+  }
+  
+  TString WWs[] ={WW, WZ_2L, WZ_3L, ZZ_2L, ZZ_4L};
+  int N_WWs = 5;
+  for(int i_WW = 0; i_WW < N_WWs; i_WW++){
+    if(GetHist(name_cycle + WWs[i_WW])){
+      mapfunc[WW + hstack] -> Add(GetHist(name_cycle + WWs[i_WW]));
+      hist_true[0] = true;
+    }
+  }
+
+  if(GetHist(name_cycle + ttbar)){
+    mapfunc[ttbar + hstack] -> Add(GetHist(name_cycle + ttbar));
+    hist_true[1] = true;
+  }
+  if(GetHist(name_cycle + DY_high)){
+    mapfunc[DY_high + hstack] -> Add(GetHist(name_cycle + DY_high));
+    hist_true[2] = true;
+  }
   
   if(debug) cout << "nx_func : " << nx_func << ", x1_func : " << x1_func << ", x2_func : " << x2_func << endl;
   
-  int bin_basis = nx_func / 50.;
+  int bin_basis = nx_func * basis_bin_fraction;
   if(debug) cout << "bin_basis : " << bin_basis << endl;
 
   mapfunc[hstack] = new TH1F("", "", nx_func, x1_func, x2_func);
   
   for(int i_stack = 0; i_stack < n_kind; i_stack++){
-    mapfunc[hstack] -> Add( GetHist(name_cycle + samples_array[i_stack]) );
+    if(hist_true[i_stack]) mapfunc[hstack] -> Add( GetHist(name_cycle + samples_array[i_stack]) );
   }
   
   find_good_binning(nameofhistogram, bin_basis, bw_func, x1_func, x2_func);
-
-  if(debug) cout << "[[makehistogram]] end" << endl;
   
 }
 //////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
 
-void run_for_hist(TString dir_1st_tier, TString histname, TString dir_2nd_tier){
+void run_for_hist(TString dir, TString histname, TString dir_2nd_tier){
 
-  if(debug) cout << "[[run_for_hist]] " << histname << endl;
+  openfile(Cycle_name, DoubleEG, dir, histname);
+  openfile(Cycle_name, SingleMuon, dir, histname);
+  openfile(Cycle_name, DY_high, dir, histname);
+  openfile(Cycle_name, WW, dir, histname);
+  openfile(Cycle_name, WZ_2L, dir, histname);
+  openfile(Cycle_name, WZ_3L, dir, histname);
+  openfile(Cycle_name, ZZ_2L, dir, histname);
+  openfile(Cycle_name, ZZ_4L, dir, histname);
+  openfile(Cycle_name, ttbar, dir, histname);
   
-  openfile(Cycle_name, DoubleEG, dir_1st_tier, dir_2nd_tier, histname);
-  openfile(Cycle_name, SingleMuon, dir_1st_tier, dir_2nd_tier, histname);
-  openfile(Cycle_name, DY_low, dir_1st_tier, dir_2nd_tier, histname);
-  openfile(Cycle_name, DY_high, dir_1st_tier, dir_2nd_tier, histname);
-  openfile(Cycle_name, SingleTbar_tW, dir_1st_tier, dir_2nd_tier, histname);
-  openfile(Cycle_name, SingleTbar_t, dir_1st_tier, dir_2nd_tier, histname);
-  openfile(Cycle_name, SingleTop_s, dir_1st_tier, dir_2nd_tier, histname);
-  openfile(Cycle_name, SingleTop_tW, dir_1st_tier, dir_2nd_tier, histname);
-  openfile(Cycle_name, SingleTop_t, dir_1st_tier, dir_2nd_tier, histname);
-  openfile(Cycle_name, WW, dir_1st_tier, dir_2nd_tier, histname);
-  openfile(Cycle_name, WZ, dir_1st_tier, dir_2nd_tier, histname);
-  openfile(Cycle_name, ZZ, dir_1st_tier, dir_2nd_tier, histname);
-  openfile(Cycle_name, WWW, dir_1st_tier, dir_2nd_tier, histname);
-  openfile(Cycle_name, WWZ, dir_1st_tier, dir_2nd_tier, histname);
-  openfile(Cycle_name, WZZ, dir_1st_tier, dir_2nd_tier, histname);
-  openfile(Cycle_name, ZZZ, dir_1st_tier, dir_2nd_tier, histname);
-  openfile(Cycle_name, WGtoLNuG, dir_1st_tier, dir_2nd_tier, histname);
-  openfile(Cycle_name, ZGto2LG, dir_1st_tier, dir_2nd_tier, histname);
-  openfile(Cycle_name, ttbar, dir_1st_tier, dir_2nd_tier, histname);
-  openfile(Cycle_name, CF_bkg, dir_1st_tier, dir_2nd_tier, histname);
-
+  cout << "[[run_for_hist]] File Open Finished" << endl;
+  
   map_outfile["outfile"] << histname << "\t";
   makehistogram(histname, dir_2nd_tier);
   
@@ -343,47 +332,54 @@ void run_for_hist(TString dir_1st_tier, TString histname, TString dir_2nd_tier){
 void plot(){
 
   map_outfile["outfile"].open("binning_SS.txt");
-
-  
+    
   TDirectory* origDir = gDirectory;
   
-  int n_hist = 11;
-  TString histograms[] = {"h_SS_lljjjjmass",
-                          "h_SS_lljjjjmass_AK8_0",
-                          "h_SS_lljjjjmass_AK8_1",
-                          "h_SS_lljjjjmass_AK8_2",
-                          "h_SS_leadingljjmass",
-                          "h_SS_secondljjmass",
-                          "h_SS_llmass",
-                          "h_SS_leadingLeptonPt",
-                          "h_SS_secondLeptonPt",
-                          "h_SS_leadingjet_pt",
-                          "h_SS_secondjet_pt"
+  int n_hist = 10;
+  TString histograms[] = {"mZp",
+			  "mZp_0AK8",
+			  "mZp_1AK8",
+			  "mZp_2AK8",
+			  "mN",
+			  "mll",
+                          "Lepton_0_Eta",
+                          "Lepton_0_Pt",
+			  "Lepton_1_Eta",
+                          "Lepton_1_Pt",
+			  
   };
 
-  int n_dir_1st = 2;
-  TString dir_1st_tier[] = {"CR3",
-			    "SR1"
+  int N_regions = 1;
+  TString regions[] = {"SR"
+	
   };
-
-  int n_dir_2nd = 1;
-  TString dir_2nd_tier[] = {"SS_DiEle",
+  
+  int N_channels = 6;
+  TString channels[] = {"DiEle",
+			"DiMu",
+			"EMu",
+			"DiEle_SS",
+                        "DiMu_SS",
+                        "EMu_SS"
   };
-
-  int n_channel = 1;
-  TString channel[] = {"_SS_DiEle"};
+  
+  
   for(int i_hist = 0; i_hist < n_hist; i_hist++){
-    for(int i = 0; i < n_dir_1st; i++){
-      for(int j = 0; j < n_channel; j++){//channel
-        run_for_hist(dir_1st_tier[i], histograms[i_hist] + "_" + dir_1st_tier[i] + channel[j], channel[j]);
-        /*
-        origDir -> cd();
-        gDirectory -> Cd(dir_1st_tier[i]);
-        gDirectory -> Cd(dir_1st_tier[i] + channel[j]);
-        mapfunc[histograms[i_hist] + "_" + dir_1st_tier[i] + "_OS_EMu"+ "emu"] -> SetName(histograms[i_hist] + "_" + dir_1st_tier[i] + channel[j]);
-        mapfunc[histograms[i_hist] + "_" + dir_1st_tier[i] + "_OS_EMu"+ "emu"] -> Write();
-	*/
-        mapfunc.clear();
+    for(int i = 0; i < N_regions; i++){
+      for(int j = 0; j < N_channels; j++){//channel
+	TString dir = regions[i] + "_" + channels[j];
+        
+	if(regions[i].Contains("SR")){
+	  if(channels[j].Contains("DiEle") || channels[j].Contains("DiMu")){
+	    if(histograms[i_hist].Contains("mZp") || histograms[i_hist].Contains("mN")) run_for_hist(dir, histograms[i_hist] + "_" + dir, channels[j]);
+	  }
+	}
+	else if(histograms[i_hist].Contains("mN")){
+	  if(!regions[i].Contains("SR")) continue;
+	}
+	else run_for_hist(dir, histograms[i_hist] + "_" + dir, channels[j]);
+	
+	mapfunc.clear();
 	maphist.clear();
       }
     }

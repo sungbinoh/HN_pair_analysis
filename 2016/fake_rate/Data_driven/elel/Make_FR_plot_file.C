@@ -42,17 +42,13 @@ map<TString, TKey*> maphistcheck;
 map<TString, TList*> maplist;
 
 //cycle name
-//TString Cycle_name = "ExampleAnalyzerElectronMuon";
-//TString Cycle_name = "ExampleAnalyzerDiMuon";
-TString Cycle_name = "Muon_FR_cal_all";
+TString Cycle_name = "Electron_FR_cal_all";
 //sample names                          
-TString data = "data_SingleMuon";
-//TString periodC = "periodC_SKMuonEG";
-//TString periodD = "periodD_SKMuonEG";
+TString data = "data_SinglePhoton";
 
 //DY
-TString DY_low = "SKDYJets_10to50";
-TString DY_high = "SKDYJets";
+TString DY_low = "SKDY10to50";
+TString DY_high = "SKDY50plus";
 
 TString Wjets = "SKWJets";
 
@@ -66,9 +62,10 @@ TString SingleTop_t = "SKSingleTop_t";
 TString WGtoLNuG = "SKWGtoLNuG";
 
 //VV
-TString WW = "SKWW";
-TString WZ = "SKWZ";
-TString ZZ = "SKZZ";
+TString WW_lnuqq = "SKWWToLNuQQ";
+TString WW_2l2nu = "SKWWTo2L2Nu";
+TString WZ = "SKWZTo3LNu_powheg";
+TString ZZ = "SKZZTo4L_powheg";
 
 //TString ttbar = "SKTTJets_aMC";
 TString ttbar = "SKTT_powheg";
@@ -103,9 +100,9 @@ TH2 * GetHist_2D(TString hname){
 void openfile(TString cyclename, TString samplename){
   
   TString underbar = "_";
-  TString version = "cat_v8-0-7.root";
+  TString version = "cat_v8-0-8.root";
   TString filename = cyclename + underbar + samplename + underbar + version;
-  if(samplename == data) filename = cyclename + underbar + samplename + "_cat_v8-0-7.root";
+  if(samplename == data) filename = cyclename + underbar + samplename + "_cat_v8-0-8.root";
   
   cout << "opening : " << filename << endl;
   
@@ -144,9 +141,9 @@ void openfile(TString cyclename, TString samplename){
 vector<TString> gethistnames(TString cyclename, TString samplename){
   
   TString underbar = "_";
-  TString version = "cat_v8-0-7.root";
+  TString version = "cat_v8-0-8.root";
   TString filename = cyclename + underbar + samplename + underbar + version;
-  if(samplename == data) filename = cyclename + underbar + samplename + "_cat_v8-0-7.root";
+  if(samplename == data) filename = cyclename + underbar + samplename + "_cat_v8-0-8.root";
   
   cout << "opening : " << filename << endl;
   
@@ -198,9 +195,8 @@ void makehistogram(TString nameofhistogram){
   GetHist_2D(nameofhistogram + "MC_sum") -> Add(GetHist_2D(name_cycle +  SingleTop_s));
   GetHist_2D(nameofhistogram + "MC_sum") -> Add(GetHist_2D(name_cycle +  ttbar));
   GetHist_2D(nameofhistogram + "MC_sum") -> Add(GetHist_2D(name_cycle +  Wjets));
-  //GetHist_2D(nameofhistogram + "MC_sum") -> Add(GetHist_2D(name_cycle +  WGtoLNuG));
-  //GetHist_2D(nameofhistogram + "MC_sum") -> Add(GetHist_2D(name_cycle +  ZGto2LG));
-  GetHist_2D(nameofhistogram + "MC_sum") -> Add(GetHist_2D(name_cycle +  WW));
+  GetHist_2D(nameofhistogram + "MC_sum") -> Add(GetHist_2D(name_cycle +  WW_lnuqq));
+  GetHist_2D(nameofhistogram + "MC_sum") -> Add(GetHist_2D(name_cycle +  WW_2l2nu));
   GetHist_2D(nameofhistogram + "MC_sum") -> Add(GetHist_2D(name_cycle +  WZ));
   GetHist_2D(nameofhistogram + "MC_sum") -> Add(GetHist_2D(name_cycle +  ZZ));
 
@@ -225,9 +221,8 @@ void plot(){
   openfile(Cycle_name, SingleTop_s);
   openfile(Cycle_name, SingleTop_tW);
   openfile(Cycle_name, SingleTop_t);
-  //openfile(Cycle_name, WGtoLNuG);
-  //openfile(Cycle_name, ZGto2LG);
-  openfile(Cycle_name, WW);
+  openfile(Cycle_name, WW_lnuqq);
+  openfile(Cycle_name, WW_2l2nu);
   openfile(Cycle_name, WZ);
   openfile(Cycle_name, ZZ);
   openfile(Cycle_name, ttbar);
@@ -252,8 +247,8 @@ void plot(){
     TString current_name = plot_names.at(i);
     bool ID_syst = current_name.Contains("pt_cone_vs_eta_F0") && current_name.Contains("Awayjet_40");
     bool ID_syst_else = current_name.Contains("pt_cone_vs_eta") && current_name.Contains("Awayjet_40");
-    bool Away_jet_syst = current_name.Contains("pt_cone_vs_eta_F0") && current_name.Contains("MUON_SUSY_VETO_central");
-    bool Away_jet_syst_else = current_name.Contains("pt_cone_vs_eta") && current_name.Contains("MUON_SUSY_VETO_central");
+    bool Away_jet_syst = current_name.Contains("pt_cone_vs_eta_F0") && current_name.Contains("ELECTRON_SUSY_HNPAIR_LOOSE_central");
+    bool Away_jet_syst_else = current_name.Contains("pt_cone_vs_eta") && current_name.Contains("ELECTRON_SUSY_HNPAIR_LOOSE_central");
     
     if(ID_syst || Away_jet_syst ) plots_names_F0.push_back(current_name);
     else if(ID_syst_else || Away_jet_syst_else) plots_names_F.push_back(current_name);
@@ -280,7 +275,7 @@ void plot(){
     }
   */
   
-  TFile *MyFile = new TFile("FR_muon_plots.root","RECREATE");
+  TFile *MyFile = new TFile("FR_electron_plots.root","RECREATE");
   cout << " plots_names_F.size() : " <<  plots_names_F.size() << endl;
   for(int i = 0; i < plots_names_F.size(); i++){
     cout << "Writing : " << plots_names_F.at(i) + "data_fr" << endl;;

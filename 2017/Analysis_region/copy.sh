@@ -1,1 +1,1 @@
-cp /cms/scratch/suoh/SKFlatOutput/HN_pair_all/*.root .
+cp /cms/scratch/suoh/SKFlatOutput/v949cand2_1/HN_pair_all/2017/*.root .

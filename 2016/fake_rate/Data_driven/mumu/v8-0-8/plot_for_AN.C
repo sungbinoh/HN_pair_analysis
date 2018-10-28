@@ -465,13 +465,14 @@ void plot(){
   draw_histogram("HLT_Mu20_v_ZPeak_Nvtx_Nvtx_reweight_central", 0., 50., 1., 1000., "N(vertice)", false);
   */
   //John's W dominant region
-  /*
+  
   draw_histogram("HLT_Mu50_v_W_John_MT_Nvtx_reweight_central", 0., 200., 1., 30000., "M_{T}(#mu, METvec) (GeV)", true);
   draw_histogram("HLT_Mu27_v_W_John_MT_Nvtx_reweight_central", 0., 200., 1., 2000., "M_{T}(#mu, METvec) (GeV)", true);
   draw_histogram("HLT_Mu20_v_W_John_MT_Nvtx_reweight_central", 0., 200., 1., 60., "M_{T}(#mu, METvec) (GeV)", true);
   draw_histogram("HLT_Mu50_v_W_John_PFMET_Nvtx_reweight_central", 0., 200., 5., 200000., "MET (GeV)", true);
   draw_histogram("HLT_Mu27_v_W_John_PFMET_Nvtx_reweight_central", 0., 200., 5., 10000., "MET (GeV)", true);
   draw_histogram("HLT_Mu20_v_W_John_PFMET_Nvtx_reweight_central", 0., 200., 5., 1000., "MET (GeV)", true);
+  
   draw_histogram("HLT_Mu50_v_W_John_leadpt_Nvtx_reweight_central", 0., 200., 1., 50000., "P_{T}(1st #mu) (GeV)", true);
   draw_histogram("HLT_Mu27_v_W_John_leadpt_Nvtx_reweight_central", 0., 200., 1., 2000., "P_{T}(1st #mu) (GeV)", true);
   draw_histogram("HLT_Mu20_v_W_John_leadpt_Nvtx_reweight_central", 0., 200., 1., 200., "P_{T}(1st #mu) (GeV)", true);
@@ -480,7 +481,7 @@ void plot(){
   draw_histogram("HLT_Mu27_v_W_John_Nvtx_Nvtx_reweight_central", 0., 50., 1., 8000., "N(vertice)", false);
   draw_histogram("HLT_Mu20_v_W_John_Nvtx_Nvtx_reweight_central", 0., 50., 1., 8000., "N(vertice)", false);
 
-
+  /*
   draw_histogram("HLT_Mu50_v_MT_MET_inclusive_tight", 0., 200., 1., 30000., "M_{T}(#mu, METvec) (GeV)", true);
   draw_histogram("HLT_Mu27_v_MT_MET_inclusive_tight", 0., 200., 1., 2000., "M_{T}(#mu, METvec) (GeV)", true);
   draw_histogram("HLT_Mu20_v_MT_MET_inclusive_tight", 0., 200., 1., 60., "M_{T}(#mu, METvec) (GeV)", true);

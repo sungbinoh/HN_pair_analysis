@@ -245,10 +245,7 @@ void makehistogram(TString nameofhistogram, float xmin, float xmax, float rebin,
 
   mapfunc[name_cycle + Wjets] -> Add(GetHist(name_cycle + Wjets));
 
-  
   cout << "3" << endl;
-  
-  cout << "check2" << endl;
   
   maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + data), "data", "p");
   
@@ -447,6 +444,10 @@ void plot(){
   for(int i_HLTs = 0; i_HLTs < N_HLTs; i_HLTs++){
     draw_histogram(HLTs[i_HLTs] + "_ZPeak_mll", 70., 110., 1., 20000., "M(ee) (GeV)", true);
     draw_histogram(HLTs[i_HLTs] + "_ZPeak_leadpt", 0., 500., 10., 20000., "P_{T}(1st e) (GeV)", true);
+    draw_histogram(HLTs[i_HLTs] + "_W_John_leadpt", 0., 200., 5., 20000., "P_{T}(1st e) (GeV)", true);
+    draw_histogram(HLTs[i_HLTs] + "_W_John_PFMET", 0., 200., 5., 20000., "MET (GeV)", true);
+    draw_histogram(HLTs[i_HLTs] + "_W_John_MT", 0., 200., 5., 20000., "M_{T}(e, METvec) (GeV)", true);
+    draw_histogram(HLTs[i_HLTs] + "_W_John_Nvtx", 0., 50., 5., 20000., "N(vertice)", true);
   }
 
   

@@ -11,4 +11,4 @@ root -l -b <<-EOF
 plot()
 .q
 EOF
-cp pdfs_HLT_CR/*.pdf /home/suoh/Dropbox/HN_pair/2016/fake_rate/Muon/v8-0-8/kinematics
+scp pdfs_HLT_CR/*.pdf suoh@147.47.242.44:/home/suoh/Dropbox/HN_pair/2016/fake_rate/Muon/v8-0-8/kinematics

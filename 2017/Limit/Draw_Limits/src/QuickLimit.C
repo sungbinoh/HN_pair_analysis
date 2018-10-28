@@ -3,6 +3,8 @@
 
 void QuickLimit(int xxx=0){
 
+  double r_value_time = 0.001; // restore r value by weighting to the limit
+  
   setTDRStyle();
 
   gStyle->SetOptStat(0);
@@ -14,7 +16,7 @@ void QuickLimit(int xxx=0){
   TString dataset = getenv("CATANVERSION");
   TString ENV_PLOT_PATH = getenv("PLOT_PATH");
 
-  TString dirname = "180930_OS_bkgd30_band";
+  TString dirname = "181015_HighPt_OS_2AK8";
 
   TString channel = "MuMu";
   TString method = "shape";
@@ -88,7 +90,7 @@ void QuickLimit(int xxx=0){
       x[j] = mN;
 
       TString this_string = "Zp"+TString::Itoa(mZP,10)+"_HN"+TString::Itoa(mN,10);
-      //cout << this_string << endl;
+      cout << this_string << endl;
 
       double this_xsec = 1.;
 
@@ -106,7 +108,7 @@ void QuickLimit(int xxx=0){
         is >> xsec;
         if(a==mZP&&mN==b) this_xsec = xsec;
       }
-      //cout << this_string << "\t" << this_xsec << endl;
+      cout << this_string << "\t" << this_xsec << endl;
 
       //==== Find Limit Value
       string elline2;
@@ -132,12 +134,15 @@ void QuickLimit(int xxx=0){
 	is >> b_68_up;
 	is >> b_95_up;
 	
+	
 	if(a==this_string){
-	  this_limit_95_down = b_95_down * 0.001;
-	  this_limit_68_down = b_68_down * 0.001;
-	  this_limit = b*0.001;
-	  this_limit_68_up = b_68_up * 0.001;
-          this_limit_95_up = b_95_up * 0.001;
+	  cout << "a : " << a << ", b : " << b << endl;
+
+	  this_limit_95_down = b_95_down * r_value_time;
+	  this_limit_68_down = b_68_down * r_value_time;
+	  this_limit = b*r_value_time;
+	  this_limit_68_up = b_68_up * r_value_time;
+          this_limit_95_up = b_95_up * r_value_time;
 	}     
       }
 
@@ -177,7 +182,7 @@ void QuickLimit(int xxx=0){
       prev_limit = this_limit;
       prev_mass = mN;
 
-      //cout << this_string << "\t" << this_xsec << "\t" << this_limit << endl;
+      cout << this_string << "\t" << this_xsec << "\t" << this_limit << endl;
 
     } // END loop N mass
 
@@ -214,13 +219,13 @@ void QuickLimit(int xxx=0){
     TGraphAsymmErrors *Limit_for_this_mZP_68_band = new TGraphAsymmErrors(n_Nmass, x, y_exp, e_x_down, e_x_up, e_68_down, e_68_up);
     
     
-/*
+
     cout << "#### Z' = " << mZP << " ####" << endl;
     cout << "---- Theory ----" << endl;
     Theory_for_this_mZP->Print();
     cout << "---- Limit ----" << endl;
     Limit_for_this_mZP->Print();
-*/
+
 
     TCanvas *c1 = new TCanvas("c1", "", 600, 600);
     canvas_margin(c1);
@@ -368,11 +373,11 @@ void QuickLimit(int xxx=0){
         is >> b_95_up;
 
         if(a==this_string){
-          this_limit_95_down = b_95_down * 0.001;
-          this_limit_68_down = b_68_down * 0.001;
-          this_limit = b*0.001;
-          this_limit_68_up = b_68_up * 0.001;
-          this_limit_95_up = b_95_up * 0.001;
+          this_limit_95_down = b_95_down * r_value_time;
+          this_limit_68_down = b_68_down * r_value_time;
+          this_limit = b*r_value_time;
+          this_limit_68_up = b_68_up * r_value_time;
+          this_limit_95_up = b_95_up * r_value_time;
 	}
       }
 
@@ -613,15 +618,15 @@ void QuickLimit(int xxx=0){
     mN.Remove(0,2);
     
     if(a.Contains("HN") && a.Contains("Zp")){
-      limit_exp_95_down[mZp + "_" + mN] = b_95_down * 0.001;
-      limit_exp_68_down[mZp + "_" + mN] = b_68_down * 0.001;
-      limit_exp[mZp + "_" + mN] = b*0.001;
-      limit_exp_68_up[mZp + "_" + mN] = b_68_up * 0.001;
-      limit_exp_95_up[mZp + "_" + mN] = b_95_up * 0.001;
+      limit_exp_95_down[mZp + "_" + mN] = b_95_down * r_value_time;
+      limit_exp_68_down[mZp + "_" + mN] = b_68_down * r_value_time;
+      limit_exp[mZp + "_" + mN] = b*r_value_time;
+      limit_exp_68_up[mZp + "_" + mN] = b_68_up * r_value_time;
+      limit_exp_95_up[mZp + "_" + mN] = b_95_up * r_value_time;
     
       double mZp_double = mZp.Atof() + 10.;
       double mN_double = mN.Atof() + 10.;
-      exp_limit_2D -> Fill(mZp_double, mN_double, b*0.001);
+      exp_limit_2D -> Fill(mZp_double, mN_double, b*r_value_time);
     }
   }
 

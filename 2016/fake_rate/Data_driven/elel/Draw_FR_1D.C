@@ -46,41 +46,6 @@ map<TString, TH2*> maphist_2D;
 map<TString, TGraphErrors*> mapTGraphErrors;
 map<TString, TGraphAsymmErrors*> mapTGraphAsymmErrors;
 
-//cycle name
-//TString Cycle_name = "ExampleAnalyzerElectronMuon";
-//TString Cycle_name = "ExampleAnalyzerDiMuon";
-TString Cycle_name = "FR_syst_cal";
-//sample names
-//TString data = "data_DoubleMuon";
-TString data = "data_SingleMuon";
-
-//TString periodC = "periodC_SKMuonEG";
-//TString periodD = "periodD_SKMuonEG";
-
-//DY
-TString DY_low = "SKDYJets_10to50";
-TString DY_high = "SKDYJets";
-
-TString Wjets = "SKWJets";
-
-//single top
-TString SingleTbar_tW = "SKSingleTbar_tW";
-TString SingleTbar_t = "SKSingleTbar_t";
-TString SingleTop_s = "SKSingleTop_s";
-TString SingleTop_tW = "SKSingleTop_tW";
-TString SingleTop_t = "SKSingleTop_t";
-
-TString WGtoLNuG = "SKWGtoLNuG";
-
-//VV
-TString WW = "SKWW";
-TString WZ = "SKWZ";
-TString ZZ = "SKZZ";
-
-//TString ttbar = "SKTTJets_aMC";
-TString ttbar = "SKTT_powheg";
-TString ZGto2LG = "SKZGto2LG";
-
 
 /// Getting Histogram Function ///////////////////////////////////////////////
 TH1 * GetHist(TString hname){
@@ -386,7 +351,7 @@ void draw_all_eta(TString map_string){
   gStyle -> SetOptStat(0);
   mapTGraphAsymmErrors["FR_IB_syst"] -> GetXaxis() -> SetTitle("P_{T}^{cone} (#mu)");
   mapTGraphAsymmErrors["FR_IB_syst"] -> GetYaxis() -> SetTitle("Fate Rate");
-  mapTGraphAsymmErrors["FR_IB_syst"] -> GetXaxis() -> SetRangeUser(10., 140.);
+  mapTGraphAsymmErrors["FR_IB_syst"] -> GetXaxis() -> SetRangeUser(40., 85.);
   mapTGraphAsymmErrors["FR_IB_syst"] -> SetMinimum(0.);
   mapTGraphAsymmErrors["FR_IB_syst"] -> SetMaximum(0.3);
   mapTGraphAsymmErrors["FR_IB_syst"] -> SetMarkerColor(kRed);
@@ -468,10 +433,10 @@ void draw_histogram(TString nameofhistogram){
   double FR_IB_p85_e[6], FR_OB_p85_e[6], FR_EC_p85_e[6];
   
   
-  double pt_bins[6] = {40., 50., 60., 72.5, 87.5, 102.5};
+  double pt_bins[6] = {47.5, 60., 75., 102.5, 135., 172.5};
   //double pt_bins_e[6] = {2.5, 2.5, 2.5, 2.5, 2.5, 2.5}; 
-  double pt_bins_e[6] = {5., 5., 5., 7.5, 7.5, 7.5};
-
+  double pt_bins_e[6] = {7.5, 5., 10., 17.5, 15., 22.5};
+  
 
   cout << "for for TGraphError" << endl;
   for(int i = 0; i < 6; i++){
@@ -568,13 +533,13 @@ void draw_histogram(TString nameofhistogram){
 /// Main Function ////////////////////////////////////////////////////////////
 void plot(){
     
-  openfile("FR_muon_plots.root");
+  openfile("FR_electron_plots.root");
   cout << "file open complete" << endl;
   
   //draw_histogram("SingleMuonTrigger_Dijet_Awayjet_40_all_MUON_HN_LOOSEv7_SIP3_events_pt_cone_vs_eta");
   //draw_histogram("SingleMuonTrigger_Dijet_Awayjet_40_all_MUON_HN_LOOSEv7_SIP3_Nvtx_reweight_events_pt_cone_vs_eta");
   //draw_histogram("SingleMuonTrigger_Dijet_central_all_MUON_HN_LOOSEv7_SIP3_Nvtx_reweight_events_pt_cone_vs_eta");
-  draw_histogram("SingleMuonTrigger_Dijet_central_all_MUON_SUSY_VETO_central_Nvtx_reweight_events_pt_cone_vs_eta");
+  draw_histogram("SingleElectronTrigger_Dijet_central_all_ELECTRON_SUSY_HNPAIR_LOOSE_central_Nvtx_reweight_events_pt_cone_vs_eta");
   //SingleMuonTrigger_Dijet_Awayjet_40_all_MUON_HN_LOOSEv7_SIP3_Nvtx_reweight_events_pt_cone_vs_eta_F
 		    /*
   draw_histogram("SingleMuonTrigger_Dijet_Awayjet_40_all_MUON_HN_LOOSESTv5_SIP_10_pt_cone_F", 0., 500., 1., 1500.); 

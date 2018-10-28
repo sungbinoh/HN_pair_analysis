@@ -42,19 +42,13 @@ map<TString, TKey*> maphistcheck;
 map<TString, TList*> maplist;
 
 //cycle name
-//TString Cycle_name = "ExampleAnalyzerElectronMuon";
-//TString Cycle_name = "ExampleAnalyzerDiMuon";
 TString Cycle_name = "Electron_FR_cal_all";
 //sample names                          
-//TString data = "data_DoubleMuon";
 TString data = "data_SinglePhoton";
 
-//TString periodC = "periodC_SKMuonEG";
-//TString periodD = "periodD_SKMuonEG";
-
 //DY
-TString DY_low = "SKDYJets_10to50";
-TString DY_high = "SKDYJets";
+TString DY_low = "SKDY10to50";
+TString DY_high = "SKDY50plus";
 
 TString Wjets = "SKWJets";
 
@@ -68,9 +62,10 @@ TString SingleTop_t = "SKSingleTop_t";
 TString WGtoLNuG = "SKWGtoLNuG";
 
 //VV
-TString WW = "SKWW";
-TString WZ = "SKWZ";
-TString ZZ = "SKZZ";
+TString WW_lnuqq = "SKWWToLNuQQ";
+TString WW_2l2nu = "SKWWTo2L2Nu";
+TString WZ = "SKWZTo3LNu_powheg";
+TString ZZ = "SKZZTo4L_powheg";
 
 //TString ttbar = "SKTTJets_aMC";
 TString ttbar = "SKTT_powheg";
@@ -94,9 +89,9 @@ TString ZGto2LG = "SKZGto2LG";
  void openfile(TString cyclename, TString samplename){
   
    TString underbar = "_";
-   TString version = "cat_v8-0-7.root";
+   TString version = "cat_v8-0-8.root";
    TString filename = cyclename + underbar + samplename + underbar + version;
-   if(samplename == data) filename = cyclename + underbar + samplename + "_cat_v8-0-7.root";
+   if(samplename == data) filename = cyclename + underbar + samplename + "_cat_v8-0-8.root";
 
    cout << "opening : " << filename << endl;
    
@@ -172,7 +167,7 @@ void makehistogram(TString nameofhistogram, float xmin, float xmax, float rebin,
   mappad[pad1] -> cd();
   mappad[pad1] -> SetLogy();
   
-  maplegend[legend] = new TLegend(0.69, 0.70, 0.96, 0.92);
+  maplegend[legend] = new TLegend(0.20, 0.70, 0.30, 0.92);
   cout << "0" << endl;
   //cout << nameofhistogram + Cycle_name + data << endl;
   //mapfunc[func] = new TH1F("", "", GetHist(nameofhistogram + Cycle_name + periodC) -> GetNbinsX(),  GetHist(nameofhistogram + Cycle_name + periodC) -> GetXaxis() -> GetXmin(), GetHist(nameofhistogram + Cycle_name + periodC) -> GetXaxis() -> GetXmax());
@@ -220,43 +215,43 @@ void makehistogram(TString nameofhistogram, float xmin, float xmax, float rebin,
   
   TString name_cycle = nameofhistogram + Cycle_name;
   cout << "check1" << endl;
-  if(maphist[name_cycle + DY_high] || maphist[name_cycle + DY_low]){
-    GetHist(name_cycle + DY_high) -> Add(GetHist(name_cycle + DY_low));
+  Int_t nx_func    = GetHist(nameofhistogram + Cycle_name + data) -> GetNbinsX();
+  Double_t x1_func = GetHist(nameofhistogram + Cycle_name + data) -> GetBinLowEdge(1);
+  Double_t bw_func = GetHist(nameofhistogram + Cycle_name + data) -> GetBinWidth(nx_func);
+  Double_t x2_func = GetHist(nameofhistogram + Cycle_name + data) -> GetBinLowEdge(nx_func) + bw_func;
+  for(int i = 0; i < n_kind; i++){
+    mapfunc[name_cycle + samples_array[i]] = new TH1F("", "", nx_func, x1_func, x2_func);
   }
-  
-  GetHist(name_cycle +  SingleTop_s) -> Add(GetHist(name_cycle + SingleTbar_tW));
-  GetHist(name_cycle +  SingleTop_s) -> Add(GetHist(name_cycle + SingleTbar_t));
-  GetHist(name_cycle +  SingleTop_s) -> Add(GetHist(name_cycle + SingleTop_tW));
-  GetHist(name_cycle +  SingleTop_s) -> Add(GetHist(name_cycle + SingleTop_t));
-  
-  /*
-    if(maphist[name_cycle + WGtoLNuG] || maphist[name_cycle + ZGto2LG]){
-    GetHist(name_cycle +  WGtoLNuG) -> Add(GetHist(name_cycle + ZGto2LG));
-    }
-  */
-  
-  GetHist(name_cycle +  WZ) -> Add(GetHist(name_cycle + WW));
-  GetHist(name_cycle +  WZ) -> Add(GetHist(name_cycle + ZZ));
-  
-  GetHist(name_cycle +  ttbar) -> Add(GetHist(name_cycle + SingleTop_s));
+  mapfunc[name_cycle + DY_high] -> Add(GetHist(name_cycle + DY_low));
+  mapfunc[name_cycle + DY_high] -> Add(GetHist(name_cycle + DY_high));
+
+  mapfunc[name_cycle + ttbar] -> Add(GetHist(name_cycle + ttbar));
+  mapfunc[name_cycle + ttbar] -> Add(GetHist(name_cycle + SingleTop_s));
+  mapfunc[name_cycle + ttbar] -> Add(GetHist(name_cycle + SingleTbar_tW));
+  mapfunc[name_cycle + ttbar] -> Add(GetHist(name_cycle + SingleTbar_t));
+  mapfunc[name_cycle + ttbar] -> Add(GetHist(name_cycle + SingleTop_tW));
+  mapfunc[name_cycle + ttbar] -> Add(GetHist(name_cycle + SingleTop_t));
+
+  mapfunc[name_cycle + WZ] -> Add(GetHist(name_cycle + WW_lnuqq));
+  mapfunc[name_cycle + WZ] -> Add(GetHist(name_cycle + WW_2l2nu));
+  mapfunc[name_cycle + WZ] -> Add(GetHist(name_cycle + ZZ));
+  mapfunc[name_cycle + WZ] -> Add(GetHist(name_cycle + WZ));
+
+  mapfunc[name_cycle + Wjets] -> Add(GetHist(name_cycle + Wjets));
   
   cout << "3" << endl;
-  
-  
-  cout << "check2" << endl;
-  
   
   maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + data), "data", "p");
   
   for(int i = 0; i < n_kind; i++){
     cout << samples_array[i] << endl;
     if(maphist[nameofhistogram + Cycle_name + samples_array[i]]){
-      GetHist(nameofhistogram + Cycle_name + samples_array[i]) -> SetFillColor(colour_array[i]);
-      GetHist(nameofhistogram + Cycle_name + samples_array[i]) -> Rebin(rebin);
+      mapfunc[name_cycle + samples_array[i]] -> SetFillColor(colour_array[i]);
+      mapfunc[name_cycle + samples_array[i]] -> Rebin(rebin);
       cout << samples_array[i] << endl;
-      maphstack[hstack] -> Add(GetHist(nameofhistogram + Cycle_name + samples_array[i]));
-      maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + samples_array[n_kind - 1 - i]), samples_legend[n_kind - 1 - i], "f");
-      mapfunc[func] -> Add(GetHist(nameofhistogram + Cycle_name + samples_array[i]));
+      maphstack[hstack] -> Add(mapfunc[name_cycle + samples_array[i]]);
+      maplegend[legend] -> AddEntry(mapfunc[name_cycle + samples_array[n_kind - 1 - i]], samples_legend[n_kind - 1 - i], "f");
+      mapfunc[func] -> Add(mapfunc[name_cycle + samples_array[i]]);
     }
   }//for loop
   
@@ -297,7 +292,7 @@ void makehistogram(TString nameofhistogram, float xmin, float xmax, float rebin,
   maphstack[hstack] -> GetXaxis() -> SetTitle(nameofhistogram);
   //maphstack[hstack] -> GetYaxis() -> SetTitle("Entries / 25 GeV");
   maphstack[hstack] -> GetYaxis() -> SetTitle(title_y);  
-  maphstack[hstack] -> Draw("histsame");
+  maphstack[hstack] -> Draw("hist");
   
   cout << "5.1" << endl;
   
@@ -312,6 +307,44 @@ void makehistogram(TString nameofhistogram, float xmin, float xmax, float rebin,
   mappad[pad1] -> Update();
   
   cout << "5.2" << endl;
+
+  if(nameofhistogram.Contains("Ptcone")){
+    double y_max = MC_stack_max * 1000;
+    TLine *Line_Photon = new TLine(40., 0.3, 40., y_max);
+    Line_Photon -> SetLineStyle(2);
+    TLine *Line_Photon_22 = new TLine(55., 0.3, 55., y_max);
+    Line_Photon_22 ->SetLineStyle(2);
+    TLine *Line_Photon_30 = new TLine(65., 0.3, 65., y_max);
+    Line_Photon_30 ->SetLineStyle(2);
+    TLine *Line_Photon_36 = new TLine(85., 0.3, 85., y_max);
+    Line_Photon_36 ->SetLineStyle(2);
+    TLine *Line_Photon_50 = new TLine(120., 0.3, 120., y_max);
+    Line_Photon_50 ->SetLineStyle(2);
+    TLine *Line_Photon_75 = new TLine(150., 0.3, 150., y_max);
+    Line_Photon_75 ->SetLineStyle(2);
+    TLine *Line_Photon_90 = new TLine(195., 0.3, 195., y_max);
+    Line_Photon_90 ->SetLineStyle(2);
+   
+    Line_Photon -> Draw("same");
+    Line_Photon_22 -> Draw("same");
+    Line_Photon_30 -> Draw("same");
+    Line_Photon_36 -> Draw("same");
+    Line_Photon_50 -> Draw("same");
+    Line_Photon_75 -> Draw("same");
+    Line_Photon_90 -> Draw("same");
+
+    TLatex latex_photon;
+    //latex_photon.SetTextSize(0.025);
+    latex_photon.DrawLatex(42., 100000., "22");
+    latex_photon.DrawLatex(56., 100000., "30");
+    latex_photon.DrawLatex(67., 100000., "36");
+    latex_photon.DrawLatex(87., 100000., "50");
+    latex_photon.DrawLatex(122., 100000., "75");
+    latex_photon.DrawLatex(152., 100000., "90");
+
+  }
+
+
   
   
   GetHist(nameofhistogram + Cycle_name + data) -> Draw("epsame");       
@@ -348,6 +381,7 @@ void makehistogram(TString nameofhistogram, float xmin, float xmax, float rebin,
   mapline[line] -> SetLineStyle(1);
   mapline[line] -> SetLineColor(kRed);
   
+
   cout << "7" << endl;
   
   
@@ -400,6 +434,8 @@ void makehistogram(TString nameofhistogram, float xmin, float xmax, float rebin,
   latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
   latex_Lumi.SetTextSize(0.035);
   latex_Lumi.DrawLatex(0.7, 0.96, "35.9 fb^{-1} (13 TeV)");
+
+
   
   cout << "9" << endl;
   
@@ -438,7 +474,8 @@ void plot(){
   openfile(Cycle_name, SingleTop_s);
   openfile(Cycle_name, SingleTop_tW);
   openfile(Cycle_name, SingleTop_t);
-  openfile(Cycle_name, WW);
+  openfile(Cycle_name, WW_lnuqq);
+  openfile(Cycle_name, WW_2l2nu);
   openfile(Cycle_name, WZ);
   openfile(Cycle_name, ZZ);
   openfile(Cycle_name, ttbar);

@@ -57,7 +57,13 @@ TString DoubleEG = "DoubleEG";
 //DY
 TString DY_high = "DYJets";
 
+
+//Wjets
+TString WJets = "WJets_MG";
+
+
 //VV
+TString VV = "VV";
 TString WW = "WWTo2L2Nu_powheg";
 TString WZ_2L = "WZTo2L2Q";
 TString WZ_3L = "WZTo3LNu";
@@ -103,7 +109,9 @@ void openfile(TString cyclename, TString samplename, TString dir, TString histna
   gDirectory->cd(dir);
       
   TH1F * current_hist = (TH1F*)gDirectory -> Get(histname);
-  current_hist -> SetDirectory(0);
+  if(current_hist){
+    current_hist -> SetDirectory(0);
+  }
   TH1::AddDirectory(kFALSE);
   
   mapfunc[histname + cyclename + samplename] = current_hist;
@@ -179,26 +187,18 @@ void make_histogram(TString nameofhistogram, int N_bin, double binx[]){
   gStyle->SetOptTitle(0);
   
   
-  int n_kind = 3;
-  TString samples_array[] = {WW, ttbar, DY_high};
-  Int_t colour_array[] = {419, 416, 400};
-  TString samples_legend[] = {"Other backgrounds", "ttbar", "Z/#gamma + jets"};
+  int n_kind = 4;
+  TString samples_array[] = {VV, WJets, ttbar, DY_high};
+  Int_t colour_array[] = {419, 901, 416, 400};
+  TString samples_legend[] = {"Other backgrounds", "W+jets", "ttbar", "Z/#gamma + jets"};
   
   if(debug) cout << "2" << endl;
   
   TString name_cycle = nameofhistogram + Cycle_name;
   if(debug) cout << "check1" << endl;
-  TString WW = "WWTo2L2Nu_powheg";
-  TString WZ_2L = "WZTo2L2Q";
-  TString WZ_3L = "WZTo3LNu";
-  TString ZZ_2L = "ZZTo2L2Q";
-  TString ZZ_4L = "ZZTo4L_powheg";
-
-
-  GetHist(name_cycle +  WW) -> Add(GetHist(name_cycle + WZ_2L));
-  GetHist(name_cycle +  WW) -> Add(GetHist(name_cycle + WZ_3L));
-  GetHist(name_cycle +  WW) -> Add(GetHist(name_cycle + ZZ_2L));
-  GetHist(name_cycle +  WW) -> Add(GetHist(name_cycle + ZZ_4L));
+  
+  
+  
   
   TString overflow = "overflow";
   Int_t nx_func    = GetHist(nameofhistogram + Cycle_name + current_data) -> GetNbinsX()+1;
@@ -210,7 +210,8 @@ void make_histogram(TString nameofhistogram, int N_bin, double binx[]){
   mapfunc[func] = new TH1F("", "", nx_func, x1_func, x2_func);
   if(debug) cout << "func rebin rebinning" << endl;
   mapfunc[func + "rebin"] = (TH1F*)mapfunc[func] -> Rebin(N_bin, func + "rebin", binx);
-  
+  mapfunc[func + "blind_data"] = (TH1F*)mapfunc[func] -> Rebin(N_bin, func + "blind_Data", binx);
+
   for(int i = 0; i < n_kind; i++){
     if(debug) cout << samples_array[i] << endl;
     if(mapfunc[nameofhistogram + Cycle_name + samples_array[i]]){
@@ -234,6 +235,7 @@ void make_histogram(TString nameofhistogram, int N_bin, double binx[]){
       GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin") -> SetLineColor(colour_array[i]);
       if(debug) cout << samples_array[i] << endl;
       
+      mapfunc[func + "blind_data"]  -> Add(GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin"));
       // -- divide bin content and error by bin width
       for(int j = 1; j <= N_bin; j++){
 	double current_content = GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin") -> GetBinContent(j);
@@ -257,14 +259,25 @@ void make_histogram(TString nameofhistogram, int N_bin, double binx[]){
     mapfunc[nameofhistogram + Cycle_name + current_data +overflow] -> SetBinError(i, GetHist(nameofhistogram + Cycle_name + current_data) -> GetBinError(i));
   }
 
-  mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] = dynamic_cast<TH1F*>(GetHist(nameofhistogram + Cycle_name + current_data + overflow) -> Rebin(N_bin, nameofhistogram + Cycle_name + current_data + "rebin", binx));
-  GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerStyle(20);
-  GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerSize(1);
+
+  if(blind){
+    mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] = (TH1F*)GetHist(func + "blind_data") -> Clone(clone + "blind");
+  }
+  else{
+    mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] = dynamic_cast<TH1F*>(GetHist(nameofhistogram + Cycle_name + current_data + overflow) -> Rebin(N_bin, nameofhistogram + Cycle_name + current_data + "rebin", binx));
+  }
+  //GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerStyle(20);
+  //GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerSize(1);
   if(!nameofhistogram.Contains("SR")){
     maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + current_data + "rebin"), "data", "lp");
   }
   //double data_max = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetMaximum();
   
+  GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerStyle(20);
+  GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerColor(kBlue);
+
+  GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerSize(1);
+
   if(debug) cout << "5" << endl;
   
   maphstack[hstack] -> Draw("hist");
@@ -274,7 +287,7 @@ void make_histogram(TString nameofhistogram, int N_bin, double binx[]){
   maphstack[hstack] -> GetXaxis()->SetLabelSize(0);
   maphstack[hstack] -> GetXaxis() -> SetRangeUser(x1_func, x2_func);
   //maphstack[hstack] -> SetMaximum(data_max * 10000.);
-  maphstack[hstack] -> SetMinimum(0.001);
+  //maphstack[hstack] -> SetMinimum();
 
   maphstack[hstack] -> GetXaxis() -> SetTitle(nameofhistogram);
 
@@ -282,73 +295,72 @@ void make_histogram(TString nameofhistogram, int N_bin, double binx[]){
   maphstack[hstack] -> Draw("histsame");
   
   vector<double> vx, vy, vexl, vexh, veyl, veyh;
-  if(!blind){
-    GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Draw("histsamep9");
-
-    map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] = new TGraphAsymmErrors(GetHist(nameofhistogram + Cycle_name + current_data + "rebin"));
-    //make correct error bars 
-
-    for(int i = 0; i < N_bin; i++){
-      int N = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetBinContent(i + 1);
-      double L =  (N==0) ? 0  : (ROOT::Math::gamma_quantile(alpha/2,N,1.));
-      double U =  (N==0) ? ( ROOT::Math::gamma_quantile_c(alpha,N+1,1) ) : ( ROOT::Math::gamma_quantile_c(alpha/2,N+1,1) );
-      if( N!=0 ){
-        map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEYlow(i, (N-L) / (binx[i + 1] - binx[i]) );
-        map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEXlow(i, 0);
-        map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEYhigh(i, (U-N ) / (binx[i + 1] - binx[i]) );
-        map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEXhigh(i, 0);
-	
-	double current_x = -1., current_y = -1.;
-	map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> GetPoint(i, current_x, current_y);
-	double modified_y = -1.;
-	modified_y = current_y / ( binx[i + 1] - binx[i] );
-	map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPoint(i, current_x, modified_y);
-	
-	
-	if(debug) cout << "i : " << i << ", current_x : " << current_x << ", current_y : " << current_y << ", modified_y : " << modified_y << endl; 
-	
-	veyl.push_back( (N-L) / (binx[i + 1] - binx[i]) );
-	veyh.push_back( (U-N) / (binx[i + 1] - binx[i]));
-      }
-      else{
-        double zerodata_err_low = 0.1 / (binx[i + 1] - binx[i]);
-	double zerodata_err_high = 1.8 / (binx[i + 1] - binx[i]);
-
-        veyl.push_back(zerodata_err_low);
-        veyh.push_back(zerodata_err_high);
-
-        double current_x = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetBinCenter(i + 1);
-        double current_ex = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetBinWidth(i + 1) /2.;
-
-        map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEYlow(i, zerodata_err_low);
-        map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEXlow(i, 0.);
-        map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEYhigh(i, zerodata_err_high);
-        map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEXhigh(i, 0.);
-
-        vx.push_back(current_x);
-	vexl.push_back(current_ex);
-        vexh.push_back(current_ex);
-      }
-    }//end for i on N_bin
-    
-    map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> Draw("p0same");
-  }
+  //GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Draw("histsamep9");
+  
+  map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] = new TGraphAsymmErrors(GetHist(nameofhistogram + Cycle_name + current_data + "rebin"));
+  //make correct error bars 
+  
+  for(int i = 0; i < N_bin; i++){
+    int N = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetBinContent(i + 1);
+    double L =  (N==0) ? 0  : (ROOT::Math::gamma_quantile(alpha/2,N,1.));
+    double U =  (N==0) ? ( ROOT::Math::gamma_quantile_c(alpha,N+1,1) ) : ( ROOT::Math::gamma_quantile_c(alpha/2,N+1,1) );
+    if( N!=0 ){
+      map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEYlow(i, (N-L) / (binx[i + 1] - binx[i]) );
+      map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEXlow(i, 0);
+      map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEYhigh(i, (U-N ) / (binx[i + 1] - binx[i]) );
+      map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEXhigh(i, 0);
+      
+      double current_x = -1., current_y = -1.;
+      map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> GetPoint(i, current_x, current_y);
+      double modified_y = -1.;
+      modified_y = current_y / ( binx[i + 1] - binx[i] );
+      map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPoint(i, current_x, modified_y);
+      
+      
+      if(debug) cout << "i : " << i << ", current_x : " << current_x << ", current_y : " << current_y << ", modified_y : " << modified_y << endl; 
+      
+      veyl.push_back( (N-L) / (binx[i + 1] - binx[i]) );
+      veyh.push_back( (U-N) / (binx[i + 1] - binx[i]));
+    }
+    else{
+      double zerodata_err_low = 0.1 / (binx[i + 1] - binx[i]);
+      double zerodata_err_high = 1.8 / (binx[i + 1] - binx[i]);
+      
+      veyl.push_back(zerodata_err_low);
+      veyh.push_back(zerodata_err_high);
+      
+      double current_x = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetBinCenter(i + 1);
+      double current_ex = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetBinWidth(i + 1) /2.;
+      
+      map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEYlow(i, zerodata_err_low);
+      map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEXlow(i, 0.);
+      map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEYhigh(i, zerodata_err_high);
+      map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetPointEXhigh(i, 0.);
+      
+      vx.push_back(current_x);
+      vexl.push_back(current_ex);
+      vexh.push_back(current_ex);
+    }
+  }//end for i on N_bin
+  
+  map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> Draw("p0same");
+  
   for (int i = 1; i <= N_bin ; i++) {
     double modified_content = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetBinContent(i) / (binx[i] - binx[i - 1]);
     double modified_error = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetBinError(i) / (binx[i] - binx[i - 1]);;
     GetHist(nameofhistogram + Cycle_name + current_data + "rebin")  -> SetBinContent(i, modified_content );
     GetHist(nameofhistogram + Cycle_name + current_data + "rebin")  -> SetBinError(i, modified_error );
   }
-    
+  
   GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetXaxis() -> SetRangeUser(x1_func, x2_func);
-  GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMinimum(1.0);
+  //GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMinimum(1.0);
   
   mappad[pad1] -> Update();
   
-  if(!blind){
-    GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerColor(kBlack);
-    GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Draw("histsamep");
-  }
+
+  GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerColor(kBlack);
+  GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Draw("histsamep");
+  
 
   mapfunc[func + "rebin"] -> SetFillColor(kBlack);;
   mapfunc[func + "rebin"] -> SetFillStyle(3013);
@@ -358,15 +370,16 @@ void make_histogram(TString nameofhistogram, int N_bin, double binx[]){
   cout << "last->GetBinContent(11) : " << last->GetBinContent(11) << endl;
   
   double data_max = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetMaximum();
+  double data_min = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetMinimum();
+
   maphstack[hstack] -> SetMaximum(data_max * 100000.);
-
-
+  maphstack[hstack] -> SetMinimum(0.0001);
 
   maplegend[legend] -> SetFillColor(kWhite);
   maplegend[legend] -> SetLineColor(kBlack);
   maplegend[legend] -> SetBorderSize(1);
   maplegend[legend] -> SetFillStyle(1001);
-  maplegend[legend] -> SetShadowColor(0); // 0 = transparent                                                                                                                                                                                                                   
+  maplegend[legend] -> SetShadowColor(0); // 0 = transparent
   
   maplegend[legend] -> SetEntrySeparation(0.3);
   maplegend[legend] -> Draw("same");
@@ -411,7 +424,7 @@ void make_histogram(TString nameofhistogram, int N_bin, double binx[]){
   mapfunc["stat" + nameofhistogram] -> GetXaxis() -> SetTitleSize(0.15);
   mapfunc["stat" + nameofhistogram] -> GetYaxis() -> SetTitleSize(0.12);
   mapfunc["stat" + nameofhistogram] -> SetMinimum(0.0);
-  mapfunc["stat" + nameofhistogram] -> SetMaximum(5.0);
+  mapfunc["stat" + nameofhistogram] -> SetMaximum(2.0);
   mapfunc["stat" + nameofhistogram] -> SetStats(0);
 
   if(debug) cout << "8" << endl;
@@ -435,7 +448,7 @@ void make_histogram(TString nameofhistogram, int N_bin, double binx[]){
   }
   mapfunc["stat" + nameofhistogram] -> Draw("CE2");
   mapfunc[clone] -> Divide(mapfunc[func + "rebin"]);
-  if(!blind){
+  //if(!blind){
     for(int i = 0; i < N_bin; i++){
       double bkg_value = mapfunc[func + "rebin"] -> GetBinContent(i + 1);
       double data_value = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetBinContent(i + 1);
@@ -467,7 +480,7 @@ void make_histogram(TString nameofhistogram, int N_bin, double binx[]){
     }//end for i on N_bin
     
     map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error_ratio"] -> Draw("p0same");
-  }
+    //}
   mapline[line] -> Draw("same");
   
   maplegend["bottom" + legend] = new TLegend(0.2, 0.85, 0.4, 0.95);
@@ -526,16 +539,24 @@ void draw_histogram(TString histname){
   
   
   // -- Get which region(CR1, CR2 , ...) and channel (DiEle, DiMu, ...)
-  int N_regions = 3;
+  int N_regions = 4;
+
   TString regions[] = {"CR_Zmass",
 		       "CR_ttbar",
-		       "CR_inv_mll"
+		       "CR_inv_mll",
+		       "SR"
   };
-  
-  int N_channels = 3;
+  /*
+  TString regions[] = {                       "SR"
+  };
+  */
+  int N_channels = 6;
   TString channels[] = {"DiEle",
                         "DiMu",
-                        "EMu"
+                        "EMu",
+			"DiEle_prefire",
+                        "DiMu_prefire",
+                        "EMu_prefire"
   };
   
   TString current_dir = "empty";
@@ -563,11 +584,8 @@ void draw_histogram(TString histname){
   openfile(Cycle_name, DoubleEG, current_dir, histname);
   openfile(Cycle_name, SingleMuon, current_dir, histname);
   openfile(Cycle_name, DY_high, current_dir, histname);
-  openfile(Cycle_name, WW, current_dir,  histname);
-  openfile(Cycle_name, WZ_2L, current_dir, histname);
-  openfile(Cycle_name, WZ_3L, current_dir, histname);
-  openfile(Cycle_name, ZZ_2L, current_dir, histname);
-  openfile(Cycle_name, ZZ_4L, current_dir, histname);
+  openfile(Cycle_name, VV, current_dir,  histname);
+  openfile(Cycle_name, WJets, current_dir,  histname);
   openfile(Cycle_name, ttbar, current_dir, histname);
   
   make_histogram(histname, N_bin, current_bins);
@@ -613,7 +631,7 @@ void open_binning_file(TString filename){
 	double current_bin_double = current_bin_value.Atof();
 	map_bin_vector[current_histname].push_back(current_bin_double);
       }
-
+      
       draw_histogram(current_histname);
       map_bin_vector.clear();
       
@@ -628,6 +646,7 @@ void open_binning_file(TString filename){
 void plot(){
   rootlogon();
   open_binning_file("binning_OS.txt");
-  
+  //open_binning_file("binning_SS.txt");
+
   
 }

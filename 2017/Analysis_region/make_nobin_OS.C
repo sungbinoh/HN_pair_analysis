@@ -106,7 +106,9 @@ void openfile(TString cyclename, TString samplename, TString dir,TString histnam
   //if(debug && samplename.Contains("SingleMuon")) gDirectory -> ls();
   
   TH1F * current_hist = (TH1F*)gDirectory -> Get(histname);
-  current_hist -> SetDirectory(0);
+  if(current_hist){
+    current_hist -> SetDirectory(0);
+  }
   TH1::AddDirectory(kFALSE);
   
   mapfunc[histname + cyclename + samplename] = current_hist;
@@ -333,8 +335,11 @@ void plot(){
     
   TDirectory* origDir = gDirectory;
   
-  int n_hist = 7;
+  int n_hist = 10;
   TString histograms[] = {"mZp",
+			  "mZp_0AK8",
+			  "mZp_1AK8",
+			  "mZp_2AK8",
 			  "mN",
 			  "mll",
                           "Lepton_0_Eta",
@@ -344,17 +349,20 @@ void plot(){
 			  
   };
 
-  int N_regions = 4;
+  int N_regions = 3;
   TString regions[] = {"CR_Zmass",
-		       "CR_ttbar",
-		       "CR_inv_mll",
+                       "CR_ttbar",
+		       //"CR_inv_mll",
 		       "SR"
   };
   
-  int N_channels = 3;
+  int N_channels = 6;
   TString channels[] = {"DiEle",
 			"DiMu",
-			"EMu"
+			"EMu",
+			"DiEle_prefire",
+			"DiMu_prefire",
+			"EMu_prefire"
   };
   
   

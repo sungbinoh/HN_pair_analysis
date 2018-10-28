@@ -15,4 +15,4 @@ root -l -b <<-EOF
 plot()
 .q
 EOF
-cp ./Fake_Rate/*.pdf /home/suoh/Dropbox/HN_pair/2016/fake_rate/2D_rate
+scp ./Fake_Rate/*.pdf suoh@147.47.242.44:/home/suoh/Dropbox/HN_pair/2016/fake_rate/Electron/2D_rate
