@@ -16,8 +16,8 @@ void QuickLimit(int xxx=0){
   TString dataset = getenv("CATANVERSION");
   TString ENV_PLOT_PATH = getenv("PLOT_PATH");
 
-  TString dirname = "181015_HighPt_OS_2AK8";
-
+  TString dirname = "181029_charge_blind";
+  
   TString channel = "MuMu";
   TString method = "shape";
 
@@ -51,7 +51,7 @@ void QuickLimit(int xxx=0){
   }
   TFile *out = new TFile(base_plotpath+"/Limits.root","RECREATE");
 
-  TString XSEC_file = "script/2017SampleXsec/values_MG_NLO.txt";
+  TString XSEC_file = "script/2017SampleXsec/ZprimeToNN.dat";
   
 
   //=================================
@@ -840,20 +840,217 @@ void QuickLimit(int xxx=0){
     }
     
   }//end for loop over a's
+
+  ////////////////////////////////////////////////////
+  // === one more time on the line of y = x/2 - 50
+  ///////////////////////////////////////////////////
+  vector<double> theory_cross_50;
+  vector<double> limit_cross_50;
+  vector<double> limit_cross_95_down_50;
+  vector<double> limit_cross_68_down_50;
+  vector<double> limit_cross_68_up_50;
+  vector<double> limit_cross_95_up_50;
+ 
+  vector<double> mZP_Cross_95_down;
+  vector<double> mZP_Cross_68_down;
+  vector<double> mZP_Cross;
+  vector<double> mZP_Cross_68_up;
+  vector<double> mZP_Cross_95_up;
+
+  vector<double> mN_Cross_95_down;
+  vector<double> mN_Cross_68_down;
+  vector<double> mN_Cross;
+  vector<double> mN_Cross_68_up;
+  vector<double> mN_Cross_95_up;
+ 
+  theory_cross_50.clear();
+  theory_cross_50.push_back(limit_theory["400_150"]);
+  theory_cross_50.push_back(limit_theory["1600_750"]);
+  theory_cross_50.push_back(limit_theory["2600_1250"]);
+  theory_cross_50.push_back(limit_theory["2800_1350"]);
   
+  limit_cross_50.clear();
+  limit_cross_50.push_back(limit_exp["400_150"]);
+  limit_cross_50.push_back(limit_exp["1600_750"]);
+  limit_cross_50.push_back(limit_exp["2600_1250"]);
+  limit_cross_50.push_back(limit_exp["2800_1350"]);
+
+  limit_cross_95_down_50.clear();
+  limit_cross_95_down_50.push_back(limit_exp_95_down["400_150"]);
+  limit_cross_95_down_50.push_back(limit_exp_95_down["1600_750"]);
+  limit_cross_95_down_50.push_back(limit_exp_95_down["2600_1250"]);
+  limit_cross_95_down_50.push_back(limit_exp_95_down["2800_1350"]);
+
+  limit_cross_68_down_50.clear();
+  limit_cross_68_down_50.push_back(limit_exp_68_down["400_150"]);
+  limit_cross_68_down_50.push_back(limit_exp_68_down["1600_750"]);
+  limit_cross_68_down_50.push_back(limit_exp_68_down["2600_1250"]);
+  limit_cross_68_down_50.push_back(limit_exp_68_down["2800_1350"]);
+
+  limit_cross_68_up_50.clear();
+  limit_cross_68_up_50.push_back(limit_exp_68_up["400_150"]);
+  limit_cross_68_up_50.push_back(limit_exp_68_up["1600_750"]);
+  limit_cross_68_up_50.push_back(limit_exp_68_up["2600_1250"]);
+  limit_cross_68_up_50.push_back(limit_exp_68_up["2800_1350"]);
+
+  limit_cross_95_up_50.clear();
+  limit_cross_95_up_50.push_back(limit_exp_95_up["400_150"]);
+  limit_cross_95_up_50.push_back(limit_exp_95_up["1600_750"]);
+  limit_cross_95_up_50.push_back(limit_exp_95_up["2600_1250"]);
+  limit_cross_95_up_50.push_back(limit_exp_95_up["2800_1350"]);
+  bool HasExclusion[5] = {false, false, false, false, false};
+  double previous_diff[5] = {999., 999., 999., 999., 999.};
+
+
+  const int N_Zp_50 = 4;
+  double mZp_50_arr[N_Zp_50] = {400., 1600., 2600., 2800.};
+  double mN_50_arr[N_Zp_50] = {150., 750., 1250., 1350.};
   
+  for(unsigned int i_50 = 0; i_50 < N_Zp_50; i_50++){
+    cout << "i_50 : " << i_50 << endl;
+    if(limit_cross_95_down_50.at(i_50) < theory_cross_50.at(i_50)) HasExclusion[0] = true;
+    if(limit_cross_68_down_50.at(i_50) < theory_cross_50.at(i_50)) HasExclusion[1] = true;
+    if(theory_cross_50.at(i_50) < theory_cross_50.at(i_50)) HasExclusion[2] = true;
+    if(limit_cross_68_up_50.at(i_50) < theory_cross_50.at(i_50)) HasExclusion[3] = true;
+    if(limit_cross_95_up_50.at(i_50) < theory_cross_50.at(i_50)) HasExclusion[4] = true;
+    
+
+    double current_diff[5];
+    current_diff[0] = theory_cross_50.at(i_50) - limit_cross_95_down_50.at(i_50);
+    current_diff[1] = theory_cross_50.at(i_50) - limit_cross_68_down_50.at(i_50);
+    current_diff[2] = theory_cross_50.at(i_50) - limit_cross_50.at(i_50);
+    current_diff[3] = theory_cross_50.at(i_50) - limit_cross_68_up_50.at(i_50);
+    current_diff[4] = theory_cross_50.at(i_50) - limit_cross_95_up_50.at(i_50);
+  
+    
+    if(i_50>0){
+      double ZP1 = mZp_50_arr[i_50 - 1] + 0.;
+      double dZP = (mZp_50_arr[i_50] + 0.) - (mZp_50_arr[i_50 - 1] + 0.);
+
+      double T1 = theory_cross_50.at(i_50 - 1);
+      double T2 = theory_cross_50.at(i_50);
+      double dT = T2-T1;
+
+      if(current_diff[0] * previous_diff[0] < 0){
+	double L1 = limit_cross_95_down_50.at(i_50 - 1);
+	double L2 = limit_cross_95_down_50.at(i_50);
+	double dL = L2-L1;
+
+	double x_meet = (L1-T1)*dZP/(dT-dL)+ZP1;
+	mZP_Cross_95_down.push_back(x_meet);
+	mN_Cross_95_down.push_back(0.5 * (x_meet + 0.) -50.0);
+      }
+
+      if(current_diff[1] * previous_diff[1] < 0){
+        double L1 = limit_cross_68_down_50.at(i_50 - 1);
+        double L2 = limit_cross_68_down_50.at(i_50);
+        double dL = L2-L1;
+
+        double x_meet = (L1-T1)*dZP/(dT-dL)+ZP1;
+        mZP_Cross_68_down.push_back(x_meet);
+        mN_Cross_68_down.push_back(0.5 * (x_meet + 0.) -50.0);
+      }
+      
+      if(current_diff[2] * previous_diff[2] < 0){
+	double L1 = limit_cross_50.at(i_50 - 1);
+	double L2 = limit_cross_50.at(i_50);
+	double dL = L2-L1;
+
+	double x_meet = (L1-T1)*dZP/(dT-dL)+ZP1;
+	mZP_Cross.push_back(x_meet);
+	mN_Cross.push_back(0.5 * (x_meet + 0.) -50.0);
+      }
+
+
+      if(current_diff[3] * previous_diff[3] < 0){
+	double L1 = limit_cross_68_up_50.at(i_50 - 1);
+	double L2 = limit_cross_68_up_50.at(i_50);
+	double dL = L2-L1;
+
+	double x_meet = (L1-T1)*dZP/(dT-dL)+ZP1;
+	mZP_Cross_68_up.push_back(x_meet);
+	mN_Cross_68_up.push_back(0.5 * (x_meet + 0.) -50.0);
+      }
+
+      if(current_diff[4] * previous_diff[4] < 0){
+        double L1 = limit_cross_95_up_50.at(i_50 - 1);
+        double L2 = limit_cross_95_up_50.at(i_50);
+        double dL = L2-L1;
+
+        double x_meet = (L1-T1)*dZP/(dT-dL)+ZP1;
+        mZP_Cross_95_up.push_back(x_meet);
+        mN_Cross_95_up.push_back(0.5 * (x_meet + 0.) -50.0);
+      }
+    }
+
+    previous_diff[0] = theory_cross_50.at(i_50) - limit_cross_95_down_50.at(i_50);
+    previous_diff[1] = theory_cross_50.at(i_50) - limit_cross_68_down_50.at(i_50);
+    previous_diff[2] = theory_cross_50.at(i_50) - limit_cross_50.at(i_50);
+    previous_diff[3] = theory_cross_50.at(i_50) - limit_cross_68_up_50.at(i_50);
+    previous_diff[4] = theory_cross_50.at(i_50) - limit_cross_95_up_50.at(i_50);
+
+  }
+
+  cout << "end 4 -50" << endl;
+  
+  if(mZP_Cross_95_down.size()>0){
+    mZP_crosses_95_down.push_back(mZP_Cross_95_down.at(0));
+    mN_crosses_95_down.push_back(mN_Cross_95_down.at(0));
+  }
+  else{
+    mZP_crosses_95_down.push_back(2800.);
+    mN_crosses_95_down.push_back(1350.);
+  }
+
+  if(mZP_Cross_68_down.size()>0){
+    mZP_crosses_68_down.push_back(mZP_Cross_68_down.at(0));
+    mN_crosses_68_down.push_back(mN_Cross_68_down.at(0));
+  }
+  else{
+    mZP_crosses_68_down.push_back(2800.);
+    mN_crosses_68_down.push_back(1350.);
+  }
+  
+  if(mZP_Cross.size()>0){
+    mZP_crosses.push_back(mZP_Cross.at(0));
+    mN_crosses.push_back(mN_Cross.at(0));
+  }
+  else{
+    mZP_crosses.push_back(2800.);
+    mN_crosses.push_back(1350.);
+  }
+
+  if(mZP_Cross_68_up.size()>0){
+    mZP_crosses_68_up.push_back(mZP_Cross_68_up.at(0));
+    mN_crosses_68_up.push_back(mN_Cross_68_up.at(0));
+  }
+  else{
+    mZP_crosses_68_up.push_back(2800.);
+    mN_crosses_68_up.push_back(1350.);
+  }
+  
+  if(mZP_Cross_95_up.size()>0){
+    mZP_crosses_95_up.push_back(mZP_Cross_95_up.at(0));
+    mN_crosses_95_up.push_back(mN_Cross_95_up.at(0));
+  }
+  else{
+    mZP_crosses_95_up.push_back(2800.);
+    mN_crosses_95_up.push_back(1350.);
+  }
+
   
   //========================================
   //==== 3) Let's draw found points 
   //========================================
+  
   c_ct -> SetLogz();
   //exp_limit_2D -> Draw("colzsame");
     
-  const int n_point_95_down = mZP_crosses_95_down.size();
-  const int n_point_68_down = mZP_crosses_68_down.size();
-  const int n_point = mZP_crosses.size();
-  const int n_point_68_up = mZP_crosses_68_up.size();
-  const int n_point_95_up = mZP_crosses_95_up.size();
+  const int n_point_95_down = mZP_crosses_95_down.size()+1;
+  const int n_point_68_down = mZP_crosses_68_down.size()+1;
+  const int n_point = mZP_crosses.size()+1;
+  const int n_point_68_up = mZP_crosses_68_up.size()+1;
+  const int n_point_95_up = mZP_crosses_95_up.size()+1;
   
   double x_mZp_95_down[n_point_95_down];
   double x_mZp_68_down[n_point_68_down];
@@ -866,26 +1063,37 @@ void QuickLimit(int xxx=0){
   double y_mZp[n_point];
   double y_mZp_68_up[n_point_68_up];
   double y_mZp_95_up[n_point_95_up];
-  for(int i_fill = 0; i_fill < n_point_95_down-1; i_fill++){
+  for(int i_fill = 0; i_fill < n_point_95_down-2; i_fill++){
     x_mZp_95_down[i_fill] = mZP_crosses_95_down.at(i_fill+1);
     y_mZp_95_down[i_fill] = mN_crosses_95_down.at(i_fill+1);
   }
-  for(int i_fill = 0; i_fill < n_point_68_down-1; i_fill++){
+  for(int i_fill = 0; i_fill < n_point_68_down-2; i_fill++){
     x_mZp_68_down[i_fill] = mZP_crosses_68_down.at(i_fill+1);
     y_mZp_68_down[i_fill] = mN_crosses_68_down.at(i_fill+1);
   }
-  for(int i_fill = 0; i_fill < n_point-1; i_fill++){
+  for(int i_fill = 0; i_fill < n_point-2; i_fill++){
     x_mZp[i_fill] = mZP_crosses.at(i_fill+1);
     y_mZp[i_fill] = mN_crosses.at(i_fill+1);
   }
-  for(int i_fill = 0; i_fill < n_point_68_up-1; i_fill++){
+  for(int i_fill = 0; i_fill < n_point_68_up-2; i_fill++){
     x_mZp_68_up[i_fill] = mZP_crosses_68_up.at(i_fill+1);
     y_mZp_68_up[i_fill] = mN_crosses_68_up.at(i_fill+1);
   }
-  for(int i_fill = 0; i_fill < n_point_95_up-1; i_fill++){
+  for(int i_fill = 0; i_fill < n_point_95_up-2; i_fill++){
     x_mZp_95_up[i_fill] = mZP_crosses_95_up.at(i_fill+1);
     y_mZp_95_up[i_fill] = mN_crosses_95_up.at(i_fill+1);
   }
+  x_mZp_95_down[n_point_95_down-2] = 400.;
+  y_mZp_95_down[n_point_95_down-2] = 150.;
+  x_mZp_68_down[n_point_68_down-2] = 400.;
+  y_mZp_68_down[n_point_68_down-2] = 150.;
+  x_mZp[n_point-2] = 400.;
+  y_mZp[n_point-2] = 150.;
+  x_mZp_68_up[n_point_68_up-2] = 400.;
+  y_mZp_68_up[n_point_68_up-2] = 150.;
+  x_mZp_95_up[n_point_95_up-2] = 400.;
+  y_mZp_95_up[n_point_95_up-2] = 150.;
+
   x_mZp_95_down[n_point_95_down-1] = mZP_crosses_95_down.at(0);
   y_mZp_95_down[n_point_95_down-1] = mN_crosses_95_down.at(0);
   x_mZp_68_down[n_point_68_down-1] = mZP_crosses_68_down.at(0);
@@ -980,13 +1188,17 @@ void QuickLimit(int xxx=0){
   lg->AddEntry(gr_atlas, "#splitline{95% CL Observed Limit}{ATLAS @ 8 TeV}", "l");
   lg->Draw();
 
-  TLatex latex_CMSPriliminary, latex_Lumi;
+  TLatex latex_CMSPriliminary, latex_Lumi, latex_channel;
   latex_CMSPriliminary.SetNDC();
   latex_Lumi.SetNDC();
   latex_CMSPriliminary.SetTextSize(0.035);
   latex_CMSPriliminary.DrawLatex(0.16, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
-  latex_Lumi.SetTextSize(0.035);
+  latex_Lumi.SetTextSize(0.035 );
   latex_Lumi.DrawLatex(0.68, 0.96, "41.3 fb^{-1} (13 TeV, 2017)");
+  latex_channel.SetNDC();
+  latex_channel.SetTextSize(0.08);
+  if(channel.Contains("MuMu")) latex_channel.DrawLatex(0.2, 0.6, "#mu#mu OS + SS");
+  else latex_channel.DrawLatex(0.2, 0.6, "ee OS + SS");
   
   
   dummy_ct_ForEachZP -> Draw("axissame");
