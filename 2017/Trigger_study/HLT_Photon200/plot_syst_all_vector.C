@@ -68,6 +68,8 @@ TString ttbar = "TTLL_powheg";
 
 const double alpha = 1 - 0.6827;
 
+double DY_scale = 1.0798;
+
 bool debug = false;
 
 // -- Set TDR Style
@@ -95,19 +97,20 @@ TH1F * GetHist(TString hname){
 void openfile(TString cyclename, TString samplename, TString dir, TString histname){
   
   TString filename = cyclename + "_" + samplename + ".root";
-  //cout << "[[openfile ]]opening : " << filename << endl;
+  if(debug) cout << "[[openfile ]]opening : " << filename << endl;
 
   TFile *current_file = new TFile ((filename)) ;
   
-  //cout << "[[openfile ]] Cd : " << dir << endl;
+  if(debug) cout << "[[openfile ]] Cd : " << dir << endl;
   gDirectory->cd(dir);
-  
+      
   TH1F * current_hist = (TH1F*)gDirectory -> Get(histname);
   if(current_hist){
     current_hist -> SetDirectory(0);
   }
   TH1::AddDirectory(kFALSE);
   
+  if(samplename.Contains("DYJets") && current_hist) current_hist->Scale(DY_scale);
   mapfunc[histname + cyclename + samplename] = current_hist;
   
   current_file -> Close();
@@ -118,7 +121,7 @@ void openfile(TString cyclename, TString samplename, TString dir, TString histna
 
 // -- Maing drawing function
 void make_histogram(TString nameofhistogram, TString current_histname, int N_bin, double binx[]){
-
+  
   if(debug){
     cout << "[[make_histogram]] checking binning arrary" << endl;
     for(int i = 0; i < N_bin; i++){
@@ -126,49 +129,120 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
     }
     cout << "" << endl;
   }
-
+  
+  const int N_categories_origin = 9.;
+  int N_catetories = 9;
+  
+  TString categories[N_categories_origin] = {"ElectronSmear",
+					     "ElectronScale",
+					     "JetsRes",
+					     "JetsScale",
+					     "SD_JMR_",
+					     "SD_JMS_",
+					     "MuonSmear", 
+					     "MuonScale",
+					     "PUReweight_",
+  };
+  TString legend_string[N_categories_origin] = {"Electron Energy Res.",
+						"Electron Energy Scale",
+						"Jets Energy Res.",
+						"Jets Energy Scale",
+						"SoftDrop Mass Res.",
+						"SoftDrop Mass Scale",
+						"Muon Momentum Res.",
+						"Muon Momentum Scale",
+						"PileUp Reweight",
+  };
+  
+  if(nameofhistogram.Contains("DiEle")){
+    N_catetories = N_categories_origin -2;
+    TString categories_new[N_categories_origin] = {"ElectronSmear",
+						   "ElectronScale",
+						   "JetsRes",
+						   "JetsScale",
+						   "SD_JMR_",
+						   "SD_JMS_",
+						   "PUReweight_",
+						   "",
+						   "",
+						   
+    };
+    TString legend_string_new[N_categories_origin] = {"Electron Energy Res.",
+						      "Electron Energy Scale",
+						      "Jets Energy Res.",
+						      "Jets Energy Scale",
+						      "SoftDrop Mass Res.",
+						      "SoftDrop Mass Scale",
+						      "PileUp Reweight",
+						      "",
+						      "",
+    };
+    
+    for(int i_category = 0; i_category < N_catetories; i_category++){
+      categories[i_category] = categories_new[i_category];
+      legend_string[i_category] = legend_string_new[i_category];
+    }
+  }
+  if(nameofhistogram.Contains("DiMu")){
+    N_catetories = N_categories_origin - 2;
+    TString categories_new[N_categories_origin] = {"JetsRes",
+						   "JetsScale",
+						   "SD_JMR_",
+						   "SD_JMS_",
+						   "MuonSmear",
+						   "MuonScale",
+						   "PUReweight_",
+						   "",
+						   "",
+    };
+    TString legend_string_new[N_categories_origin] = {"Jets Energy Res.",
+                                                      "Jets Energy Scale",
+                                                      "SoftDrop Mass Res.",
+                                                      "SoftDrop Mass Scale",
+                                                      "Muon Momentum Res.",
+						      "Muon Momentum Scale",
+						      "PileUp Reweight",
+						      "",
+                                                      "",
+    };
+    for(int i_category = 0; i_category < N_catetories; i_category++){
+      categories[i_category] = categories_new[i_category];
+      legend_string[i_category]= legend_string_new[i_category];
+    }
+  }
+  if(debug){
+    for(int i_category = 0; i_category < N_catetories; i_category++){
+    cout << i_category << "'th category : " + categories[i_category] << endl;
+    cout << i_category << "'th legend : " + legend_string[i_category] << endl;
+    } 
+  }
   const int N_syst_x = N_bin - 1;
+  map<TString, vector<double>> map_syst;
   double syst_x_bin[N_syst_x];
   double syst_x_bin_error[N_syst_x];
   double syst_Stat[N_syst_x];
-  double SystElEn[N_syst_x];
-  double SystJER[N_syst_x];
-  double SystJES[N_syst_x];
-  double SystMuEn[N_syst_x];
-  double SystPU[N_syst_x];
   
   for(int i = 0; i < N_syst_x; i++){
     syst_x_bin[i] = (binx[i+1] + binx[i]) / 2.0;
     syst_x_bin_error[i] = (binx[i+1] - binx[i]) / 2.0;
   }
-  for(int i = 0; i < N_syst_x; i++){
-    cout << syst_x_bin[i] << ", ";
-  }
-  cout << "" << endl;
-  for(int i = 0; i < N_syst_x; i++){
-    cout << syst_x_bin_error[i] << ", ";
-  }
-  cout << "" << endl;
-  
-  
-  const int N_syst = 11;
-  TString systematics[N_syst] = {"central",
-                                 "PU_down", "PU_up",
-                                 "SystElEnDown", "SystElEnUp",
-                                 "SystJERDown", "SystJERUp",
-                                 "SystJESDown", "SystJESUp",
-                                 "SystMuEnDown", "SystMuEnUp",
-  };
 
-  
-  
+  if(debug){
+    for(int i = 0; i < N_syst_x; i++){
+      cout << syst_x_bin[i] << ", ";
+    }
+    cout << "" << endl;
+    for(int i = 0; i < N_syst_x; i++){
+      cout << syst_x_bin_error[i] << ", ";
+    }
+    cout << "" << endl;
+  }
   TString current_data;
   if(nameofhistogram.Contains("EMu") || nameofhistogram.Contains("DiMu")) current_data = SingleMuon;
   else if(nameofhistogram.Contains("DiEle")) current_data = DoubleEG;
   else return;
   
   TString title_y = "Rel. Syst";;
-
   
   bool blind = false;
   blind = (nameofhistogram.Contains("SR")) && (!nameofhistogram.Contains("EMu"));
@@ -202,11 +276,9 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   
   if(debug) cout << "1" << endl;
   
-  int n_kind = 3;
-  TString samples_array[] = {VV, ttbar, DY_high};
-  Int_t colour_array[] = {419, 416, 400};
-  TString samples_legend[] = {"Other backgrounds", "ttbar", "Z/#gamma + jets"};
-  
+  int n_kind = 4;
+  TString samples_array[] = {VV, WJets, ttbar, DY_high};
+    
   if(debug) cout << "2" << endl;
   
   TString name_cycle = nameofhistogram + Cycle_name;
@@ -223,13 +295,10 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   if(debug) cout << "func rebin rebinning" << endl;
   mapfunc[func + "rebin"] = (TH1F*)mapfunc[func] -> Rebin(N_bin, func + "rebin", binx);
   
-  
-  mapfunc[func + "SystElEn" ] = (TH1F*)mapfunc[func] -> Rebin(N_bin, func + "rebin", binx);
-  mapfunc[func + "SystJER" ] = (TH1F*)mapfunc[func] -> Rebin(N_bin, func + "rebin", binx);
-  mapfunc[func + "SystJES" ] = (TH1F*)mapfunc[func] -> Rebin(N_bin, func + "rebin", binx);
-  mapfunc[func + "SystMuEn" ] = (TH1F*)mapfunc[func] -> Rebin(N_bin, func + "rebin", binx);
-  mapfunc[func + "PU" ] = (TH1F*)mapfunc[func] -> Rebin(N_bin, func + "rebin", binx);
-  
+  for(int i_category = 0; i_category < N_catetories; i_category++){
+    mapfunc[func + "syst_" + categories[i_category] + "Up" + "rebin"] = (TH1F*)mapfunc[func] -> Rebin(N_bin, func + "rebin", binx);
+    mapfunc[func + "syst_" + categories[i_category] + "Down" + "rebin"] = (TH1F*)mapfunc[func] -> Rebin(N_bin, func + "rebin", binx);
+  }
   
   for(int i = 0; i < n_kind; i++){
     if(debug) cout << samples_array[i] << endl;
@@ -238,127 +307,92 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
       Double_t x1 = GetHist(nameofhistogram + Cycle_name + samples_array[i]) -> GetBinLowEdge(1);
       Double_t bw = GetHist(nameofhistogram + Cycle_name + samples_array[i]) -> GetBinWidth(nx);
       Double_t x2 = GetHist(nameofhistogram + Cycle_name + samples_array[i]) -> GetBinLowEdge(nx)+bw;
+      if(debug) cout << samples_array[i] + "'s size is called" << endl;
+
       
       TH1F *htmp = new TH1F("", "", nx, x1, x2);
-      TH1F *htmp_SystElEn = new TH1F("", "", nx, x1, x2);
-      TH1F *htmp_SystJER = new TH1F("", "", nx, x1, x2);
-      TH1F *htmp_SystJES = new TH1F("", "", nx, x1, x2);
-      TH1F *htmp_SystMuEn = new TH1F("", "", nx, x1, x2);
-      TH1F *htmp_PU = new TH1F("", "", nx, x1, x2);
       
-      for (Int_t j = 1; j <= nx; j++) {
+      for(Int_t j = 1; j <= nx; j++){
+	
 	double current_bin_content = GetHist(nameofhistogram + Cycle_name + samples_array[i]) -> GetBinContent(j);
-        htmp -> SetBinContent(j, current_bin_content);
-	htmp_SystElEn -> SetBinContent(j, current_bin_content);
-        htmp_SystJER -> SetBinContent(j, current_bin_content);
-        htmp_SystJES -> SetBinContent(j, current_bin_content);
-        htmp_SystMuEn -> SetBinContent(j, current_bin_content);
-	htmp_PU -> SetBinContent(j, current_bin_content);
-        	
-	double stat_error, SystElEn_error, SystJER_error, SystJES_error, SystMuEn_error, PU_error;
+        double current_bin_error = GetHist(nameofhistogram + Cycle_name + samples_array[i]) -> GetBinError(j);
+	htmp -> SetBinContent(j, current_bin_content);
+	htmp -> SetBinError(j, current_bin_error);
 	
-	stat_error = GetHist(nameofhistogram + Cycle_name + samples_array[i]) -> GetBinError(j); //stat error
-	if(GetHist(current_histname + "_SystElEnDown"   + Cycle_name + samples_array[i]) || GetHist(current_histname + "_SystElEnUp" + Cycle_name + samples_array[i]) ){
-	  SystElEn_error = 0.;
-	  if(GetHist(current_histname + "_SystElEnDown" + Cycle_name + samples_array[i])) SystElEn_error += pow(current_bin_content - GetHist(current_histname + "_SystElEnDown" + Cycle_name + samples_array[i]) -> GetBinContent(j), 2);
-	  if(GetHist(current_histname + "_SystElEnUp"   + Cycle_name + samples_array[i])) SystElEn_error += pow(current_bin_content - GetHist(current_histname + "_SystElEnUp" + Cycle_name + samples_array[i]) -> GetBinContent(j), 2);
-	  SystElEn_error = pow(SystElEn_error, 0.5);
-	}
-	if(GetHist(current_histname + "_SystJERDown"   + Cycle_name + samples_array[i]) || GetHist(current_histname + "_SystJERUp" + Cycle_name + samples_array[i]) ){
-	  SystJER_error = 0.;
-	  if(GetHist(current_histname + "_SystJERDown" + Cycle_name + samples_array[i])) SystJER_error += pow(current_bin_content - GetHist(current_histname + "_SystJERDown" + Cycle_name + samples_array[i]) -> GetBinContent(j), 2);
-	  if(GetHist(current_histname + "_SystJERUp"   + Cycle_name + samples_array[i])) SystJER_error += pow(current_bin_content - GetHist(current_histname + "_SystJERUp" + Cycle_name + samples_array[i]) -> GetBinContent(j), 2);
-	  SystJER_error = pow(SystJER_error, 0.5);
-	}
-	if(GetHist(current_histname + "_SystJESDown"         + Cycle_name + samples_array[i]) || GetHist(current_histname + "_SystJESUp"       + Cycle_name + samples_array[i]) ){
-	  SystJES_error = 0.;
-	  if(GetHist(current_histname + "_SystJESDown"       + Cycle_name + samples_array[i])) SystJES_error += pow(current_bin_content - GetHist(current_histname + "_SystJESDown"       + Cycle_name + samples_array[i]) -> GetBinContent(j), 2);
-	  if(GetHist(current_histname + "_SystJESUp"         + Cycle_name + samples_array[i])) SystJES_error += pow(current_bin_content - GetHist(current_histname + "_SystJESUp"       + Cycle_name + samples_array[i]) -> GetBinContent(j), 2);
-	  SystJES_error = pow(SystJES_error, 0.5);
-	}
-	if(GetHist(current_histname + "_SystMuEnDown"       + Cycle_name + samples_array[i]) || GetHist(current_histname + "_SystMuEnUp"     + Cycle_name + samples_array[i]) ){
-	  SystMuEn_error = 0.;
-	  if(GetHist(current_histname + "_SystMuEnDown"     + Cycle_name + samples_array[i])) SystMuEn_error += pow(current_bin_content - GetHist(current_histname + "_SystMuEnDown"     + Cycle_name + samples_array[i]) -> GetBinContent(j), 2);
-	  if(GetHist(current_histname + "_SystMuEnUp"       + Cycle_name + samples_array[i])) SystMuEn_error += pow(current_bin_content - GetHist(current_histname + "_SystMuEnUp"     + Cycle_name + samples_array[i]) -> GetBinContent(j), 2);
-	  SystMuEn_error = pow(SystMuEn_error, 0.5);
-	}
-	if(GetHist(current_histname + "_PU_down"         + Cycle_name + samples_array[i]) || GetHist(current_histname + "_PU_up"       + Cycle_name + samples_array[i]) ){
-	  PU_error = 0.;
-	  if(GetHist(current_histname + "_PU_down"       + Cycle_name + samples_array[i])) PU_error += pow(current_bin_content - GetHist(current_histname + "_PU_down"       + Cycle_name + samples_array[i]) -> GetBinContent(j), 2);
-	  if(GetHist(current_histname + "_PU_up"         + Cycle_name + samples_array[i])) PU_error += pow(current_bin_content - GetHist(current_histname + "_PU_up"       + Cycle_name + samples_array[i]) -> GetBinContent(j), 2);
-	  PU_error = pow(PU_error, 0.5);
-	}
-	
-	htmp -> SetBinError(j, stat_error);
-	htmp_SystElEn -> SetBinError(j, SystElEn_error);
-	htmp_SystJER -> SetBinError(j, SystJER_error);
-	htmp_SystJES -> SetBinError(j, SystJES_error);
-	htmp_SystMuEn -> SetBinError(j, SystMuEn_error);
-	htmp_PU -> SetBinError(j, PU_error);
-
-      }
+      }//for nx
       
-      if(debug) cout << "rebinning" << endl;
+      if(debug) cout << samples_array[i] + " : called all syst hists" << endl;
+      
+      
       
       mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin"] = dynamic_cast<TH1F*>(htmp -> Rebin(N_bin, nameofhistogram + Cycle_name + samples_array[i] + "rebin", binx));
-      GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin") -> SetFillColor(colour_array[i]);
-      GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin") -> SetLineColor(colour_array[i]);
       
-      mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin_SystElEn"]  = dynamic_cast<TH1F*>(htmp_SystElEn  -> Rebin(N_bin, nameofhistogram + Cycle_name + samples_array[i] + "rebin_SystElEn" , binx));
-      mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin_SystJER"]   = dynamic_cast<TH1F*>(htmp_SystJER   -> Rebin(N_bin, nameofhistogram + Cycle_name + samples_array[i] + "rebin_SystJER"  , binx));
-      mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin_SystJES"]   = dynamic_cast<TH1F*>(htmp_SystJES   -> Rebin(N_bin, nameofhistogram + Cycle_name + samples_array[i] + "rebin_SystJES"  , binx));
-      mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin_SystMuEn"]  = dynamic_cast<TH1F*>(htmp_SystMuEn  -> Rebin(N_bin, nameofhistogram + Cycle_name + samples_array[i] + "rebin_SystMuEn" , binx));
-      mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin_PU"]        = dynamic_cast<TH1F*>(htmp_PU        -> Rebin(N_bin, nameofhistogram + Cycle_name + samples_array[i] + "rebin_PU"       , binx));
-      
-      if(debug) cout << samples_array[i] << endl;
-      
-      mapfunc[func + "rebin"] -> Add(GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin"));
-      mapfunc[func + "SystElEn"] -> Add(GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin_SystElEn"));
-      mapfunc[func + "SystJER"] -> Add(GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin_SystJER"));
-      mapfunc[func + "SystJES"]       -> Add(GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin_SystJES"));
-      mapfunc[func + "SystMuEn"]     -> Add(GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin_SystMuEn"));
-      mapfunc[func + "PU"]        -> Add(GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin_PU"));
+      for(int i_category = 0; i_category < N_catetories; i_category++){
+	
+	if(GetHist(current_histname + "_" + categories[i_category] + "Down" + Cycle_name + samples_array[i])){
+	  if(debug) cout << "Filling " << categories[i_category] << endl;
+	  
+	  TH1F *htmp_down = new TH1F("", "", nx, x1, x2);
+	  TH1F *htmp_up = new TH1F("", "", nx, x1, x2);
+	  
+	  for(Int_t j = 1; j <= nx; j++){
+	    double current_bin_content = GetHist(current_histname + "_" + categories[i_category] + "Down" + Cycle_name + samples_array[i]) -> GetBinContent(j);
+	    htmp_down -> SetBinContent(j, current_bin_content);
+	    
+	    current_bin_content = GetHist(current_histname + "_" + categories[i_category] + "Up" + Cycle_name + samples_array[i]) -> GetBinContent(j);
+	    htmp_up -> SetBinContent(j, current_bin_content);
+	  }
+	  mapfunc["htmp_" + categories[i_category] + "Down" + "rebin"] = dynamic_cast<TH1F*>(htmp_down -> Rebin(N_bin, nameofhistogram + Cycle_name + samples_array[i] + "rebin", binx));
+	  mapfunc["htmp_" + categories[i_category] + "Up" + "rebin"] = dynamic_cast<TH1F*>(htmp_up -> Rebin(N_bin, nameofhistogram + Cycle_name + samples_array[i] + "rebin", binx));
+	}
+      }
+    }//if mapfunc
+    if(debug) cout << samples_array[i] + " : if mapfunc ends" << endl;
+
+    
+    mapfunc[func + "rebin"]  -> Add(mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin"] );
+    for(int i_category = 0; i_category < N_catetories; i_category++){
+      mapfunc[func + "syst_" + categories[i_category] + "Down" + "rebin"] -> Add(mapfunc["htmp_" + categories[i_category] + "Down" + "rebin"]);
+      mapfunc[func + "syst_" + categories[i_category] + "Up" + "rebin"] -> Add(mapfunc["htmp_" + categories[i_category] + "Up" + "rebin"]);
     }
-  }//for loop
-  
+  }//for n_kind
 
   if(debug) cout << "4" << endl;
   
   for(int i = 0; i < N_syst_x; i++){
     double current_denom = mapfunc[func + "rebin"]              -> GetBinContent(i+1);
-    cout << "current_denom : " << current_denom << endl;
+    if(debug) cout << "current_denom : " << current_denom << endl;
     if(current_denom > 10e-6){ 
-      syst_Stat[i]      = mapfunc[func + "rebin"]    -> GetBinError(i+1) / mapfunc[func + "rebin"]    -> GetBinContent(i+1);
-      SystElEn[i]       = mapfunc[func + "SystElEn"] -> GetBinError(i+1) / mapfunc[func + "SystElEn"] -> GetBinContent(i+1);
-      SystJER[i]        = mapfunc[func + "SystJER"]  -> GetBinError(i+1) / mapfunc[func + "SystJER"]  -> GetBinContent(i+1);
-      SystJES[i]        = mapfunc[func + "SystJES"]  -> GetBinError(i+1) / mapfunc[func + "SystJES"]  -> GetBinContent(i+1);
-      SystMuEn[i]       = mapfunc[func + "SystMuEn"] -> GetBinError(i+1) / mapfunc[func + "SystMuEn"] -> GetBinContent(i+1);
-      SystPU[i]         = mapfunc[func + "PU"]  -> GetBinError(i+1) / mapfunc[func + "PU"]  -> GetBinContent(i+1);
+      syst_Stat[i]          = mapfunc[func + "rebin"] -> GetBinError(i+1) / current_denom;
+      for(int i_category = 0; i_category < N_catetories; i_category++){
+	double current_error = 0.;
+	current_error += pow(current_denom - mapfunc[func + "syst_" + categories[i_category] + "Down" + "rebin"] -> GetBinContent(i+1), 2);
+	current_error += pow(current_denom - mapfunc[func + "syst_" + categories[i_category] + "Up" + "rebin"] -> GetBinContent(i+1), 2);
+	current_error = pow(current_error, 0.5);
+	map_syst[categories[i_category]].push_back(current_error / current_denom);
+      }
     }
     else{
-      syst_Stat[i]  = 0.;
-      SystElEn[i]   = 0.;
-      SystJER[i]    = 0.;
-      SystJES[i]    = 0.;
-      SystMuEn[i]   = 0.;
-      SystPU[i]     = 0.;
-      
+      syst_Stat[i]          = 0.;
+      for(int i_category = 0; i_category < N_catetories; i_category++){
+	map_syst[categories[i_category]].push_back(0.);
+      }
     }
   }
-  
-  cout << "stat errpr" << endl;
-  for(int i = 0; i < N_syst_x; i++){
+  if(debug){
+    cout << "stat errpr" << endl;
+    for(int i = 0; i < N_syst_x; i++){
     cout << syst_Stat[i] << ", ";
-  }
-  cout << "" << endl;
-
-  cout << "SystJER" << endl;
+    }
+    cout << "" << endl;
+  }    
+  /*
+  cout << "syst_JetsScale" << endl;
   for(int i = 0; i < N_syst_x; i++){
-    cout << SystJER[i] << ", ";
+    cout << syst_JetsScale[i] << ", ";
   }
   cout << "" << endl;
-  
-  TString name_x = nameofhistogram;
+  */
   TGraph *gr_stat_error         = new TGraph(N_syst_x, syst_x_bin, syst_Stat);
   gStyle->SetOptTitle(0);
   gr_stat_error -> SetMarkerStyle(20);
@@ -371,50 +405,43 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   gr_stat_error -> GetXaxis() -> SetTitle(current_histname);
   gr_stat_error -> GetXaxis() -> SetTitleSize(0.15);
   gr_stat_error -> GetXaxis() -> SetLabelSize(0.03);
-  
-
   gr_stat_error -> GetXaxis() -> SetRangeUser(x1_func, x2_func);
   gr_stat_error -> GetYaxis() -> SetRangeUser(0., 1.);
-
   gr_stat_error -> Draw("ALP");
-  
-  TGraph *gr_SystElEn = new TGraph(N_syst_x, syst_x_bin, SystElEn);
-  gr_SystElEn -> SetMarkerStyle(20);
-  gr_SystElEn -> SetMarkerColor(kBlue);
-  gr_SystElEn -> SetLineColor(kBlue);
-  gr_SystElEn -> Draw("same LP");
-  
-  TGraph *gr_SystMuEn     = new TGraph(N_syst_x, syst_x_bin, SystMuEn);
-  gr_SystMuEn -> SetMarkerStyle(20);
-  gr_SystMuEn -> SetMarkerColor(kCyan);
-  gr_SystMuEn -> SetLineColor(kCyan);
-  gr_SystMuEn -> Draw("same LP");
-  
-  TGraph *gr_SystJER = new TGraph(N_syst_x, syst_x_bin, SystJER);
-  gr_SystJER -> SetMarkerStyle(20);
-  gr_SystJER -> SetMarkerColor(kOrange);
-  gr_SystJER -> SetLineColor(kOrange);
-  gr_SystJER -> Draw("same LP");
-  
-  TGraph *gr_SystJES       = new TGraph(N_syst_x, syst_x_bin, SystJES);
-  gr_SystJES -> SetMarkerStyle(20);
-  gr_SystJES -> SetMarkerColor(kRed);
-  gr_SystJES -> SetLineColor(kRed);
-  gr_SystJES -> Draw("same LP");
-
-  TGraph *gr_SystPU     = new TGraph(N_syst_x, syst_x_bin, SystPU);
-  gr_SystPU -> SetMarkerStyle(20);
-  gr_SystPU -> SetMarkerColor(kGreen);
-  gr_SystPU -> SetLineColor(kGreen);
-  gr_SystPU -> Draw("same LP");
-  
-  
   maplegend[legend] -> AddEntry(gr_stat_error, "Stat error", "lp");
-  maplegend[legend] -> AddEntry(gr_SystElEn, "Electron Energy error", "lp");
-  maplegend[legend] -> AddEntry(gr_SystMuEn, "Muon Energy error", "lp");
-  maplegend[legend] -> AddEntry(gr_SystJER, "JER error", "lp");
-  maplegend[legend] -> AddEntry(gr_SystJES, "JES error", "lp");
-  maplegend[legend] -> AddEntry(gr_SystPU, "Pileup Reweight error", "lp");
+
+  
+  Int_t colour_array[] = {600, // kBlue
+			  432, // kCyan
+			  632, // kRed
+			  800, // kOrange
+			  416, // kGreen
+			  400, // kYellow
+			  880, // kViolet
+  };
+  
+  map<TString, TGraph*> map_TGraph;;
+  for(int i_category = 0; i_category < N_catetories; i_category++){
+    double current_syst_y[N_syst_x];
+    for(int i_bin = 0; i_bin < N_syst_x; i_bin++){
+      current_syst_y[i_bin] = map_syst[categories[i_category]].at(i_bin);
+    }
+    map_TGraph[categories[i_category]] = new TGraph(N_syst_x, syst_x_bin, current_syst_y);
+    map_TGraph[categories[i_category]] -> SetMarkerStyle(20);
+    map_TGraph[categories[i_category]] -> SetMarkerColor(colour_array[i_category]);
+    map_TGraph[categories[i_category]] -> SetLineColor(colour_array[i_category]);
+    map_TGraph[categories[i_category]] -> Draw("same LP");
+  
+    if(categories[i_category].Contains("PU_reweight")){
+      map_TGraph[categories[i_category]] -> SetMarkerStyle(28);
+      map_TGraph[categories[i_category]] -> SetMarkerColor(kBlack);
+      map_TGraph[categories[i_category]] -> SetLineColor(kBlack);
+      map_TGraph[categories[i_category]] -> SetLineStyle(6);
+      map_TGraph[categories[i_category]] -> Draw("same LP");
+    }
+    
+    maplegend[legend] -> AddEntry(map_TGraph[categories[i_category]] , legend_string[i_category] + " error", "lp");
+  }
   
   maplegend[legend] -> Draw("same");
   
@@ -424,7 +451,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   latex_CMSPriliminary.SetTextSize(0.035);
   latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
   latex_Lumi.SetTextSize(0.035);
-  latex_Lumi.DrawLatex(0.7, 0.96, "35.9 fb^{-1} (13 TeV)");
+  latex_Lumi.DrawLatex(0.7, 0.96, "41.3 fb^{-1} (13 TeV)");
   
   if(debug) cout << "9" << endl;
 
@@ -475,11 +502,14 @@ void draw_histogram(TString histname){
   
   
   // -- Get which region(CR1, CR2 , ...) and channel (DiEle, DiMu, ...)
-  int N_regions = 3;
+  int N_regions = 6;
 
   TString regions[] = {"CR_Zmass",
-		       "CR_ttbar1",
-		       "CR_ttbar2",
+		       "CR_ttbar",
+		       "tight_CR_Zmass",
+                       "tight_CR_ttbar",
+		       "CR_inv_mll",
+		       "SR"
   };
   /*
   TString regions[] = {                       "SR"
@@ -491,16 +521,60 @@ void draw_histogram(TString histname){
                         "EMu"
   };
   
-
-  const int N_syst = 11;
-  TString systematics[N_syst] = {"central",
-                                 "PU_down", "PU_up",
-                                 "SystElEnDown", "SystElEnUp",
-                                 "SystJERDown", "SystJERUp",
-                                 "SystJESDown", "SystJESUp",
-                                 "SystMuEnDown", "SystMuEnUp",
+  const int N_syst_origin = 19;
+  int N_syst = 19;
+  TString systematics[N_syst_origin] = {"central",
+					"ElectronScaleDown", "ElectronScaleUp",
+					"ElectronSmearDown", "ElectronSmearUp",
+					"JetsResDown", "JetsResUp",
+					"JetsScaleDown", "JetsScaleUp",
+					"SD_JMR_Down", "SD_JMR_Up",
+					"SD_JMS_Down", "SD_JMS_Up",
+					"PUReweight_Down", "PUReweight_Up",
+					"MuonScaleDown", "MuonScaleUp",
+					"MuonSmearDown", "MuonSmearUp",
   };
   
+  
+  if(histname.Contains("DiEle")){
+    N_syst = N_syst_origin - 4;
+    TString systematics_new[N_syst_origin] = {"central",
+					      "ElectronScaleDown", "ElectronScaleUp",
+					      "ElectronSmearDown", "ElectronSmearUp",
+					      "JetsResDown", "JetsResUp",
+					      "JetsScaleDown", "JetsScaleUp",
+					      "SD_JMR_Down", "SD_JMR_Up",
+					      "SD_JMS_Down", "SD_JMS_Up",
+					      "PUReweight_Down", "PUReweight_Up",
+					      "", "", "", "",
+    };
+    for(int i_syst = 0; i_syst < N_syst; i_syst++){
+      systematics[i_syst] = systematics_new[i_syst];
+    }
+  }
+  if(histname.Contains("DiMu")){
+    N_syst = N_syst_origin - 4;
+    TString systematics_new[N_syst_origin] = {"central",
+					      "JetsResDown", "JetsResUp",
+					      "JetsScaleDown", "JetsScaleUp",
+					      "SD_JMR_Down", "SD_JMR_Up",
+					      "SD_JMS_Down", "SD_JMS_Up",
+					      "PUReweight_Down", "PUReweight_Up",
+					      "MuonScaleDown", "MuonScaleUp",
+					      "MuonSmearDown", "MuonSmearUp",
+					      "", "", "", "",
+    };
+    for(int i_syst = 0; i_syst < N_syst; i_syst++){
+      systematics[i_syst] = systematics_new[i_syst];
+    }
+  }
+  
+  if(debug){
+    for(int i_syst = 0; i_syst < N_syst; i_syst++){
+      cout << i_syst << "th syst : " << systematics[i_syst] << endl; 
+    } 
+  }
+
   TString current_dir = "empty";
   TString current_channel = "empty";
   

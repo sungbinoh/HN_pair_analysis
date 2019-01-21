@@ -16,7 +16,7 @@ void QuickLimit(int xxx=0){
   TString dataset = getenv("CATANVERSION");
   TString ENV_PLOT_PATH = getenv("PLOT_PATH");
 
-  TString dirname = "181029_charge_blind";
+  TString dirname = "181210_weighted_Combine";
   
   TString channel = "MuMu";
   TString method = "shape";
@@ -60,7 +60,7 @@ void QuickLimit(int xxx=0){
  
   cout <<" #### 1) xsec vs mN, for each ZP ####" << endl;
   
-  vector<int> ZPmasses = {400, 800, 1200, 1600, 2000, 2400, 2800, 3200, 3600, 4000, 4400, 4800};
+  vector<int> ZPmasses = {400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000};
   vector<double> nN_crosses;
   
   for(unsigned int i=0; i<ZPmasses.size(); i++){
@@ -298,7 +298,7 @@ void QuickLimit(int xxx=0){
 
   cout <<" #### 2) xsec vs mZP, for each N ####" << endl;
 
-  vector<int> Nmasses = {100, 300, 500, 700, 900, 1100, 1300, 1500, 1700, 1900, 2100, 2300};
+  vector<int> Nmasses = {100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300, 2400};
   vector<double> mZP_crosses;
 
   for(unsigned int i=0; i<Nmasses.size(); i++){
@@ -689,7 +689,7 @@ void QuickLimit(int xxx=0){
       int mN_low;
       int mN_high;
       mN_low = GetLowMN(mN);
-      mN_high = mN_low + 200;
+      mN_high = mN_low + 100;
       TString current_mZp_str = TString::Itoa(mZp_array[i_N], 10);
       TString current_mN_low_str = TString::Itoa(mN_low, 10);
       TString current_mN_high_str = TString::Itoa(mN_high, 10);
@@ -1194,7 +1194,7 @@ void QuickLimit(int xxx=0){
   latex_CMSPriliminary.SetTextSize(0.035);
   latex_CMSPriliminary.DrawLatex(0.16, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
   latex_Lumi.SetTextSize(0.035 );
-  latex_Lumi.DrawLatex(0.68, 0.96, "41.3 fb^{-1} (13 TeV, 2017)");
+  latex_Lumi.DrawLatex(0.68, 0.96, "77.5 fb^{-1} (13 TeV, 2017)");
   latex_channel.SetNDC();
   latex_channel.SetTextSize(0.08);
   if(channel.Contains("MuMu")) latex_channel.DrawLatex(0.2, 0.6, "#mu#mu OS + SS");

@@ -69,9 +69,9 @@ TString ttbar = "TTLL_powheg";
 
 const double alpha = 1 - 0.6827;
 
-bool debug = false;
+bool debug = true;
 
-double DY_scale = 1.0798;
+
 
 // -- Set TDR Style
 void rootlogon()
@@ -112,7 +112,7 @@ void openfile(TString cyclename, TString samplename, TString dir, TString histna
   }
   TH1::AddDirectory(kFALSE);
   
-  if(samplename.Contains("DYJets") && current_hist) current_hist->Scale(DY_scale);
+
   mapfunc[histname + cyclename + samplename] = current_hist;
   
   current_file -> Close();
@@ -130,21 +130,21 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
       cout << binx[i] << ", " << endl;
     }
   }
-
-  const int N_syst = 19;
+  
+  const int N_syst = 11;
   TString systematics[N_syst] = {"central",
-                                 "ElectronScaleDown", "ElectronScaleUp",
-                                 "ElectronSmearDown", "ElectronSmearUp",
-                                 "JetsResDown", "JetsResUp",
-                                 "JetsScaleDown", "JetsScaleUp",
-				 "SD_JMR_Down", "SD_JMR_Up",
-				 "SD_JMS_Down", "SD_JMS_Up",
-                                 "PUReweight_Down", "PUReweight_Up",
-				 "MuonScaleDown", "MuonScaleUp",
-				 "MuonSmearDown", "MuonSmearUp",
-				 //"PDFNormDown", "PDFNormUp"
+                                 "PU_down", "PU_up",
+                                 "SystElEnDown", "SystElEnUp",
+                                 "SystJERDown", "SystJERUp",
+                                 "SystJESDown", "SystJESUp",
+                                 "SystMuEnDown", "SystMuEnUp",
   };
   
+
+
+  
+  
+
   TString current_data;
   if(nameofhistogram.Contains("EMu") || nameofhistogram.Contains("DiMu")) current_data = SingleMuon;
   else if(nameofhistogram.Contains("DiEle")) current_data = DoubleEG;
@@ -208,7 +208,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   
   TString name_cycle = nameofhistogram + Cycle_name;
   if(debug) cout << "check1" << endl;
-
+  cout << "nameofhistogram + Cycle_name + current_data : " << nameofhistogram + Cycle_name + current_data << endl;
   TString overflow = "overflow";
   Int_t nx_func    = GetHist(nameofhistogram + Cycle_name + current_data) -> GetNbinsX()+1;
   Double_t x1_func = GetHist(nameofhistogram + Cycle_name + current_data) -> GetBinLowEdge(1);
@@ -221,7 +221,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   mapfunc[func + "rebin"] = (TH1F*)mapfunc[func] -> Rebin(N_bin, func + "rebin", binx);
   mapfunc[func + "rebin_stat_err"] = (TH1F*)mapfunc[func] -> Rebin(N_bin, func + "rebin", binx);
   mapfunc[func + "blind_data"] = (TH1F*)mapfunc[func] -> Rebin(N_bin, func + "blind_Data", binx);
-  
+
   for(int i = 0; i < n_kind; i++){
     if(debug) cout << samples_array[i] << endl;
     if(mapfunc[nameofhistogram + Cycle_name + samples_array[i]]){
@@ -239,21 +239,21 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
         double current_bin_error = GetHist(nameofhistogram + Cycle_name + samples_array[i]) -> GetBinError(j);
         htmp -> SetBinContent(j, current_bin_content);
         htmp -> SetBinError(j, current_bin_error);
-	htmp_stat_err -> SetBinContent(j, current_bin_content);
-        htmp_stat_err -> SetBinError(j, current_bin_error);	
+        htmp_stat_err -> SetBinContent(j, current_bin_content);
+        htmp_stat_err -> SetBinError(j, current_bin_error);
       }
-      
+
       if(debug) cout << samples_array[i] + " : called all syst hists" << endl;
 
       mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin"] = dynamic_cast<TH1F*>(htmp -> Rebin(N_bin, nameofhistogram + Cycle_name + samples_array[i] + "rebin", binx));
       mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin_stat_err"] = dynamic_cast<TH1F*>(htmp_stat_err -> Rebin(N_bin, nameofhistogram + Cycle_name + samples_array[i] + "rebin", binx));
-      
+
       // -- Make rebinned hists for all systematic categories
       for(int i_syst = 1; i_syst < N_syst; i_syst++){
-	if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + samples_array[i])){
-	  if(debug) cout << "Filling " << systematics[i_syst] << endl;
-	  TH1F *htmp_syst = new TH1F("", "", nx, x1, x2);
-	  for(Int_t j = 1; j <= nx; j++){
+        if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + samples_array[i])){
+          if(debug) cout << "Filling " << systematics[i_syst] << endl;
+          TH1F *htmp_syst = new TH1F("", "", nx, x1, x2);
+          for(Int_t j = 1; j <= nx; j++){
             double current_bin_content = GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + samples_array[i]) -> GetBinContent(j);
             htmp_syst -> SetBinContent(j, current_bin_content);
           }
@@ -264,18 +264,18 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
       // -- Calculate errors for rebinned hist
       Int_t N_rebinned_x = mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin"] -> GetNbinsX();
       for(Int_t j = 1; j < N_rebinned_x; j++){
-	double current_bin_error =  mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin"] -> GetBinError(j);
+        double current_bin_error =  mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin"] -> GetBinError(j);
 	for(int i_syst = 1; i_syst < N_syst; i_syst++){
-	  if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + samples_array[i])){
-	    double diff = fabs(mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin"] -> GetBinContent(j) - mapfunc[nameofhistogram + systematics[i_syst] + samples_array[i] + "rebin"] -> GetBinContent(j));
-	    current_bin_error = pow(current_bin_error, 2);
-	    current_bin_error += pow(diff, 2);
-	    current_bin_error = pow(current_bin_error, 0.5);
-	  }
-	}
-	mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin"] -> SetBinError(j, current_bin_error);
-      } 
-	
+          if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + samples_array[i])){
+            double diff = fabs(mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin"] -> GetBinContent(j) - mapfunc[nameofhistogram + systematics[i_syst] + samples_array[i] + "rebin"] -> GetBinContent(j));
+            current_bin_error = pow(current_bin_error, 2);
+            current_bin_error += pow(diff, 2);
+            current_bin_error = pow(current_bin_error, 0.5);
+          }
+        }
+        mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin"] -> SetBinError(j, current_bin_error);
+      }
+      
       GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin") -> SetFillColor(colour_array[i]);
       GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin") -> SetLineColor(colour_array[i]);
       if(debug) cout << samples_array[i] << endl;
@@ -291,10 +291,10 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
       for(int j = 1; j <= N_bin; j++){
         double current_content = GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin_stat_err") -> GetBinContent(j);
         double current_error = GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin_stat_err") -> GetBinError(j);
-        GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin_stat_err") -> SetBinContent(j, current_content / (binx[j] - binx[j - 1]) );
+	GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin_stat_err") -> SetBinContent(j, current_content / (binx[j] - binx[j - 1]) );
         GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin_stat_err") -> SetBinError(j, current_error / (binx[j] - binx[j - 1]) );
       }
-
+      
       maphstack[hstack] -> Add(GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin"));
       maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin"), samples_legend[i], "lf");
       mapfunc[func + "rebin"] -> Add(GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin"));
@@ -448,7 +448,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   mappad[pad2] -> SetRightMargin( 0.03 );
   mappad[pad2] -> Draw();
   mappad[pad2] -> cd();
-  
+
   mapfunc[clone] = (TH1F*)GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Clone(clone);
 
   mapfunc["stat" + nameofhistogram] = (TH1F*)GetHist(func + "rebin") -> Clone(clone);
@@ -501,13 +501,13 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
     
   }
   mapfunc["stat" + nameofhistogram] -> Draw("CE2");
-
+  
   mapfunc["stat_err" + nameofhistogram] -> SetMarkerSize(0);
   mapfunc["stat_err" + nameofhistogram] -> SetMarkerStyle(0);
   mapfunc["stat_err" + nameofhistogram] -> SetLineColor(kRed);
   mapfunc["stat_err" + nameofhistogram] -> SetFillColor(kRed);
   mapfunc["stat_err" + nameofhistogram] -> Draw("E2same");
-  
+
   for(int i = 0; i < N_bin; i++){
     double current_error = mapfunc["stat_err" + nameofhistogram] -> GetBinError(i + 1) / mapfunc["stat_err" + nameofhistogram] -> GetBinContent(i + 1);
     double original_error = mapfunc["stat_err" + nameofhistogram] -> GetBinError(i + 1);
@@ -521,7 +521,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
     mapfunc["stat_err" + nameofhistogram] -> SetBinError(i + 1, current_error);
 
   }
-    
+  
   mapfunc[clone] -> Divide(mapfunc[func + "rebin"]);
   //if(!blind){
   for(int i = 0; i < N_bin; i++){
@@ -573,7 +573,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   latex_CMSPriliminary.SetTextSize(0.035);
   latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
   latex_Lumi.SetTextSize(0.035);
-  latex_Lumi.DrawLatex(0.7, 0.96, "41.3 fb^{-1} (13 TeV)");
+  latex_Lumi.DrawLatex(0.7, 0.96, "35.9 fb^{-1} (13 TeV)");
   
   if(debug) cout << "9" << endl;
 
@@ -624,37 +624,36 @@ void draw_histogram(TString histname){
   
   
   // -- Get which region(CR1, CR2 , ...) and channel (DiEle, DiMu, ...)
-  int N_regions = 6;
-
+  int N_regions = 4;
+  
   TString regions[] = {"CR_Zmass",
-		       "CR_ttbar",
-		       "CR_inv_mll",
-		       "tight_CR_Zmass",
-		       "tight_CR_ttbar",
+		       "CR_ttbar1",
+		       "CR_ttbar2",
 		       "SR"
   };
-  
 
-  int N_channels = 3;
+
+
+
+
+  int N_channels = 2;
   TString channels[] = {"DiEle",
                         "DiMu",
-                        "EMu"
   };
   
-  const int N_syst = 19;
+
+  const int N_syst = 11;
   TString systematics[N_syst] = {"central",
-				 "ElectronScaleDown", "ElectronScaleUp",
-				 "ElectronSmearDown", "ElectronSmearUp",
-				 "JetsResDown", "JetsResUp",
-				 "JetsScaleDown", "JetsScaleUp",
-				 "SD_JMR_Down", "SD_JMR_Up",
-                                 "SD_JMS_Down", "SD_JMS_Up",
-				 "PUReweight_Down", "PUReweight_Up",
-				 "MuonScaleDown", "MuonScaleUp",
-                                 "MuonSmearDown", "MuonSmearUp",
-				 //"PDFNormDown", "PDFNormUp"
+                                 "PU_down", "PU_up",
+                                 "SystElEnDown", "SystElEnUp",
+                                 "SystJERDown", "SystJERUp",
+                                 "SystJESDown", "SystJESUp",
+                                 "SystMuEnDown", "SystMuEnUp",
   };
   
+
+
+
   TString current_dir = "empty";
   TString current_channel = "empty";
   
@@ -674,12 +673,12 @@ void draw_histogram(TString histname){
     TString current_dir_syst = current_dir + "_" + systematics[i_syst];
     TString current_hist_syst = current_histname + "_" + systematics[i_syst];
 
-    openfile(Cycle_name, DoubleEG, current_dir_syst, current_hist_syst);
-    openfile(Cycle_name, SingleMuon, current_dir_syst, current_hist_syst);
-    openfile(Cycle_name, DY_high, current_dir_syst, current_hist_syst);
-    openfile(Cycle_name, VV, current_dir_syst, current_hist_syst);
-    openfile(Cycle_name, WJets, current_dir_syst, current_hist_syst);
-    openfile(Cycle_name, ttbar, current_dir_syst, current_hist_syst);
+    openfile(Cycle_name, DoubleEG, "Hists", current_hist_syst);
+    openfile(Cycle_name, SingleMuon, "Hists", current_hist_syst);
+    openfile(Cycle_name, DY_high, "Hists", current_hist_syst);
+    openfile(Cycle_name, VV, "Hists", current_hist_syst);
+    openfile(Cycle_name, WJets, "Hists", current_hist_syst);
+    openfile(Cycle_name, ttbar, "Hists", current_hist_syst);
   }
   
   make_histogram(histname, current_histname, N_bin, current_bins);
@@ -741,7 +740,7 @@ void open_binning_file(TString filename){
 /// Main nction ////////////////////////////////////////////////////////////
 void plot(){
   rootlogon();
-  open_binning_file("binning_OS.txt");
+  open_binning_file("binning_mZp.txt");
   //open_binning_file("binning_SS.txt");
   //open_binning_file("binning_Nvtx.txt");
 

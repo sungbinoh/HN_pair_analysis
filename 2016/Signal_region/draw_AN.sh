@@ -4,9 +4,18 @@ root -l -b <<-EOF
 plot()
 .q
 EOF
-echo 'next job'
+#root -l -b <<-EOF
+#.L plot_mZp.C+
+#plot()
+#.q
+#EOF
 #root -l -b <<-EOF
 #.L plot_syst_all.C+
+#plot()
+#.q
+#EOF
+#root -l -b <<-EOF
+#.L plot_syst_all_mZp.C+
 #plot()
 #.q
 #EOF

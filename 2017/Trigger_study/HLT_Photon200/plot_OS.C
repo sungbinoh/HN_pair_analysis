@@ -45,7 +45,7 @@ map<TString, double> map_overflow;
 map<TString, TLine*> mapline;
 map<TString, TKey*> maphistcheck;
 map<TString, TList*> maplist;
-map<TString, std::vector<double> > map_bin_vector;
+map<TString, std::vector<double>> map_bin_vector;
 
 //cycle name
 TString Cycle_name = "HN_pair_all";
@@ -233,49 +233,30 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
       TH1F *htmp = new TH1F("", "", nx, x1, x2);
       TH1F *htmp_stat_err = new TH1F("", "", nx, x1, x2);
       
-      // -- Make rebinned central hists
-      for(Int_t j = 1; j <= nx; j++){
-        double current_bin_content = GetHist(nameofhistogram + Cycle_name + samples_array[i]) -> GetBinContent(j);
-        double current_bin_error = GetHist(nameofhistogram + Cycle_name + samples_array[i]) -> GetBinError(j);
-        htmp -> SetBinContent(j, current_bin_content);
-        htmp -> SetBinError(j, current_bin_error);
-	htmp_stat_err -> SetBinContent(j, current_bin_content);
-        htmp_stat_err -> SetBinError(j, current_bin_error);	
+      for (Int_t j = 1; j <= nx; j++) {
+        htmp -> SetBinContent(j, GetHist(nameofhistogram + Cycle_name + samples_array[i]) -> GetBinContent(j) );
+	htmp_stat_err -> SetBinContent(j, GetHist(nameofhistogram + Cycle_name + samples_array[i]) -> GetBinContent(j) );
+	htmp_stat_err -> SetBinError(j, GetHist(nameofhistogram + Cycle_name + samples_array[i]) -> GetBinError(j) );
+	double current_bin_content = GetHist(nameofhistogram + Cycle_name + samples_array[i]) -> GetBinContent(j);
+	double current_error;
+	current_error = GetHist(nameofhistogram + Cycle_name + samples_array[i]) -> GetBinError(j); //stat error
+	current_error *= current_error; //square for quadratic sum
+	for(int k = 1; k < N_syst; k++){
+	  //cout << "adding errors of " << systematics[k] << endl;
+	  double current_syst_error = current_bin_content;
+	  if(GetHist(current_histname + "_" + systematics[k] + Cycle_name + samples_array[i])) current_syst_error = current_bin_content - GetHist(current_histname + "_" + systematics[k] + Cycle_name + samples_array[i]) -> GetBinContent(j);
+	  current_syst_error *= current_syst_error;
+	  current_error = current_error + current_syst_error;
+	} 
+	current_error = pow(current_error, 0.5);
+	htmp -> SetBinError(j, current_error);
       }
       
-      if(debug) cout << samples_array[i] + " : called all syst hists" << endl;
-
+      if(debug) cout << "rebinning" << endl;
+      
       mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin"] = dynamic_cast<TH1F*>(htmp -> Rebin(N_bin, nameofhistogram + Cycle_name + samples_array[i] + "rebin", binx));
-      mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin_stat_err"] = dynamic_cast<TH1F*>(htmp_stat_err -> Rebin(N_bin, nameofhistogram + Cycle_name + samples_array[i] + "rebin", binx));
-      
-      // -- Make rebinned hists for all systematic categories
-      for(int i_syst = 1; i_syst < N_syst; i_syst++){
-	if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + samples_array[i])){
-	  if(debug) cout << "Filling " << systematics[i_syst] << endl;
-	  TH1F *htmp_syst = new TH1F("", "", nx, x1, x2);
-	  for(Int_t j = 1; j <= nx; j++){
-            double current_bin_content = GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + samples_array[i]) -> GetBinContent(j);
-            htmp_syst -> SetBinContent(j, current_bin_content);
-          }
-          mapfunc[nameofhistogram + systematics[i_syst] + samples_array[i] + "rebin"] = dynamic_cast<TH1F*>(htmp_syst -> Rebin(N_bin, nameofhistogram + Cycle_name + samples_array[i] + "rebin", binx));
-	}
-      }
-      
-      // -- Calculate errors for rebinned hist
-      Int_t N_rebinned_x = mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin"] -> GetNbinsX();
-      for(Int_t j = 1; j < N_rebinned_x; j++){
-	double current_bin_error =  mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin"] -> GetBinError(j);
-	for(int i_syst = 1; i_syst < N_syst; i_syst++){
-	  if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + samples_array[i])){
-	    double diff = fabs(mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin"] -> GetBinContent(j) - mapfunc[nameofhistogram + systematics[i_syst] + samples_array[i] + "rebin"] -> GetBinContent(j));
-	    current_bin_error = pow(current_bin_error, 2);
-	    current_bin_error += pow(diff, 2);
-	    current_bin_error = pow(current_bin_error, 0.5);
-	  }
-	}
-	mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin"] -> SetBinError(j, current_bin_error);
-      } 
-	
+      mapfunc[nameofhistogram + Cycle_name + samples_array[i] + "rebin_stat_err"] = dynamic_cast<TH1F*>(htmp_stat_err -> Rebin(N_bin, nameofhistogram + Cycle_name + samples_array[i] + "rebin_stat_err", binx));
+
       GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin") -> SetFillColor(colour_array[i]);
       GetHist(nameofhistogram + Cycle_name + samples_array[i] + "rebin") -> SetLineColor(colour_array[i]);
       if(debug) cout << samples_array[i] << endl;
