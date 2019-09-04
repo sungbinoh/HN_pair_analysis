@@ -47,6 +47,32 @@ void openfile_DATA(TString cyclename, TString samplename, TString dir, TString h
 
 void make_histogram(TString nameofhistogram, TString current_histname, int N_bin, double binx[]){
 
+  //cout << "[make_histogram] nameofhistogram : " << nameofhistogram << ", current_histname : " << current_histname << endl;
+ 
+  if( GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0))){
+
+     
+    /*
+    Int_t idx0 = nameofhistogram.Index("__DYreweight");
+    TString new_histname = "";
+    for(int i_index = 0; i_index < idx0; i_index++){
+      new_histname += nameofhistogram[i_index];
+    }
+    new_histname += "_central";
+   
+    if(GetHist(new_histname + Cycle_name + map_sample_names["DYJets"].at(0)) ){
+      double integ_before = GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0) ) -> Integral();
+      double integ_after  = GetHist(new_histname + Cycle_name + map_sample_names["DYJets"].at(0)) -> Integral();
+      double DY_norm = integ_before / integ_after;
+      //cout << "integ_before : " << integ_before << endl;
+      //cout << "integ_after : " << integ_after << endl;
+      //cout << "DY_norm : " << DY_norm << endl;
+      GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)) -> Scale(DY_norm);
+    }
+    */
+    
+  }
+  
   if(debug){
     cout << "[[make_histogram]] checking binning arrary" << endl;
     for(int i = 0; i < N_bin; i++){
@@ -58,6 +84,35 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   if(nameofhistogram.Contains("EMu") || nameofhistogram.Contains("DiMu")) current_data = SingleMuon;
   else if(nameofhistogram.Contains("DiEle")) current_data = DoubleEG;
   else return;
+
+
+  double N_DY = 0.;
+  double N_MC = 0.;
+  double N_Data = 0.;
+  double DY_norm = 1.;
+  if( GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0))){
+      
+    N_DY = GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)) -> Integral();
+    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)))     N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)) -> Integral();
+    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar"].at(0)) ) N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar"].at(0)) -> Integral();
+    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["WJets"].at(0)) )  N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["WJets"].at(0)) -> Integral();
+    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["Other"].at(0)) )        N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["Other"].at(0)) -> Integral();
+    
+    if(GetHist(nameofhistogram + Cycle_name + current_data) )N_Data = GetHist(nameofhistogram + Cycle_name + current_data) -> Integral();
+    
+    DY_norm = (N_DY + N_Data - N_MC) / N_DY;
+    GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)) -> Scale(DY_norm); 
+    
+    for(int i_syst = 1; i_syst < N_syst; i_syst++){
+      if(GetHist(current_histname + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0))){
+	GetHist(current_histname + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0)) -> Scale(DY_norm);
+      }
+    }
+  }
+  
+
+
+
 
   TString title_y;
   if(nameofhistogram.Contains("N")) title_y = "Number";
@@ -114,7 +169,8 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   
   // -- Add Overflow bin
   TString overflow = "overflow";
-  cout << nameofhistogram + Cycle_name + current_data << endl;
+  //cout << nameofhistogram + Cycle_name + current_data << endl;
+  //cout << "nameofhistogram + Cycle_name + current_data : " << nameofhistogram + Cycle_name + current_data << endl;
   Int_t nx_template = GetHist(nameofhistogram + Cycle_name + current_data) -> GetNbinsX()+1;
   Double_t x1_template = GetHist(nameofhistogram + Cycle_name + current_data) -> GetBinLowEdge(1);
   Double_t bw_template = binx[N_bin - 1] - binx[N_bin- 2];
@@ -157,22 +213,25 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
       
       // -- Make rebinned hists for all systematic categories
       for(int i_syst = 1; i_syst < N_syst; i_syst++){
-        if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + current_sample)){
-          if(debug) cout << "Filling " << systematics[i_syst] << endl;
+        //if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + current_sample)){
+	if(GetHist(current_histname + systematics[i_syst] + Cycle_name + current_sample)){ // -- FIXME
+
+	  if(debug) cout << "Filling " << systematics[i_syst] << endl;
           TH1F *htmp_syst = new TH1F("", "", nx, x1, x2);
           for(Int_t j = 1; j <= nx; j++){
-            double current_bin_content = GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + current_sample) -> GetBinContent(j);
-            htmp_syst -> SetBinContent(j, current_bin_content);
+            //double current_bin_content = GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + current_sample) -> GetBinContent(j);
+            double current_bin_content = GetHist(current_histname + systematics[i_syst] + Cycle_name + current_sample) -> GetBinContent(j); // -- FIXME
+	    htmp_syst -> SetBinContent(j, current_bin_content);
           }
           mapfunc[nameofhistogram + systematics[i_syst] + current_sample + "rebin"] = dynamic_cast<TH1F*>(htmp_syst -> Rebin(N_bin, nameofhistogram + Cycle_name + current_sample + "rebin", binx));
         }
       }
 
       vector<double> error_vector = Get_Syst_Error(nameofhistogram, current_sample);
+
       for(unsigned int j_syst = 0; j_syst < error_vector.size(); j_syst++){
 	mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"] -> SetBinError(j_syst, error_vector.at(j_syst));
       }
-      
       mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"] ->  SetFillColor(colour_array[i_legend]);
       mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"] ->  SetLineColor(colour_array[i_legend]);
       
@@ -227,7 +286,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   maphstack[hstack] -> GetYaxis() -> SetTitle(title_y);
   maphstack[hstack] -> Draw("histsame");
   
-
+  
   // -- Proper error for data : 
   Proper_error_data(nameofhistogram, current_data, N_bin, binx);
   map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetMarkerColor(kBlack);
@@ -238,7 +297,9 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   mappad[pad1] -> Update();
   //GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerColor(kRed);
   GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Draw("histsamep");
-
+  
+    
+  
   // -- Draw Bkg Error bar
   mapfunc[func + "rebin"] -> SetFillColor(kBlack);;
   mapfunc[func + "rebin"] -> SetFillStyle(3013);
@@ -500,7 +561,8 @@ void open_files(TString histname){
     if(histname.Contains(regions[i_region])) current_dir = regions[i_region];
   }
   for(int i_channel = 0; i_channel < N_channels; i_channel++){
-    if(histname.Contains(channels[i_channel])) current_channel = channels[i_channel];
+    // -- FIXME
+    if(histname.Contains(channels[i_channel])) current_channel = channels[i_channel] + "__DYreweight";
   }
 
   current_dir = current_dir + "_" + current_channel;
@@ -510,8 +572,11 @@ void open_files(TString histname){
   
   
   for(int i_syst = 0; i_syst < N_syst; i_syst++){
-    TString current_dir_syst = current_dir + "_" + systematics[i_syst];
-    TString current_hist_syst = current_histname + "_" + systematics[i_syst];
+    // -- FIXME
+    //TString current_dir_syst = current_dir + "_" + systematics[i_syst];
+    //TString current_hist_syst = current_histname + "_" + systematics[i_syst];
+    TString current_dir_syst = current_dir + systematics[i_syst];
+    TString current_hist_syst = current_histname + "__DYreweight" + systematics[i_syst]; // -- FIXME
     TString legend_list[4] = {"DYJets", "ttbar", "WJets", "Other"};
     for(int i_legend_list = 0; i_legend_list < 4; i_legend_list++){
       
@@ -521,14 +586,44 @@ void open_files(TString histname){
       
       for(int i_vector = 0; i_vector < vector_size; i_vector++){
 	openfile_background(Cycle_name, map_sample_names[legend_list[i_legend_list]].at(i_vector), current_dir_syst, current_hist_syst);
+	
+	if(map_sample_names[legend_list[i_legend_list]].at(0).Contains("DY")){
+	  //cout <<"current_histname : " << current_histname << endl;
+	  //cout << "current_dir : " << current_dir << endl;
+
+	  Int_t idx0 = current_dir.Index("__DYreweight");	  
+	  Int_t idx1 = current_hist_syst.Index("__DYreweight");
+
+	  TString new_dir = "";
+	  TString new_histname = "";
+	  for(int i_index = 0; i_index < idx0; i_index++){
+	    new_dir += current_dir[i_index];
+	  }
+	  new_dir += "_central";
+	  //cout << "new_dir : " << new_dir << endl;
+
+	  for(int i_index = 0; i_index < idx1; i_index++){
+            new_histname += current_hist_syst[i_index];
+          }
+	  new_histname += "_central";
+	  //cout << "new_histname : " << new_histname << endl;
+	  
+	  openfile_background(Cycle_name, map_sample_names[legend_list[i_legend_list]].at(i_vector), new_dir, new_histname);
+	  
+	}
       }
     }
-
+    
+    //cout << "current_dir_syst : " << current_dir_syst << endl;
+    //cout << "current_hist_syst : " << current_hist_syst << endl;
     openfile_DATA(Cycle_name, DoubleEG, current_dir_syst, current_hist_syst);
     openfile_DATA(Cycle_name, SingleMuon, current_dir_syst, current_hist_syst);
-
+    
   }
-  
+  // -- FIXME
+  current_histname = current_histname + "__DYreweight";
+  histname = current_histname + "central";
+  //cout << "histname : " << histname << ", current_histname : " << current_histname << endl;
   make_histogram(histname, current_histname, N_bin, current_bins);
   
 }
@@ -547,8 +642,8 @@ void open_binning_file(TString filename){
       data_file.getline(line, 500);
       if(debug) cout << line << endl;
       TString this_line = line;
-      if(this_line.Contains("resign")) continue;
-
+      if(this_line.Contains("#")) continue;
+      
       TObjArray *tx = this_line.Tokenize("\t");
       int N_line_part = tx -> GetEntries();
       if(N_line_part < 1) continue;
@@ -574,7 +669,7 @@ void open_binning_file(TString filename){
         double current_bin_double = current_bin_value.Atof();
         map_bin_vector[current_histname].push_back(current_bin_double);
       }
-      
+
       cout << "current_histname : " << current_histname << endl;
       
       open_files(current_histname);
@@ -608,7 +703,8 @@ void QuickPlot(int year=2018){
   
   
   open_binning_file("binning_uniform.txt");
-    
+  //open_binning_file("binning_test.txt");
+
 }
 
 

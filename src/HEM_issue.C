@@ -260,7 +260,245 @@ void draw_2D_DATA(TString nameofhistogram, TString current_data){
 
 void draw_1D_DATA(TString nameofhistogram, TString current_data){
 
+  cout << "[draw_2D_DATA] nameofhistogram :" << nameofhistogram << endl;
+  double total_lumi_2016 = 35.9;
+  double total_lumi_2017 = 41.3;
+  double total_lumi_2018 = 59.7;
+
+  TCanvas *canvas = new TCanvas(nameofhistogram + "canvas","",800,800);
+  canvas_margin(canvas);
+  gStyle -> SetOptStat(1111);
   
+  cout << "[draw_1D_DATA] nameofhistogram + Cycle_name + current_data : " << nameofhistogram + Cycle_name + current_data << endl;
+  if(!mapfunc[nameofhistogram + Cycle_name + current_data + "_2016"]) return;
+  if(!mapfunc[nameofhistogram + Cycle_name + current_data + "_2017"]) return;
+  if(!mapfunc[nameofhistogram + Cycle_name + current_data + "_2018"]) return;
+  
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2016"] -> SetStats(0);
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2016"] -> GetXaxis() -> SetTitle(nameofhistogram);
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2016"] -> GetYaxis() -> SetTitle(nameofhistogram);
+
+  double denom_2016 = mapfunc[nameofhistogram + Cycle_name + current_data + "_2016"] -> Integral();
+  double denom_2017 = mapfunc[nameofhistogram + Cycle_name + current_data + "_2017"] -> Integral();
+  double denom_2018 = mapfunc[nameofhistogram + Cycle_name + current_data + "_2018"] -> Integral();
+  
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2016"] -> Scale(1. / denom_2016);
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2017"] -> Scale(1. / denom_2017);
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2018"] -> Scale(1. / denom_2018);
+
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2016"] -> Rebin(20);
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2017"] -> Rebin(20);
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2018"] -> Rebin(20);
+
+
+  // -- Cosmetics
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2016"] -> GetYaxis()->SetTitle("Normalized");
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2016"] -> GetYaxis()->SetLabelSize(0.05);
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2016"] -> GetYaxis()->SetTitleSize(0.07);
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2016"] -> GetYaxis()->SetTitleOffset(1.02);;
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2016"] -> GetYaxis() -> SetRangeUser(0., 0.1);
+  if(nameofhistogram.Contains("FatJet")){
+    mapfunc[nameofhistogram + Cycle_name + current_data + "_2016"] -> GetYaxis() -> SetRangeUser(0., 0.2);
+  }
+  
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2016"] -> GetXaxis() -> SetTitle("Pt (GeV)");
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2016"] -> GetXaxis() -> SetTitleSize(0.05);
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2016"] -> GetXaxis() -> SetLabelSize(0.03);
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2016"] -> GetXaxis() -> SetRangeUser(0., 1000.);
+  if(nameofhistogram.Contains("FatJet")){
+    mapfunc[nameofhistogram + Cycle_name + current_data + "_2016"] -> GetXaxis() -> SetRangeUser(200., 1000.);
+  }
+
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2016"] -> SetLineColor(kBlue);
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2016"] -> Draw("hist");
+
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2017"] -> SetLineColor(kRed);
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2018"] -> SetLineColor(kBlack);
+  
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2017"] -> Draw("histsame");
+  mapfunc[nameofhistogram + Cycle_name + current_data + "_2018"] -> Draw("histsame");
+  
+  TLegend *legend = new TLegend(0.60, 0.75, 0.95, 0.95);
+  legend -> AddEntry(mapfunc[nameofhistogram + Cycle_name + current_data + "_2016"], "2016", "lp");
+  legend -> AddEntry(mapfunc[nameofhistogram + Cycle_name + current_data + "_2017"], "2017", "lp");
+  legend -> AddEntry(mapfunc[nameofhistogram + Cycle_name + current_data + "_2018"], "2018", "lp");
+
+  legend -> SetFillColor(kWhite);
+  legend -> SetLineColor(kBlack);
+  legend -> SetBorderSize(1);
+  legend -> SetFillStyle(1001);
+  legend -> SetShadowColor(0); 
+  legend -> SetEntrySeparation(0.3);
+  legend -> Draw("same");
+
+  ////////////////////////////////////
+  // -- Latex
+  ////////////////////////////////////
+  TLatex latex_CMSPriliminary, latex_Lumi;
+  latex_CMSPriliminary.SetNDC();
+  latex_Lumi.SetNDC();
+  latex_CMSPriliminary.SetTextSize(0.035);
+  latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
+  latex_Lumi.SetTextSize(0.035);
+  TString total_lumi_str = "41.3";
+  if(tag_year == 2016) total_lumi_str = "35.9";
+  if(tag_year == 2018) total_lumi_str = "59.7";
+  latex_Lumi.DrawLatex(0.7, 0.96, "(13 TeV)");
+
+  
+
+  TString pdfname;
+  TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
+  pdfname = WORKING_DIR + "/plots/HEM_issue/kinematics/";
+  pdfname.Append(nameofhistogram);
+  pdfname.Append(".pdf");
+  
+  canvas -> SaveAs(pdfname);
+}
+
+void summarized_kinematics(TString nameofhistogram, TString current_data, TString current_1D_plot_tag){
+  
+  TCanvas *canvas = new TCanvas(nameofhistogram + "_" + current_1D_plot_tag + "canvas","",800,800);
+  canvas_margin(canvas);
+  gStyle -> SetOptStat(1111);
+
+  TString hist_1st_Quad = nameofhistogram + "_1st_Quadrant" + "_" + current_1D_plot_tag;
+  TString hist_2nd_Quad = nameofhistogram + "_2nd_Quadrant" + "_" + current_1D_plot_tag;
+  TString hist_3rd_Quad = nameofhistogram + "_3rd_Quadrant" + "_" + current_1D_plot_tag;
+  TString hist_4th_Quad = nameofhistogram + "_4th_Quadrant" + "_" + current_1D_plot_tag;
+  
+  double mean_2016[4], rms_2016[4];
+  double mean_2017[4], rms_2017[4];
+  double mean_2018[4], rms_2018[4];
+  
+  mean_2016[0] = mapfunc[hist_1st_Quad + Cycle_name + current_data + "_2016"] -> GetMean();
+  mean_2017[0] = mapfunc[hist_1st_Quad + Cycle_name + current_data + "_2017"] -> GetMean();
+  mean_2018[0] = mapfunc[hist_1st_Quad + Cycle_name + current_data + "_2018"] -> GetMean();
+
+  mean_2016[1] = mapfunc[hist_2nd_Quad + Cycle_name + current_data + "_2016"] -> GetMean();
+  mean_2017[1] = mapfunc[hist_2nd_Quad + Cycle_name + current_data + "_2017"] -> GetMean();
+  mean_2018[1] = mapfunc[hist_2nd_Quad + Cycle_name + current_data + "_2018"] -> GetMean();
+
+  mean_2016[2] = mapfunc[hist_3rd_Quad + Cycle_name + current_data + "_2016"] -> GetMean();
+  mean_2017[2] = mapfunc[hist_3rd_Quad + Cycle_name + current_data + "_2017"] -> GetMean();
+  mean_2018[2] = mapfunc[hist_3rd_Quad + Cycle_name + current_data + "_2018"] -> GetMean();
+
+  mean_2016[3] = mapfunc[hist_4th_Quad + Cycle_name + current_data + "_2016"] -> GetMean();
+  mean_2017[3] = mapfunc[hist_4th_Quad + Cycle_name + current_data + "_2017"] -> GetMean();
+  mean_2018[3] = mapfunc[hist_4th_Quad + Cycle_name + current_data + "_2018"] -> GetMean();
+
+  rms_2016[0] = mapfunc[hist_1st_Quad + Cycle_name + current_data + "_2016"] -> GetMeanError();
+  rms_2017[0] = mapfunc[hist_1st_Quad + Cycle_name + current_data + "_2017"] -> GetMeanError();
+  rms_2018[0] = mapfunc[hist_1st_Quad + Cycle_name + current_data + "_2018"] -> GetMeanError();
+
+  rms_2016[1] = mapfunc[hist_2nd_Quad + Cycle_name + current_data + "_2016"] -> GetMeanError();
+  rms_2017[1] = mapfunc[hist_2nd_Quad + Cycle_name + current_data + "_2017"] -> GetMeanError();
+  rms_2018[1] = mapfunc[hist_2nd_Quad + Cycle_name + current_data + "_2018"] -> GetMeanError();
+
+  rms_2016[2] = mapfunc[hist_3rd_Quad + Cycle_name + current_data + "_2016"] -> GetMeanError();
+  rms_2017[2] = mapfunc[hist_3rd_Quad + Cycle_name + current_data + "_2017"] -> GetMeanError();
+  rms_2018[2] = mapfunc[hist_3rd_Quad + Cycle_name + current_data + "_2018"] -> GetMeanError();
+
+  rms_2016[3] = mapfunc[hist_4th_Quad + Cycle_name + current_data + "_2016"] -> GetMeanError();
+  rms_2017[3] = mapfunc[hist_4th_Quad + Cycle_name + current_data + "_2017"] -> GetMeanError();
+  rms_2018[3] = mapfunc[hist_4th_Quad + Cycle_name + current_data + "_2018"] -> GetMeanError();
+  
+  double x[4] = {0.5, 1.5, 2.5, 3.5};
+  double ex[4] = {0.5, 0.5, 0.5, 0.5};
+  
+  TGraphErrors *gr_2016 = new TGraphErrors(4,x,mean_2016,ex,rms_2016);
+  gr_2016->SetTitle("");
+  gr_2016->SetMarkerColor(4);
+  gr_2016->SetMarkerStyle(21);
+  
+  std::vector<TString> x_labels = {"1st", "2nd", "3rd", "4th"};
+  for(int i = 0; i < 4; i++){
+    gr_2016->GetXaxis()->SetBinLabel(gr_2016->GetXaxis()->FindBin(i + 0.5), x_labels[i]);
+  }
+  
+  double max_y = 0.;
+  double min_y = 99999999.;
+  for(int i = 0; i < 4; i++){
+    if(max_y < mean_2016[i]) max_y = mean_2016[i];
+    if(min_y > mean_2016[i]) min_y = mean_2016[i];
+  }
+  for(int i = 0; i < 4;i++){
+    if(max_y < mean_2017[i]) max_y = mean_2017[i];
+    if(min_y > mean_2017[i]) min_y = mean_2017[i];
+  }for(int i = 0; i < 4;i++){
+    if(max_y < mean_2018[i]) max_y = mean_2018[i];
+    if(min_y > mean_2018[i]) min_y = mean_2018[i];
+  }
+  
+  //double y_range_bottom = min_y / 2.;
+  //double y_range_top = max_y * 2.;  
+  double y_range_bottom = min_y - rms_2016[0]  * 20.;
+  double y_range_top = max_y + rms_2016[0]  * 20.;
+  
+  
+  gr_2016 -> SetMarkerColor(kBlue);
+  gr_2016 -> SetLineColor(kBlue);
+  gr_2016 -> GetXaxis() -> SetTitleSize(0.15);
+  gr_2016 -> GetXaxis() -> SetTitleOffset(0.5);
+  gr_2016 -> GetXaxis() -> SetTitle("");
+  gr_2016 -> GetXaxis() -> LabelsOption("h"); 
+  gr_2016 -> GetYaxis() -> SetTitle("Mean Pt (GeV)");
+  gr_2016 -> GetYaxis() -> SetTitleSize(0.07);
+  gr_2016 -> GetYaxis() -> SetTitleOffset(1.02);
+  gr_2016 -> GetYaxis() -> SetLabelSize(0.05);
+  gr_2016 -> GetYaxis() -> SetRangeUser(y_range_bottom, y_range_top);
+
+  gr_2016->Draw("ALP");
+  
+  TGraphErrors *gr_2017 = new TGraphErrors(4,x,mean_2017,ex,rms_2017);
+  gr_2017 -> SetMarkerStyle(21);
+  gr_2017 -> SetMarkerColor(kRed);
+  gr_2017 -> SetLineColor(kRed);
+  gr_2017 -> Draw("LPsame");
+
+  TGraphErrors *gr_2018 = new TGraphErrors(4,x,mean_2018,ex,rms_2018);
+  gr_2018 -> SetMarkerStyle(21);
+  gr_2018 -> SetMarkerColor(kBlack);
+  gr_2018 -> SetLineColor(kBlack);
+  gr_2018 -> Draw("LPsame");
+  
+  TLegend *legend = new TLegend(0.60, 0.75, 0.95, 0.95);
+  legend -> AddEntry(gr_2016, "2016", "lp");
+  legend -> AddEntry(gr_2017, "2017", "lp");
+  legend -> AddEntry(gr_2018, "2018", "lp");
+
+  legend -> SetFillColor(kWhite);
+  legend -> SetLineColor(kBlack);
+  legend -> SetBorderSize(1);
+  legend -> SetFillStyle(1001);
+  legend -> SetShadowColor(0); 
+  legend -> SetEntrySeparation(0.3);
+  legend -> Draw("same");
+
+
+  ////////////////////////////////////
+  // -- Latex
+  ////////////////////////////////////
+  canvas -> cd();
+  TLatex latex_CMSPriliminary, latex_Lumi;
+  latex_CMSPriliminary.SetNDC();
+  latex_Lumi.SetNDC();
+  latex_CMSPriliminary.SetTextSize(0.035);
+  latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
+  latex_Lumi.SetTextSize(0.035);
+  TString total_lumi_str = "41.3";
+  if(tag_year == 2016) total_lumi_str = "35.9";
+  if(tag_year == 2018) total_lumi_str = "59.7";
+  latex_Lumi.DrawLatex(0.7, 0.96, "(13 TeV)");
+  
+  TString pdfname;
+  TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
+  pdfname = WORKING_DIR + "/plots/HEM_issue/kinematics/Summary_";
+  pdfname.Append(nameofhistogram);
+  
+  pdfname.Append("_" + current_1D_plot_tag + ".pdf");
+  
+  canvas -> SaveAs(pdfname);
 
 }
 
@@ -319,6 +557,7 @@ void TwoD_Yield(){
     }
   }
   
+   
   return;
   
 }
@@ -384,17 +623,35 @@ void OneD_Kinematics(){
     }
   }
 
-  return;
+  TString plots_summarize[2] = {"FatJet_0_Pt", "Jet_0_Pt"};
   
+  for(int i_regions = 0; i_regions < N_regions; i_regions++){
+    for(int i_channels = 0; i_channels < N_channels; i_channels++){
+      TString current_1D_plot_tag = regions[i_regions] + "_" + channels[i_channels] + "_central";
 
+      SingleMuon = "data_SingleMuon";
+      DoubleEG = "data_DoubleEG";
 
+      if(channels[i_channels].Contains("DiEle")){
+	summarized_kinematics("FatJet_0_Pt", DoubleEG, current_1D_plot_tag);
+	summarized_kinematics("Jet_0_Pt", DoubleEG, current_1D_plot_tag);
+      }
+      else{
+	summarized_kinematics("FatJet_0_Pt", SingleMuon, current_1D_plot_tag);
+	summarized_kinematics("Jet_0_Pt", SingleMuon, current_1D_plot_tag);
+      }
+    }
+  }
+  
+  return;
+ 
 }
 
 void HEM_issue(){
   
   Cycle_name = "HN_pair_all_SkimTree_LRSMHighPt";
 
-  TwoD_Yield();
+  //TwoD_Yield();
   OneD_Kinematics();
 
 }

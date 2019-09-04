@@ -4,7 +4,7 @@
 using namespace std;
 const double alpha = 1 - 0.6827;
 // == Debugging Mode
-bool debug = false;
+bool debug = true;
 int tag_year = 0;
 TString Cycle_name;
 TString SingleMuon;
@@ -73,7 +73,7 @@ vector<double> Get_Syst_Error(TString nameofhistogram, TString sample){
       }
     }
     error_vector.push_back(current_bin_error);
-    //cout << mapfunc[nameofhistogram + Cycle_name + sample + "rebin"] -> GetBinContent(j) << ", syst : " << current_bin_error << endl;
+    if(debug) cout << mapfunc[nameofhistogram + Cycle_name + sample + "rebin"] -> GetBinContent(j) << ", syst : " << current_bin_error << endl;
   }
 
   return error_vector;
