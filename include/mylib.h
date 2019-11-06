@@ -1,6 +1,8 @@
 #ifndef mylib_h
 #define mylib_h
 
+ofstream outfile;
+
 using namespace std;
 const double alpha = 1 - 0.6827;
 // == Debugging Mode
@@ -57,16 +59,15 @@ vector<double> Get_Syst_Error(TString nameofhistogram, TString sample){
   
   vector<double> error_vector;
   error_vector.clear();
-  
+  if(debug) cout << nameofhistogram << ", " << sample << endl;  
   Int_t N_rebinned_x = mapfunc[nameofhistogram + Cycle_name + sample + "rebin"] -> GetNbinsX();
   
   for(Int_t j = 1; j < N_rebinned_x; j++){
-
     double current_bin_error =  mapfunc[nameofhistogram + Cycle_name + sample + "rebin"] -> GetBinError(j);
-    
     for(int i_syst = 1; i_syst < N_syst; i_syst++){
       if(GetHist(nameofhistogram + systematics[i_syst] + sample + "rebin")){
 	double diff = fabs(mapfunc[nameofhistogram + Cycle_name + sample + "rebin"] -> GetBinContent(j) - mapfunc[nameofhistogram + systematics[i_syst] + sample + "rebin"] -> GetBinContent(j));
+	if(debug) cout << systematics[i_syst] << " : " << diff << endl;;
 	current_bin_error = pow(current_bin_error, 2);
 	current_bin_error += pow(diff, 2);
 	current_bin_error = pow(current_bin_error, 0.5);

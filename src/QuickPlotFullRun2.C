@@ -1,12 +1,12 @@
 #include "canvas_margin.h"
 #include "mylib.h"
 
-void openfile_background(TString cyclename, TString samplename, TString dir, TString histname){
+void openfile_background(TString cyclename, TString samplename, TString dir, TString histname, int year){
   
-  cout << "[openfile_background] " << samplename << endl;
+  cout << "[openfile_background] " << samplename << ", " << histname << ", " << year << endl;
 
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
-  TString root_file_path = WORKING_DIR+"/rootfiles/" +TString::Itoa(tag_year,10) + "/Background/";
+  TString root_file_path = WORKING_DIR+"/rootfiles/" +TString::Itoa(year,10) + "/Background/";
   TString filename = root_file_path + cyclename + "_" + samplename + ".root";
   TFile *current_file = new TFile ((filename)) ;
   gDirectory->cd(dir);
@@ -18,17 +18,18 @@ void openfile_background(TString cyclename, TString samplename, TString dir, TSt
   TH1::AddDirectory(kFALSE);
   
   //if(samplename.Contains("DYJets") && current_hist) current_hist->Scale(DY_scale);
-  mapfunc[histname + cyclename + samplename] = current_hist;
+  mapfunc[histname + cyclename + samplename + TString::Itoa(year,10)] = current_hist;
   
+  if(mapfunc[histname + cyclename + samplename + TString::Itoa(year,10)]) cout << "integral of [" << histname + cyclename + samplename + TString::Itoa(year,10) << "] : " << mapfunc[histname + cyclename + samplename + TString::Itoa(year,10)] -> Integral() << endl;
   current_file -> Close();
   delete current_file;
 }
 
-void openfile_DATA(TString cyclename, TString samplename, TString dir, TString histname){
+void openfile_DATA(TString cyclename, TString samplename, TString dir, TString histname, int year){
 
   cout << "[openfile_DATA] " << samplename << endl;
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
-  TString root_file_path = WORKING_DIR+"/rootfiles/" +TString::Itoa(tag_year,10) + "/DATA/";
+  TString root_file_path = WORKING_DIR+"/rootfiles/" +TString::Itoa(year,10) + "/DATA/";
   TString filename = root_file_path + cyclename + "_" + samplename + ".root";
   TFile *current_file = new TFile ((filename)) ;
   gDirectory->cd(dir);
@@ -39,7 +40,7 @@ void openfile_DATA(TString cyclename, TString samplename, TString dir, TString h
   }
   TH1::AddDirectory(kFALSE);
 
-  mapfunc[histname + cyclename + samplename] = current_hist;
+  mapfunc[histname + cyclename + samplename + TString::Itoa(year,10)] = current_hist;
 
   current_file -> Close();
   delete current_file;
@@ -51,30 +52,6 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
 
   //cout << "[make_histogram] nameofhistogram : " << nameofhistogram << ", current_histname : " << current_histname << endl;
  
-  if( GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0))){
-
-     
-    /*
-    Int_t idx0 = nameofhistogram.Index("__DYreweight");
-    TString new_histname = "";
-    for(int i_index = 0; i_index < idx0; i_index++){
-      new_histname += nameofhistogram[i_index];
-    }
-    new_histname += "_central";
-   
-    if(GetHist(new_histname + Cycle_name + map_sample_names["DYJets"].at(0)) ){
-      double integ_before = GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0) ) -> Integral();
-      double integ_after  = GetHist(new_histname + Cycle_name + map_sample_names["DYJets"].at(0)) -> Integral();
-      double DY_norm = integ_before / integ_after;
-      //cout << "integ_before : " << integ_before << endl;
-      //cout << "integ_after : " << integ_after << endl;
-      //cout << "DY_norm : " << DY_norm << endl;
-      GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)) -> Scale(DY_norm);
-    }
-    */
-    
-  }
-  
   if(debug){
     cout << "[[make_histogram]] checking binning arrary" << endl;
     for(int i = 0; i < N_bin; i++){
@@ -91,61 +68,133 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   double N_DY = 0.;
   double N_MC = 0.;
   double N_Data = 0.;
+  double DY_norm_2016 = 1., DY_norm_2017 = 1., DY_norm_2018 = 1.;;
   double DY_norm = 1.;
-  if( GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0))){
+  if( GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2016"].at(0) + "2016") && GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2017"].at(0) + "2017") && GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2018"].at(0) + "2018")){
       
-    N_DY = GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)) -> Integral();
-  
-    cout << "N_DY " << map_sample_names["DYJets"].at(0) << " : " << N_DY << endl;
+    N_DY += GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2016"].at(0) + "2016") -> Integral();
+    N_DY += GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2017"].at(0) + "2017") -> Integral();
+    N_DY += GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2018"].at(0) + "2018") -> Integral();
+
+    cout << "N_DY : " << N_DY << endl;
     
-    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)))     N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)) -> Integral();
-    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar"].at(0)) ) N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar"].at(0)) -> Integral();
-    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["WJets"].at(0)) )  N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["WJets"].at(0)) -> Integral();
-    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["Other"].at(0)) )        N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["Other"].at(0)) -> Integral();
+    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2016"].at(0) + "2016"))     N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2016"].at(0) + "2016") -> Integral();
+    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar2016"].at(0) + "2016") ) N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar2016"].at(0) + "2016") -> Integral();
+    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["WJets2016"].at(0) + "2016") )  N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["WJets2016"].at(0) + "2016") -> Integral();
+    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["Other2016"].at(0) + "2016") )        N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["Other2016"].at(0) + "2016") -> Integral();
     
-    if(GetHist(nameofhistogram + Cycle_name + current_data) )N_Data = GetHist(nameofhistogram + Cycle_name + current_data) -> Integral();
-    
-    //DY_norm = (N_DY + N_Data - N_MC) / N_DY;
+    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2017"].at(0) + "2017"))     N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2017"].at(0) + "2017") -> Integral();
+    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar2017"].at(0) + "2017") ) N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar2017"].at(0) + "2017") -> Integral();
+    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["WJets2017"].at(0) + "2017") )  N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["WJets2017"].at(0) + "2017") -> Integral();
+    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["Other2017"].at(0) + "2017") )        N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["Other2017"].at(0) + "2017") -> Integral();
+
+    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2018"].at(0) + "2018"))     N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2018"].at(0) + "2018") -> Integral();
+    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar2018"].at(0) + "2018") ) N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar2018"].at(0) + "2018") -> Integral();
+    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["WJets2018"].at(0) + "2018") )  N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["WJets2018"].at(0) + "2018") -> Integral();
+    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["Other2018"].at(0) + "2018") )        N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["Other2018"].at(0) + "2018") -> Integral();
+
+    if(GetHist(nameofhistogram + Cycle_name + current_data + "2016") )N_Data += GetHist(nameofhistogram + Cycle_name + current_data + "2016") -> Integral();
+    if(GetHist(nameofhistogram + Cycle_name + current_data + "2017") )N_Data += GetHist(nameofhistogram + Cycle_name + current_data + "2017") -> Integral();
+    if(GetHist(nameofhistogram + Cycle_name + current_data + "2018") )N_Data += GetHist(nameofhistogram + Cycle_name + current_data + "2018") -> Integral();
+
+    DY_norm = (N_DY + N_Data - N_MC) / N_DY;
    
-    if(tag_year == 2016){
-      if(nameofhistogram.Contains("DiMu")){
-	DY_norm = 0.762;
-      }
-      if(nameofhistogram.Contains("DiEle")){
-        DY_norm = 0.872;
-      }
+   
+    if(nameofhistogram.Contains("DiMu")){
+      DY_norm_2016 = 0.762;
+      DY_norm_2017 = 1.132;
+      DY_norm_2018 = 0.683;
     }
-    if(tag_year == 2017){
-      if(nameofhistogram.Contains("DiMu")){
-        DY_norm = 1.132;
-      }
-      if(nameofhistogram.Contains("DiEle")){
-	DY_norm = 1.131;
-      }
-    }if(tag_year == 2018){
-      if(nameofhistogram.Contains("DiMu")){
-        DY_norm = 0.683;
-      }
-      if(nameofhistogram.Contains("DiEle")){
-	DY_norm = 0.685;
-      }
+    if(nameofhistogram.Contains("DiEle")){
+      DY_norm_2016 = 0.872;
+      DY_norm_2017 = 1.131;
+      DY_norm_2018 = 0.685;
     }
 
-    GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)) -> Scale(DY_norm); 
+    GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2016"].at(0) + "2016") -> Scale(DY_norm_2016); 
+    GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2017"].at(0) + "2017") -> Scale(DY_norm_2017);
+    GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2018"].at(0) + "2018") -> Scale(DY_norm_2018);
+
     
     outfile << nameofhistogram << "'s DY_norm : " << DY_norm << endl;
     
     for(int i_syst = 1; i_syst < N_syst; i_syst++){
-      if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0))){
-	GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0)) -> Scale(DY_norm);
+      cout << current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2016"].at(0) + "2016" << endl;
+      if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2016"].at(0) + "2016")){
+	GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2016"].at(0) + "2016") -> Scale(DY_norm_2016);
+	cout << "DY interal 2016 syst " <<  systematics[i_syst] << " : " << GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2016"].at(0) + "2016") -> Integral() << endl;
+      }
+      if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2017"].at(0) + "2017")){
+        GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2017"].at(0) + "2017") -> Scale(DY_norm_2017);
+      }
+      if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2018"].at(0) + "2018")){
+        GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2018"].at(0) + "2018") -> Scale(DY_norm_2018);
       }
     }
   }
   
+  // -- Add three years histograms
+  Int_t nx_ttbar    = GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar2016"].at(0) + "2016") -> GetNbinsX();
+  Double_t x1_ttbar = GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar2016"].at(0) + "2016") -> GetBinLowEdge(1);
+  Double_t x2_ttbar = GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar2016"].at(0) + "2016") -> GetBinLowEdge(nx_ttbar+1);
+  TH1F *htmp_add = new TH1F("", "", nx_ttbar, x1_ttbar, x2_ttbar);
+  
+  mapfunc[nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)] = (TH1F*)htmp_add -> Clone("DYJets");
+  if(GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2016"].at(0) + "2016")) mapfunc[nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)] -> Add(GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2016"].at(0) + "2016"));
+  if(GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2017"].at(0) + "2017")) mapfunc[nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)] -> Add(GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2017"].at(0) + "2017"));
+  if(GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2018"].at(0) + "2018")) mapfunc[nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)] -> Add(GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2018"].at(0) + "2018"));
+  cout << "[make_histogram] intgeral DYJet : " << mapfunc[nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)] -> Integral() << endl;
+  
+  mapfunc[nameofhistogram + Cycle_name + map_sample_names["ttbar"].at(0)] = (TH1F*)htmp_add -> Clone("ttbar");
+  if(GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar2016"].at(0) + "2016")) mapfunc[nameofhistogram + Cycle_name + map_sample_names["ttbar"].at(0)] -> Add(GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar2016"].at(0) + "2016"));
+  if(GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar2017"].at(0) + "2017")) mapfunc[nameofhistogram + Cycle_name + map_sample_names["ttbar"].at(0)] -> Add(GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar2017"].at(0) + "2017"));
+  if(GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar2018"].at(0) + "2018")) mapfunc[nameofhistogram + Cycle_name + map_sample_names["ttbar"].at(0)] -> Add(GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar2018"].at(0) + "2018"));
+  
+  mapfunc[nameofhistogram + Cycle_name + map_sample_names["WJets"].at(0)] = (TH1F*)htmp_add -> Clone("WJets");
+  if(GetHist(nameofhistogram + Cycle_name + map_sample_names["WJets2016"].at(0) + "2016")) mapfunc[nameofhistogram + Cycle_name + map_sample_names["WJets"].at(0)] -> Add( GetHist(nameofhistogram + Cycle_name + map_sample_names["WJets2016"].at(0) + "2016"));
+  if(GetHist(nameofhistogram + Cycle_name + map_sample_names["WJets2017"].at(0) + "2017")) mapfunc[nameofhistogram + Cycle_name + map_sample_names["WJets"].at(0)] -> Add(GetHist(nameofhistogram + Cycle_name + map_sample_names["WJets2017"].at(0) + "2017"));
+  if(GetHist(nameofhistogram + Cycle_name + map_sample_names["WJets2018"].at(0) + "2018")) mapfunc[nameofhistogram + Cycle_name + map_sample_names["WJets"].at(0)] -> Add(GetHist(nameofhistogram + Cycle_name + map_sample_names["WJets2018"].at(0) + "2018"));
+  
+  mapfunc[nameofhistogram + Cycle_name + map_sample_names["Other"].at(0)] = (TH1F*)htmp_add -> Clone("Other");
+  if(GetHist(nameofhistogram + Cycle_name + map_sample_names["Other2016"].at(0) + "2016")) mapfunc[nameofhistogram + Cycle_name + map_sample_names["Other"].at(0)] -> Add( GetHist(nameofhistogram + Cycle_name + map_sample_names["Other2016"].at(0) + "2016"));
+  if(GetHist(nameofhistogram + Cycle_name + map_sample_names["Other2017"].at(0) + "2017")) mapfunc[nameofhistogram + Cycle_name + map_sample_names["Other"].at(0)] -> Add(GetHist(nameofhistogram + Cycle_name + map_sample_names["Other2017"].at(0) + "2017"));
+  if(GetHist(nameofhistogram + Cycle_name + map_sample_names["Other2018"].at(0) + "2018")) mapfunc[nameofhistogram + Cycle_name + map_sample_names["Other"].at(0)] -> Add(GetHist(nameofhistogram + Cycle_name + map_sample_names["Other2018"].at(0) + "2018"));
+  
+  mapfunc[nameofhistogram + Cycle_name + current_data] = GetHist(nameofhistogram + Cycle_name + current_data + "2016");
+  mapfunc[nameofhistogram + Cycle_name + current_data] -> Add(GetHist(nameofhistogram + Cycle_name + current_data + "2017"));
+  mapfunc[nameofhistogram + Cycle_name + current_data] -> Add(GetHist(nameofhistogram + Cycle_name + current_data + "2018"));
+  
+  for(int i_syst = 1; i_syst < N_syst; i_syst++){
+    mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0)] = (TH1F*)htmp_add -> Clone("DYJets" + systematics[i_syst]);
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2016"].at(0) + "2016")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2016"].at(0) + "2016"));
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2017"].at(0) + "2017")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2017"].at(0) + "2017"));
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2018"].at(0) + "2018")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2018"].at(0) + "2018"));
+    
+    cout << "DY interal all syst " << systematics[i_syst] << " : " << mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0)] -> Integral() << endl;
 
+    
+    mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["ttbar"].at(0)] = (TH1F*)htmp_add -> Clone("ttbar" + systematics[i_syst]);
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["ttbar2016"].at(0) + "2016")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["ttbar"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["ttbar2016"].at(0) + "2016"));
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["ttbar2017"].at(0) + "2017")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["ttbar"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["ttbar2017"].at(0) + "2017"));
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["ttbar2018"].at(0) + "2018")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["ttbar"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["ttbar2018"].at(0) + "2018"));
+    
+    mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["WJets"].at(0)] = (TH1F*)htmp_add -> Clone("WJets" + systematics[i_syst]);
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["WJets2016"].at(0) + "2016")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["WJets"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["WJets2016"].at(0) + "2016"));
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["WJets2017"].at(0) + "2017")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["WJets"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["WJets2017"].at(0) + "2017"));
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["WJets2018"].at(0) + "2018")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["WJets"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["WJets2018"].at(0) + "2018"));
 
+    mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["Other"].at(0)] = (TH1F*)htmp_add -> Clone("Other" + systematics[i_syst]);
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["Other2016"].at(0) + "2016")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["Other"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["Other2016"].at(0) + "2016"));
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["Other2017"].at(0) + "2017")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["Other"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["Other2017"].at(0) + "2017"));
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["Other2018"].at(0) + "2018")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["Other"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["Other2018"].at(0) + "2018"));
+  }
 
-
+  
+  
+  if(debug){
+    cout << "[[make_histogram]] Added three years" << endl;
+  }
+  
   TString title_y;
   if(nameofhistogram.Contains("N")) title_y = "Number";
   else title_y = "Events/bin";
@@ -169,7 +218,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   func.Insert(0, "ratio_");
   clone.Insert(0, "h3_");
   line.Insert(0, "l_");
-
+  
   mapcanvas[canvas] = new TCanvas(canvas,"",800,800);
   canvas_margin(mapcanvas[canvas]);
   gStyle -> SetOptStat(1111);
@@ -227,7 +276,6 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
       TH1F *htmp = new TH1F("", "", nx, x1, x2);
       TH1F *htmp_stat_err = new TH1F("", "", nx, x1, x2);
       
-      cout << "GetHist  integral " << current_sample << " : " << GetHist(nameofhistogram + Cycle_name + current_sample)->Integral() << endl;
       // -- Make rebinned central hists
       for(Int_t j = 1; j <= nx; j++){
         double current_bin_content = GetHist(nameofhistogram + Cycle_name + current_sample) -> GetBinContent(j);
@@ -238,31 +286,28 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
         htmp_stat_err -> SetBinError(j, current_bin_error);
       }
       
-      cout << "temp integral " << current_sample << " : " << htmp->Integral() << endl;
-      
       if(debug) cout << current_sample + " : called all syst hists" << endl;
       
       mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"] = dynamic_cast<TH1F*>(htmp -> Rebin(N_bin, nameofhistogram + Cycle_name + current_sample + "rebin", binx));
-      cout << "rebinned integral " << current_sample << " : " << mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"] -> Integral() << endl;
       mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin_stat_err"] = dynamic_cast<TH1F*>(htmp_stat_err -> Rebin(N_bin, nameofhistogram + Cycle_name + current_sample + "rebin", binx));
       
       
       // -- Make rebinned hists for all systematic categories
       for(int i_syst = 1; i_syst < N_syst; i_syst++){
         //if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + current_sample)){
-	if(GetHist(current_histname +  "_" + systematics[i_syst] + Cycle_name + current_sample)){ // -- FIXME
+	if(GetHist(current_histname + systematics[i_syst] + Cycle_name + current_sample)){ // -- FIXME
 
 	  if(debug) cout << "Filling " << systematics[i_syst] << endl;
           TH1F *htmp_syst = new TH1F("", "", nx, x1, x2);
           for(Int_t j = 1; j <= nx; j++){
             //double current_bin_content = GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + current_sample) -> GetBinContent(j);
-            double current_bin_content = GetHist(current_histname +  "_" + systematics[i_syst] + Cycle_name + current_sample) -> GetBinContent(j); // -- FIXME
+            double current_bin_content = GetHist(current_histname + systematics[i_syst] + Cycle_name + current_sample) -> GetBinContent(j); // -- FIXME
 	    htmp_syst -> SetBinContent(j, current_bin_content);
           }
-          mapfunc[nameofhistogram +  "_" + systematics[i_syst] + current_sample + "rebin"] = dynamic_cast<TH1F*>(htmp_syst -> Rebin(N_bin, nameofhistogram + Cycle_name + current_sample + "rebin", binx));
+          mapfunc[nameofhistogram + systematics[i_syst] + current_sample + "rebin"] = dynamic_cast<TH1F*>(htmp_syst -> Rebin(N_bin, nameofhistogram + Cycle_name + current_sample + "rebin", binx));
         }
       }
-      
+
       vector<double> error_vector = Get_Syst_Error(nameofhistogram, current_sample);
 
       for(unsigned int j_syst = 0; j_syst < error_vector.size(); j_syst++){
@@ -509,9 +554,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   latex_CMSPriliminary.SetTextSize(0.035);
   latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
   latex_Lumi.SetTextSize(0.035);
-  TString total_lumi = "41.3";
-  if(tag_year == 2016) total_lumi = "35.9";
-  if(tag_year == 2018) total_lumi = "59.7";
+  TString total_lumi = "137.4";
   latex_Lumi.DrawLatex(0.7, 0.96, total_lumi + " fb^{-1} (13 TeV)");
 
   if(debug) cout << "9" << endl;
@@ -620,15 +663,23 @@ void open_files(TString histname){
       //cout << "vector_size : " << vector_size << endl;
       
       for(int i_vector = 0; i_vector < vector_size; i_vector++){
-	openfile_background(Cycle_name, map_sample_names[legend_list[i_legend_list]].at(i_vector), current_dir_syst, current_hist_syst);
+	openfile_background(Cycle_name, map_sample_names[legend_list[i_legend_list] + "2016"].at(i_vector), current_dir_syst, current_hist_syst, 2016);
+	openfile_background(Cycle_name, map_sample_names[legend_list[i_legend_list] + "2017"].at(i_vector), current_dir_syst, current_hist_syst, 2017);
+        openfile_background(Cycle_name, map_sample_names[legend_list[i_legend_list] + "2018"].at(i_vector), current_dir_syst, current_hist_syst, 2018);
+
       }
     }
     
     //cout << "current_dir_syst : " << current_dir_syst << endl;
     //cout << "current_hist_syst : " << current_hist_syst << endl;
-    openfile_DATA(Cycle_name, DoubleEG, current_dir_syst, current_hist_syst);
-    openfile_DATA(Cycle_name, SingleMuon, current_dir_syst, current_hist_syst);
-    
+    openfile_DATA(Cycle_name, DoubleEG, current_dir_syst, current_hist_syst, 2016);
+    openfile_DATA(Cycle_name, DoubleEG, current_dir_syst, current_hist_syst, 2017);
+    openfile_DATA(Cycle_name, DoubleEG, current_dir_syst, current_hist_syst, 2018);
+
+    openfile_DATA(Cycle_name, SingleMuon, current_dir_syst, current_hist_syst, 2016);
+    openfile_DATA(Cycle_name, SingleMuon, current_dir_syst, current_hist_syst, 2017);
+    openfile_DATA(Cycle_name, SingleMuon, current_dir_syst, current_hist_syst, 2018);
+
   }
   // -- FIXME
   //histname = histname + "_central";
@@ -694,59 +745,62 @@ void open_binning_file(TString filename){
   
 }
 
-void QuickPlot(int year=2018){
+void QuickPlotFullRun2(int year=2019){
   setTDRStyle();
   
   // == Set Input Sample List
   tag_year = year;
   
-  outfile.open("output_" + TString::Itoa(tag_year,10) + ".txt");
+  //outfile.open("output_" + TString::Itoa(tag_year,10) + ".txt");
   
-  if(tag_year == 2018){
-    //map_sample_names["DYJets"] = {"DYJets_MG"};
-    map_sample_names["DYJets"] = {"DYJets_MG_HT"};
-    map_sample_names["ttbar"] = {"TT_powheg"};
-    map_sample_names["WJets"] = {"WJets_MG"};
-    map_sample_names["Other"] = {"VV"};
-    map_sample_names["Muon"] = {"data_SingleMuon"};
-    map_sample_names["EGamma"] = {"data_DoubleEG"};
+  //map_sample_names["DYJets"] = {"DYJets_MG"};
+  map_sample_names["DYJets2018"] = {"DYJets_MG_HT"};
+  map_sample_names["ttbar2018"] = {"TT_powheg"};
+  map_sample_names["WJets2018"] = {"WJets_MG"};
+  map_sample_names["Other2018"] = {"VV"};
+  map_sample_names["Muon2018"] = {"data_SingleMuon"};
+  map_sample_names["EGamma2018"] = {"data_DoubleEG"};
     
-    SingleMuon = "data_SingleMuon";
-    DoubleEG = "data_DoubleEG";
-  }
+  SingleMuon = "data_SingleMuon";
+  DoubleEG = "data_DoubleEG";
+  
 
-  if(tag_year == 2017){
-    //map_sample_names["DYJets"] = {"DYJets_MG"};
-    map_sample_names["DYJets"] = {"DYJets_MG_Njet_binned"};
-    map_sample_names["ttbar"] = {"TT_powheg"};
-    map_sample_names["WJets"] = {"WJets_MG"};
-    map_sample_names["Other"] = {"VV"};
-    map_sample_names["Muon"] = {"data_SingleMuon"};
-    map_sample_names["EGamma"] = {"data_DoubleEG"};
+  //map_sample_names["DYJets"] = {"DYJets_MG"};
+  map_sample_names["DYJets2017"] = {"DYJets_MG_Njet_binned"};
+  map_sample_names["ttbar2017"] = {"TT_powheg"};
+  map_sample_names["WJets2017"] = {"WJets_MG"};
+  map_sample_names["Other2017"] = {"VV"};
+  map_sample_names["Muon2017"] = {"data_SingleMuon"};
+  map_sample_names["EGamma2017"] = {"data_DoubleEG"};
+  
+  //SingleMuon = "data_SingleMuon";
+  //DoubleEG = "data_DoubleEG";
 
-    SingleMuon = "data_SingleMuon";
-    DoubleEG = "data_DoubleEG";
-  }
 
-  if(tag_year == 2016){
-    //map_sample_names["DYJets"] = {"DYJets_MG"};
-    map_sample_names["DYJets"] = {"DYJets_MG_HT"};
-    map_sample_names["ttbar"] = {"TT_powheg"};
-    map_sample_names["WJets"] = {"WJets_MG"};
-    map_sample_names["Other"] = {"VV"};
-    map_sample_names["Muon"] = {"data_SingleMuon"};
-    map_sample_names["EGamma"] = {"data_DoubleEG"};
+  //map_sample_names["DYJets"] = {"DYJets_MG"};
+  map_sample_names["DYJets2016"] = {"DYJets_MG_HT"};
+  map_sample_names["ttbar2016"] = {"TT_powheg"};
+  map_sample_names["WJets2016"] = {"WJets_MG"};
+  map_sample_names["Other2016"] = {"VV"};
+  map_sample_names["Muon2016"] = {"data_SingleMuon"};
+  map_sample_names["EGamma2016"] = {"data_DoubleEG"};
 
-    SingleMuon = "data_SingleMuon";
-    DoubleEG = "data_DoubleEG";
-  }
+
+  map_sample_names["DYJets"] = {"DYJets_MG_HT"};
+  map_sample_names["ttbar"] = {"TT_powheg"};
+  map_sample_names["WJets"] = {"WJets_MG"};
+  map_sample_names["Other"] = {"VV"};
+  map_sample_names["Muon"] = {"data_SingleMuon"};
+  map_sample_names["EGamma"] = {"data_DoubleEG"};
   
   
+  //SingleMuon = "data_SingleMuon";
+  //DoubleEG = "data_DoubleEG";
 
   Cycle_name = "HN_pair_all_SkimTree_LRSMHighPt";
-
   
-  open_binning_file("binning_uniform_test.txt");
+  //open_binning_file("binning_uniform_test.txt");
+  open_binning_file("binning_Zp.txt");
   //open_binning_file("binning_test.txt");
 
   outfile.close();
