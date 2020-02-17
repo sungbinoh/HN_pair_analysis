@@ -105,32 +105,32 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
     
     if(GetHist(nameofhistogram + Cycle_name + current_data) )N_Data = GetHist(nameofhistogram + Cycle_name + current_data) -> Integral();
     
-    //DY_norm = (N_DY + N_Data - N_MC) / N_DY;
-   
+    DY_norm = (N_DY + N_Data - N_MC) / N_DY;
+    
     if(tag_year == 2016){
       if(nameofhistogram.Contains("DiMu")){
-	DY_norm = 0.762;
+	DY_norm = 0.801;
       }
       if(nameofhistogram.Contains("DiEle")){
-        DY_norm = 0.872;
+        DY_norm = 0.907;
       }
     }
     if(tag_year == 2017){
       if(nameofhistogram.Contains("DiMu")){
-        DY_norm = 1.132;
+        DY_norm = 1.084;
       }
       if(nameofhistogram.Contains("DiEle")){
-	DY_norm = 1.131;
+	DY_norm = 1.078;
       }
     }if(tag_year == 2018){
       if(nameofhistogram.Contains("DiMu")){
-        DY_norm = 0.683;
+        DY_norm = 1.06015;
       }
       if(nameofhistogram.Contains("DiEle")){
-	DY_norm = 0.685;
+	DY_norm = 1.0312;
       }
     }
-
+    
     GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)) -> Scale(DY_norm); 
     
     outfile << nameofhistogram << "'s DY_norm : " << DY_norm << endl;
@@ -709,15 +709,15 @@ void QuickPlot(int year=2018){
     map_sample_names["WJets"] = {"WJets_MG"};
     map_sample_names["Other"] = {"VV"};
     map_sample_names["Muon"] = {"data_SingleMuon"};
-    map_sample_names["EGamma"] = {"data_DoubleEG"};
+    map_sample_names["EGamma"] = {"data_EGamma"};
     
     SingleMuon = "data_SingleMuon";
-    DoubleEG = "data_DoubleEG";
+    DoubleEG = "data_EGamma";
   }
 
   if(tag_year == 2017){
     //map_sample_names["DYJets"] = {"DYJets_MG"};
-    map_sample_names["DYJets"] = {"DYJets_MG_Njet_binned"};
+    map_sample_names["DYJets"] = {"DYJets_MG_HT"};
     map_sample_names["ttbar"] = {"TT_powheg"};
     map_sample_names["WJets"] = {"WJets_MG"};
     map_sample_names["Other"] = {"VV"};

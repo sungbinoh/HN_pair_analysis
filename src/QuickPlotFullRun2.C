@@ -101,14 +101,14 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
    
    
     if(nameofhistogram.Contains("DiMu")){
-      DY_norm_2016 = 0.762;
-      DY_norm_2017 = 1.132;
-      DY_norm_2018 = 0.683;
+      DY_norm_2016 = 0.801;
+      DY_norm_2017 = 1.084;
+      DY_norm_2018 = 1.06;
     }
     if(nameofhistogram.Contains("DiEle")){
-      DY_norm_2016 = 0.872;
-      DY_norm_2017 = 1.131;
-      DY_norm_2018 = 0.685;
+      DY_norm_2016 = 0.907;
+      DY_norm_2017 = 1.078;
+      DY_norm_2018 = 1.031;
     }
 
     GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2016"].at(0) + "2016") -> Scale(DY_norm_2016); 
@@ -766,7 +766,7 @@ void QuickPlotFullRun2(int year=2019){
   
 
   //map_sample_names["DYJets"] = {"DYJets_MG"};
-  map_sample_names["DYJets2017"] = {"DYJets_MG_Njet_binned"};
+  map_sample_names["DYJets2017"] = {"DYJets_MG_HT"};
   map_sample_names["ttbar2017"] = {"TT_powheg"};
   map_sample_names["WJets2017"] = {"WJets_MG"};
   map_sample_names["Other2017"] = {"VV"};
