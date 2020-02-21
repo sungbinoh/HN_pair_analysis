@@ -143,9 +143,6 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   }
   
 
-
-
-
   TString title_y;
   if(nameofhistogram.Contains("N")) title_y = "Number";
   else title_y = "Events/bin";
@@ -192,7 +189,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   
   maphstack[hstack] = new THStack(hstack, "Stacked_" + nameofhistogram);
   gStyle->SetOptTitle(0);
-  
+
   TString legend_list[4] = {"Other", "WJets", "ttbar", "DYJets"};
   Int_t colour_array[] = {419, 901, 416, 400};
 
@@ -201,11 +198,9 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   
   // -- Add Overflow bin
   TString overflow = "overflow";
-  //cout << nameofhistogram + Cycle_name + current_data << endl;
-  //cout << "nameofhistogram + Cycle_name + current_data : " << nameofhistogram + Cycle_name + current_data << endl;
   Int_t nx_template = GetHist(nameofhistogram + Cycle_name + current_data) -> GetNbinsX()+1;
   Double_t x1_template = GetHist(nameofhistogram + Cycle_name + current_data) -> GetBinLowEdge(1);
-  Double_t bw_template = binx[N_bin - 1] - binx[N_bin- 2];
+  Double_t bw_template = (binx[N_bin - 1] - binx[0]) / 20.;
   Double_t x2_template = GetHist(nameofhistogram + Cycle_name + current_data) -> GetBinLowEdge(nx_template)+bw_template;
   binx[N_bin] = binx[N_bin - 1] + bw_template;
   if(debug) cout << "[[make_histogram]] binx[N_bin] ; " << binx[N_bin]  << endl;
@@ -219,55 +214,18 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
     if(debug) cout << legend_list[i_legend] << endl;
     TString current_sample = map_sample_names[legend_list[i_legend]].at(0);
     if(mapfunc[nameofhistogram + Cycle_name + current_sample]){
-      Int_t nx    = GetHist(nameofhistogram + Cycle_name + current_sample) -> GetNbinsX()+1;
-      Double_t x1 = GetHist(nameofhistogram + Cycle_name + current_sample) -> GetBinLowEdge(1);
-      Double_t bw = bw_template;
-      Double_t x2 = GetHist(nameofhistogram + Cycle_name + current_sample) -> GetBinLowEdge(nx)+bw_template;
       
-      TH1F *htmp = new TH1F("", "", nx, x1, x2);
-      TH1F *htmp_stat_err = new TH1F("", "", nx, x1, x2);
-      
-      cout << "GetHist  integral " << current_sample << " : " << GetHist(nameofhistogram + Cycle_name + current_sample)->Integral() << endl;
-      // -- Make rebinned central hists
-      for(Int_t j = 1; j <= nx; j++){
-        double current_bin_content = GetHist(nameofhistogram + Cycle_name + current_sample) -> GetBinContent(j);
-	double current_bin_error = GetHist(nameofhistogram + Cycle_name + current_sample) -> GetBinError(j);
-        htmp -> SetBinContent(j, current_bin_content);
-        htmp -> SetBinError(j, current_bin_error);
-        htmp_stat_err -> SetBinContent(j, current_bin_content);
-        htmp_stat_err -> SetBinError(j, current_bin_error);
-      }
-      
-      cout << "temp integral " << current_sample << " : " << htmp->Integral() << endl;
-      
-      if(debug) cout << current_sample + " : called all syst hists" << endl;
-      
-      mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"] = dynamic_cast<TH1F*>(htmp -> Rebin(N_bin, nameofhistogram + Cycle_name + current_sample + "rebin", binx));
-      cout << "rebinned integral " << current_sample << " : " << mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"] -> Integral() << endl;
-      mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin_stat_err"] = dynamic_cast<TH1F*>(htmp_stat_err -> Rebin(N_bin, nameofhistogram + Cycle_name + current_sample + "rebin", binx));
+      Rebin_with_overflow(nameofhistogram + Cycle_name + current_sample, N_bin, binx);
+      //cout << "GetHist  integral " << current_sample << " : " << GetHist(nameofhistogram + Cycle_name + current_sample)->Integral() << endl;
+      //cout << "temp integral " << current_sample << " : " << htmp->Integral() << endl;
       
       
+      if(debug) cout << current_sample + " : calling all syst hists" << endl;
       // -- Make rebinned hists for all systematic categories
-      for(int i_syst = 1; i_syst < N_syst; i_syst++){
-        //if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + current_sample)){
-	if(GetHist(current_histname +  "_" + systematics[i_syst] + Cycle_name + current_sample)){ // -- FIXME
-
-	  if(debug) cout << "Filling " << systematics[i_syst] << endl;
-          TH1F *htmp_syst = new TH1F("", "", nx, x1, x2);
-          for(Int_t j = 1; j <= nx; j++){
-            //double current_bin_content = GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + current_sample) -> GetBinContent(j);
-            double current_bin_content = GetHist(current_histname +  "_" + systematics[i_syst] + Cycle_name + current_sample) -> GetBinContent(j); // -- FIXME
-	    htmp_syst -> SetBinContent(j, current_bin_content);
-          }
-          mapfunc[nameofhistogram +  "_" + systematics[i_syst] + current_sample + "rebin"] = dynamic_cast<TH1F*>(htmp_syst -> Rebin(N_bin, nameofhistogram + Cycle_name + current_sample + "rebin", binx));
-        }
+      for(int i_syst = 0; i_syst < N_syst_comparison; i_syst++){
+	Save_syst_array(current_histname, systematics_comparison[i_syst], Cycle_name + current_sample, N_bin, binx);
       }
       
-      vector<double> error_vector = Get_Syst_Error(nameofhistogram, current_sample);
-
-      for(unsigned int j_syst = 0; j_syst < error_vector.size(); j_syst++){
-	mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"] -> SetBinError(j_syst, error_vector.at(j_syst));
-      }
       mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"] ->  SetFillColor(colour_array[i_legend]);
       mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"] ->  SetLineColor(colour_array[i_legend]);
       
@@ -277,7 +235,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
       maphstack[hstack] -> Add(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"));
       //maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"), legend_list[i_legend], "lf");
       mapfunc[func + "rebin"] -> Add(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"));
-      mapfunc[func + "rebin_stat_err"] -> Add(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin_stat_err"));
+      mapfunc[func + "rebin_stat_err"] -> Add(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"));
     }
   }
   
@@ -623,7 +581,7 @@ void open_files(TString histname){
 	openfile_background(Cycle_name, map_sample_names[legend_list[i_legend_list]].at(i_vector), current_dir_syst, current_hist_syst);
       }
     }
-    
+
     //cout << "current_dir_syst : " << current_dir_syst << endl;
     //cout << "current_hist_syst : " << current_hist_syst << endl;
     openfile_DATA(Cycle_name, DoubleEG, current_dir_syst, current_hist_syst);
@@ -644,7 +602,7 @@ void open_binning_file(TString filename){
   TString binning_file_path=WORKING_DIR+"/script/"+filename;
   ifstream data_file;
   data_file.open(binning_file_path);
- 
+  
   char line[500];
   if(data_file.is_open()){
     while(!data_file.eof()){
@@ -752,12 +710,3 @@ void QuickPlot(int year=2018){
   outfile.close();
   
 }
-
-
-
-
-
-
-
-
-

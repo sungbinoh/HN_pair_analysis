@@ -27,7 +27,7 @@ map<TString, TKey*> maphistcheck;
 map<TString, TList*> maplist;
 map<TString, std::vector<double> > map_bin_vector;
 map<TString, std::vector<TString> > map_sample_names;
-
+map<TString, std::vector<double> > map_syst_array;
 
 const int N_syst = 19;
 TString systematics[N_syst] = {"central",
@@ -41,6 +41,18 @@ TString systematics[N_syst] = {"central",
 			       "MuonScaleDown", "MuonScaleUp",
 			       "MuonSmearDown", "MuonSmearUp",
 			       //"PDFNormDown", "PDFNormUp" 
+};
+
+const int N_syst_comparison = 9;
+TString systematics_comparison[N_syst] = {"ElectronScale",
+					  "ElectronSmear",
+					  "JetsRes",
+					  "JetsScale",
+					  "SD_JMR_",
+					  "SD_JMS_",
+					  "PUReweight_",
+					  "MuonScale",
+					  "MuonSmear"
 };
 
 vector<double> vx, vy, vexl, vexh, veyl, veyh;
@@ -80,6 +92,75 @@ vector<double> Get_Syst_Error(TString nameofhistogram, TString sample){
   return error_vector;
 }
 
+void Rebin_with_overflow(TString histname, int N_bin, double binx[]){
+
+  if(debug) cout << "[Rebin_with_overflow]" << endl;
+
+  Int_t nx    = mapfunc[histname] -> GetNbinsX()+1;
+  Double_t x1 = mapfunc[histname] -> GetBinLowEdge(1);
+  Double_t bw = (binx[N_bin - 1] - binx[0]) / 20.;
+  Double_t x2 = mapfunc[histname] -> GetBinLowEdge(nx)+bw_template;
+
+  TH1F *htmp = new TH1F("", "", nx, x1, x2);
+  for(Int_t j = 1; j <= nx; j++){
+    double current_bin_content = mapfunc[histname] -> GetBinContent(j);
+    double current_bin_error = mapfunc[histname] -> GetBinError(j);
+    htmp -> SetBinContent(j, current_bin_content);
+    htmp -> SetBinError(j, current_bin_error);
+  }
+  mapfunc[histname + "rebin"] = dynamic_cast<TH1F*>(htmp -> Rebin(N_bin, histname + "rebin", binx));
+
+}
+
+void Save_syst_array(TString current_histname, TString systematics, TString cycle_and_sample, int N_bin, double binx[]){
+
+  TString histname_Up   = current_histname + "_" + systematics + "Up"   + cycle_and_sample;
+  TString histname_Down = current_histname + "_" + systematics + "Down" + cycle_and_sample;
+
+  if(!mapfunc[histname_Up]) return;
+
+  Int_t nx    = mapfunc[histname_Up] -> GetNbinsX()+1;
+  Double_t x1 = mapfunc[histname_Up] -> GetBinLowEdge(1);
+  Double_t bw = (binx[N_bin - 1] - binx[0]) / 20.;
+  Double_t x2 = mapfunc[histname_Up] -> GetBinLowEdge(nx)+bw_template;
+
+  TH1F *htmp_syst_Up = new TH1F("", "", nx, x1, x2);
+  TH1F *htmp_syst_Down = new TH1F("", "", nx, x1, x2);
+
+  for(Int_t j = 1; j <= nx; j++){
+    double current_bin_content_Up = mapfunc[histname_Up] -> GetBinContent(j);
+    double current_bin_error_Up = mapfunc[histname_Up] -> GetBinError(j);
+    htmp_syst_Up -> SetBinContent(j, current_bin_content_Up);
+    htmp_syst_Up -> SetBinError(j, current_bin_error_Up);
+  
+    double current_bin_content_Down = mapfunc[histname_Down] -> GetBinContent(j);
+    double current_bin_error_Down = mapfunc[histname_Down] -> GetBinError(j);
+    htmp_syst_Down -> SetBinContent(j, current_bin_content_Down);
+    htmp_syst_Down -> SetBinError(j, current_bin_error_Down);
+  }
+  
+  mapfunc[histname_Up + "rebin"] = dynamic_cast<TH1F*>(htmp_syst_Up -> Rebin(N_bin, histname_Up + "rebin", binx));
+  mapfunc[histname_Down + "rebin"] = dynamic_cast<TH1F*>(htmp_syst_Down -> Rebin(N_bin, histname_Down + "rebin", binx));
+
+  map_syst_array[current_histname + systematics + "Up"].clear();
+  map_syst_array[current_histname + systematics + "Down"].clear();
+  //map_syst_array
+  Int_t new_nx = mapfunc[histname_Up + "rebin"] -> GetNbinsX() + 1;
+  for(Int_t j = 1; j < new_nx; j++){
+    double current_entry_Up = mapfunc[histname_Up + "rebin"] -> GetBinContent(j);
+    double current_entry_Down =  mapfunc[histname_Down + "rebin"] ->GetBinContent(j);
+
+    if(current_entry_Up > current_entry_Down){
+      map_syst_array[current_histname + systematics + "Up"].push_back(current_entry_Up);
+      map_syst_array[current_histname + systematics + "Down"].push_back(current_entry_Down);
+    }
+    else{
+      map_syst_array[current_histname + systematics + "Up"].push_back(current_entry_Down);
+      map_syst_array[current_histname + systematics + "Down"].push_back(current_entry_Up);
+    }
+  }
+
+}
 
 void Proper_error_data(TString nameofhistogram, TString current_data, int N_bin, double binx[]){
   
