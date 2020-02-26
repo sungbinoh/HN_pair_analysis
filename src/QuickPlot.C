@@ -238,24 +238,63 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
       mapfunc[func + "rebin_stat_err"] -> Add(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"));
     }
   }
-  
+
   for(int i_legend = 0; i_legend < 4; i_legend++){
     TString current_sample = map_sample_names[legend_list[4 - i_legend - 1]].at(0);
-    if(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin")) maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"), legend_list[4 - i_legend - 1], "lf");
+    if(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin")) {
+      maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"), legend_list[4 - i_legend - 1], "lf");
+      sum_syst_error(current_histname, Cycle_name + current_sample, N_bin);
+    }  
   }
+
+  vector<double> bkg_central;
+  vector<double> bkg_up;
+  vector<double> bkg_down;
+  bkg_central.clear();
+  bkg_up.clear();
+  bkg_down.clear();
+  for(int j = 1; j < N_bin + 1; j++){
+    double current_bkg = mapfunc[func + "rebin"] -> GetBinContent(j);
+    bkg_central.push_back(current_bkg);
+    
+    double current_up_sum = 0.;
+    double current_down_sum = 0.;
+    
+    for(int i_legend = 0; i_legend < 4; i_legend++){
+      TString current_sample = map_sample_names[legend_list[4 - i_legend - 1]].at(0);
+      if(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin")) {
+	cout << "[make_histogram] Up size : " << map_syst_array[current_histname + Cycle_name + current_sample + "Up"].size() << endl;
+	cout << "[make_histogram] Down size : " << map_syst_array[current_histname + Cycle_name + current_sample + "Down"].size() << endl;
+	
+	current_up_sum   = current_up_sum   + map_syst_array[current_histname + Cycle_name + current_sample + "Up"].at(j-1);
+	current_down_sum = current_down_sum + map_syst_array[current_histname + Cycle_name + current_sample + "Down"].at(j-1);
+      }
+    }
+    bkg_up.push_back(current_up_sum);
+    bkg_down.push_back(current_down_sum);
+  }
+  
+  map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] = new TGraphAsymmErrors(mapfunc[func + "rebin"]);
+  map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] = new TGraphAsymmErrors(mapfunc[func + "rebin"]);
+  
+  for(int i = 0; i < N_bin; i++){
+    map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> SetPointEYlow(i,  bkg_down.at(i));
+    map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> SetPointEYhigh(i, bkg_up.at(i));
+    
+    double current_x = mapfunc[func + "rebin"] -> GetBinCenter(i + 1);
+    double current_y = mapfunc[func + "rebin"] -> GetBinContent(i + 1);
+    map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> SetPoint(i, current_x, 1.);
+    map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> SetPointEYlow(i, bkg_down.at(i) / current_y);
+    map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> SetPointEYhigh(i, bkg_up.at(i) / current_y);
+  }
+  
   
   if(debug) cout << "4" << endl;
 
-  mapfunc[nameofhistogram + Cycle_name + current_data + overflow] = new TH1F("", "", nx_template, x1_template, x2_template);
-  for (Int_t i = 1; i <= nx_template; i++) {
-    mapfunc[nameofhistogram + Cycle_name + current_data +overflow] -> SetBinContent(i, GetHist(nameofhistogram + Cycle_name + current_data) -> GetBinContent(i)) ;
-    mapfunc[nameofhistogram + Cycle_name + current_data +overflow] -> SetBinError(i, GetHist(nameofhistogram + Cycle_name + current_data) -> GetBinError(i));
-  }
+  Rebin_with_overflow(nameofhistogram + Cycle_name + current_data, N_bin, binx);
+
   if(blind){
     mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] = (TH1F*)GetHist(func + "blind_data") -> Clone(clone + "blind");
-  }
-  else{
-    mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] = dynamic_cast<TH1F*>(GetHist(nameofhistogram + Cycle_name + current_data + overflow) -> Rebin(N_bin, nameofhistogram + Cycle_name + current_data + "rebin", binx));
   }
   
   // -- Add DATA on Legend
@@ -265,7 +304,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerStyle(20);
   GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerColor(kBlack);
   GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerSize(1);
-
+  
   if(debug) cout << "5" << endl;
   
   maphstack[hstack] -> Draw("hist");
@@ -291,15 +330,13 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   mappad[pad1] -> Update();
   //GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerColor(kRed);
   GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Draw("histsamep");
-  
     
-  
   // -- Draw Bkg Error bar
-  mapfunc[func + "rebin"] -> SetFillColor(kBlack);;
-  mapfunc[func + "rebin"] -> SetFillStyle(3013);
-  mapfunc[func + "rebin"] -> SetMarkerSize(0);
-  mapfunc[func + "rebin"] -> Draw("e2same");
-  maplegend[legend] -> AddEntry(mapfunc[func + "rebin"], "Syst. + Stat.", "pf");
+  map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> SetFillColor(kBlack);;
+  map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> SetFillStyle(3013);
+  map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> SetMarkerSize(0);
+  map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> Draw("e2same");
+  maplegend[legend] -> AddEntry(map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"], "Syst. + Stat.", "pf");
   
   
   // -- Set y-axis range
@@ -337,58 +374,64 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   mapfunc[clone] = (TH1F*)GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Clone(clone);
   
   // -- Make Clone hist for Bkg. One for total error, and one for stat error
-  mapfunc["stat" + nameofhistogram] = (TH1F*)GetHist(func + "rebin") -> Clone(clone);
+  mapfunc["pad2_template" + nameofhistogram] = (TH1F*)GetHist(func + "rebin") -> Clone(clone);
   mapfunc["stat_err" + nameofhistogram] = (TH1F*)GetHist(func + "rebin_stat_err") -> Clone(clone);
   
+  for(int i = 1; i < N_bin + 1; i++){
+    mapfunc["pad2_template" + nameofhistogram] -> SetBinContent(i, 1.);
+    mapfunc["pad2_template" + nameofhistogram] -> SetBinError(i, 0.);
+  }
   if(debug) cout << "7" << endl;
 
   // -- Draw Line at Data/MC = 1
-  mapline[line] = new TLine(binx[0], 1, binx[N_bin - 1], 1);
+  mapline[line] = new TLine(binx[0], 1, binx[N_bin - 1] + bw_template, 1);
   mapline[line] -> Draw();
   mapline[line] -> SetLineStyle(1);
   mapline[line] -> SetLineColor(kBlue);
   
   // -- Draw syst box hist with all contents as 1
   TString name_x = nameofhistogram;
-  mapfunc["stat" + nameofhistogram] -> SetTitle("");
-  mapfunc["stat" + nameofhistogram] -> SetFillColor(kOrange);
-  mapfunc["stat" + nameofhistogram] -> SetMarkerSize(0);
-  mapfunc["stat" + nameofhistogram] -> SetMarkerStyle(0);
-  mapfunc["stat" + nameofhistogram] -> SetLineColor(kWhite);
-  mapfunc["stat" + nameofhistogram] -> GetXaxis() -> SetTitle(name_x);
-  mapfunc["stat" + nameofhistogram] -> GetXaxis() -> SetTitleSize(0.15);
-  mapfunc["stat" + nameofhistogram] -> GetXaxis() -> SetLabelSize(0.10);
-  mapfunc["stat" + nameofhistogram] -> GetXaxis() -> SetRangeUser(x1_template, x2_template);
+    
+  mapfunc["pad2_template" + nameofhistogram] -> SetTitle("");
+  mapfunc["pad2_template" + nameofhistogram] -> SetLineColor(kWhite);
+  mapfunc["pad2_template" + nameofhistogram] -> GetXaxis() -> SetTitle(name_x);
+  mapfunc["pad2_template" + nameofhistogram] -> GetXaxis() -> SetTitleSize(0.15);
+  mapfunc["pad2_template" + nameofhistogram] -> GetXaxis() -> SetLabelSize(0.10);
+  mapfunc["pad2_template" + nameofhistogram] -> GetXaxis() -> SetRangeUser(x1_template, x2_template);
+  mapfunc["pad2_template" + nameofhistogram] -> GetYaxis() -> SetTitle("#frac{Obs.}{Pred.}");
+  mapfunc["pad2_template" + nameofhistogram] -> GetYaxis() -> SetTitleSize(0.12);
+  mapfunc["pad2_template" + nameofhistogram] -> GetYaxis() -> SetTitleOffset(0.5);
+  mapfunc["pad2_template" + nameofhistogram] -> GetYaxis() -> SetLabelSize(0.08);
+  mapfunc["pad2_template" + nameofhistogram] -> GetYaxis() -> SetNdivisions(505);
+  mapfunc["pad2_template" + nameofhistogram] -> SetMinimum(0.5);
+  mapfunc["pad2_template" + nameofhistogram] -> SetMaximum(1.5);
+  mapfunc["pad2_template" + nameofhistogram] -> SetStats(0);
+  mapfunc["pad2_template" + nameofhistogram] -> Draw("hist");
+
+  //map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> SetFillColor(kBlack);;
+  //map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> SetFillStyle(3013);
+  //map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> SetMarkerSize(0);
+  //map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> Draw("e2same");
   
-  mapfunc["stat" + nameofhistogram] -> SetYTitle("#frac{Obs.}{Pred.}");
-  mapfunc["stat" + nameofhistogram] -> GetYaxis() -> SetTitleSize(0.12);
-  mapfunc["stat" + nameofhistogram] -> GetYaxis() -> SetTitleOffset(0.5);
-  mapfunc["stat" + nameofhistogram] -> GetYaxis() -> SetLabelSize(0.08);
-  mapfunc["stat" + nameofhistogram] -> GetYaxis() -> SetNdivisions(505);
-  
-  mapfunc["stat" + nameofhistogram] -> SetFillStyle(1001);
-  mapfunc["stat" + nameofhistogram] -> SetFillColorAlpha(45,0.35);
-  mapfunc["stat" + nameofhistogram] -> SetMinimum(0.5);
-  mapfunc["stat" + nameofhistogram] -> SetMaximum(1.5);
-  mapfunc["stat" + nameofhistogram] -> SetStats(0);
+  map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> SetFillColor(kOrange);
+  map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> SetMarkerSize(0);
+  map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> SetLineColor(kWhite);
+  //map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> SetFillStyle(3005);
+  //map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> SetFillColorAlpha(45,0.35);
   
   if(debug) cout << "8" << endl;
 
-  Int_t ncells = mapfunc["stat" + nameofhistogram] -> GetSize();
   for(int i = 0; i < N_bin; i++){
-    double current_error = mapfunc["stat" + nameofhistogram] -> GetBinError(i + 1) / mapfunc["stat" + nameofhistogram] -> GetBinContent(i + 1);
-    double original_error = mapfunc["stat" + nameofhistogram] -> GetBinError(i + 1);
-    double original_content = mapfunc["stat" + nameofhistogram] -> GetBinContent(i + 1);
-
     bool no_data = false;
     double data_value = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetBinContent(i + 1);;
-    if(data_value < 10e-7) current_error = 0.;
-
-    mapfunc["stat" + nameofhistogram] -> SetBinContent(i + 1, 1.);
-    mapfunc["stat" + nameofhistogram] -> SetBinError(i + 1, current_error);
-
+    if(data_value < 10e-7) no_data = true;
+    if(no_data){
+      map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> SetPointEYlow(i, 0.);
+      map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> SetPointEYhigh(i, 0.);
+    }
+    cout << "bkg_error_ration " << i << " error : " << map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> GetErrorYhigh(i) << ", " << map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> GetErrorYlow(i) << endl;
   }
-  mapfunc["stat" + nameofhistogram] -> Draw("CE2");
+  map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> Draw("e2same");
   
 
   // -- Draw stat error box hist with all contents as 1
@@ -452,7 +495,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   maplegend["bottom" + legend]->SetBorderSize(0);
   maplegend["bottom" + legend]->SetNColumns(3);
   maplegend["bottom" + legend]->AddEntry(mapfunc["stat_err" + nameofhistogram], "Stat.", "f");
-  maplegend["bottom" + legend]->AddEntry(mapfunc["stat" + nameofhistogram], "Stat. + Syst.", "f");
+  maplegend["bottom" + legend]->AddEntry(map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"], "Stat. + Syst.", "f");
   maplegend["bottom" + legend]->AddEntry(mapfunc[clone] , "Obs./Pred.", "p");
   maplegend["bottom" + legend]->Draw("same");
 
@@ -511,6 +554,9 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
 
 void open_files(TString histname){
   
+  maphist.clear();
+  map_syst_array.clear();
+  mapfunc.clear();
   if(debug) cout << "[[draw_histogram]] histname : " << histname << endl;  
   
   unsigned int N_bin = map_bin_vector[histname].size();
@@ -542,8 +588,13 @@ void open_files(TString histname){
                         "DiMu_DYreweight",
                         "EMu_DYreweight",
   };
-  
 
+  int N_AK8_bins = 3;
+  TString AK8_bins[] = {"0AK8",
+			"1AK8",
+			"2AK8"
+  };
+  
   TString current_dir = "empty";
   TString current_channel = "empty";
   
@@ -557,8 +608,15 @@ void open_files(TString histname){
       current_channel = channels[i_channel];
     }
   }
-
+  
   current_dir = current_dir + "_" + current_channel;
+  if(!histname.Contains("mZp")){
+    for(int i_AK8_bin = 0; i_AK8_bin < N_AK8_bins; i_AK8_bin++){
+      if(histname.Contains(AK8_bins[i_AK8_bin])){
+	current_dir = AK8_bins[i_AK8_bin] + "_" + current_dir;
+      } 
+    }
+  }
 
   if(debug) cout << "current_dir : " << current_dir << "/" << histname << "+systflags" << endl;
   if(current_dir.Contains("empty") || current_channel.Contains("empty")) return;
@@ -642,7 +700,7 @@ void open_binning_file(TString filename){
 
       cout << "[[open_binning_file]] current_histname : " << current_histname << endl;
       
-      open_files(current_histname);
+      //open_files(current_histname);
       open_files(current_histname + "_DYreweight");
       map_bin_vector.clear();
       
@@ -705,7 +763,7 @@ void QuickPlot(int year=2018){
 
   
   open_binning_file("binning_uniform_test.txt");
-  //open_binning_file("binning_test.txt");
+  //open_binning_file("binning_uniform_few.txt");
 
   outfile.close();
   

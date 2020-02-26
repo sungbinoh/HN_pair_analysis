@@ -99,7 +99,7 @@ void Rebin_with_overflow(TString histname, int N_bin, double binx[]){
   Int_t nx    = mapfunc[histname] -> GetNbinsX()+1;
   Double_t x1 = mapfunc[histname] -> GetBinLowEdge(1);
   Double_t bw = (binx[N_bin - 1] - binx[0]) / 20.;
-  Double_t x2 = mapfunc[histname] -> GetBinLowEdge(nx)+bw_template;
+  Double_t x2 = mapfunc[histname] -> GetBinLowEdge(nx)+bw;
 
   TH1F *htmp = new TH1F("", "", nx, x1, x2);
   for(Int_t j = 1; j <= nx; j++){
@@ -113,28 +113,45 @@ void Rebin_with_overflow(TString histname, int N_bin, double binx[]){
 }
 
 void Save_syst_array(TString current_histname, TString systematics, TString cycle_and_sample, int N_bin, double binx[]){
-
+  
+  cout << "[Save_syst_array]" << endl;
+  
   TString histname_Up   = current_histname + "_" + systematics + "Up"   + cycle_and_sample;
   TString histname_Down = current_histname + "_" + systematics + "Down" + cycle_and_sample;
+  TString histname_central = current_histname + "_central" + cycle_and_sample + "rebin"; // -- central hists are already rebinned
 
+  // -- booleans to check if there are up/down hists
+  bool up_hist = false;
+  bool down_hist = false;
+  
   if(!mapfunc[histname_Up]) return;
 
   Int_t nx    = mapfunc[histname_Up] -> GetNbinsX()+1;
   Double_t x1 = mapfunc[histname_Up] -> GetBinLowEdge(1);
   Double_t bw = (binx[N_bin - 1] - binx[0]) / 20.;
-  Double_t x2 = mapfunc[histname_Up] -> GetBinLowEdge(nx)+bw_template;
+  Double_t x2 = mapfunc[histname_Up] -> GetBinLowEdge(nx)+bw;
 
   TH1F *htmp_syst_Up = new TH1F("", "", nx, x1, x2);
   TH1F *htmp_syst_Down = new TH1F("", "", nx, x1, x2);
 
   for(Int_t j = 1; j <= nx; j++){
-    double current_bin_content_Up = mapfunc[histname_Up] -> GetBinContent(j);
-    double current_bin_error_Up = mapfunc[histname_Up] -> GetBinError(j);
+    double current_bin_content_Up = mapfunc[histname_central] -> GetBinContent(j);
+    double current_bin_error_Up = mapfunc[histname_central] -> GetBinError(j);
+    if(mapfunc[histname_Up]){
+      current_bin_content_Up = mapfunc[histname_Up] -> GetBinContent(j);
+      current_bin_error_Up = mapfunc[histname_Up] -> GetBinError(j);
+      up_hist =true;
+    }
     htmp_syst_Up -> SetBinContent(j, current_bin_content_Up);
     htmp_syst_Up -> SetBinError(j, current_bin_error_Up);
-  
-    double current_bin_content_Down = mapfunc[histname_Down] -> GetBinContent(j);
-    double current_bin_error_Down = mapfunc[histname_Down] -> GetBinError(j);
+    
+    double current_bin_content_Down = mapfunc[histname_central] -> GetBinContent(j);
+    double current_bin_error_Down = mapfunc[histname_central] -> GetBinError(j);
+    if(mapfunc[histname_Down]){
+      current_bin_content_Down = mapfunc[histname_Down] -> GetBinContent(j);
+      current_bin_error_Down = mapfunc[histname_Down] -> GetBinError(j);
+      down_hist = true;
+    }
     htmp_syst_Down -> SetBinContent(j, current_bin_content_Down);
     htmp_syst_Down -> SetBinError(j, current_bin_error_Down);
   }
@@ -151,14 +168,66 @@ void Save_syst_array(TString current_histname, TString systematics, TString cycl
     double current_entry_Down =  mapfunc[histname_Down + "rebin"] ->GetBinContent(j);
 
     if(current_entry_Up > current_entry_Down){
-      map_syst_array[current_histname + systematics + "Up"].push_back(current_entry_Up);
-      map_syst_array[current_histname + systematics + "Down"].push_back(current_entry_Down);
+      map_syst_array[current_histname + cycle_and_sample + systematics + "Up"].push_back(current_entry_Up);
+      map_syst_array[current_histname + cycle_and_sample + systematics + "Down"].push_back(current_entry_Down);
     }
     else{
-      map_syst_array[current_histname + systematics + "Up"].push_back(current_entry_Down);
-      map_syst_array[current_histname + systematics + "Down"].push_back(current_entry_Up);
+      map_syst_array[current_histname + cycle_and_sample + systematics + "Up"].push_back(current_entry_Down);
+      map_syst_array[current_histname + cycle_and_sample + systematics + "Down"].push_back(current_entry_Up);
     }
   }
+
+  cout << "[Save_syst_array] " << current_histname + cycle_and_sample + systematics << "Up size : " << map_syst_array[current_histname + cycle_and_sample + systematics + "Up"].size() << endl;
+  cout << "[Save_syst_array] " << current_histname + cycle_and_sample + systematics << "Down size : " << map_syst_array[current_histname + cycle_and_sample + systematics + "Down"].size() << endl;
+
+
+}
+
+void sum_syst_error(TString current_histname, TString cycle_and_sample, int N_bin){
+  
+  // -- get central entries
+  std::vector<double> central_content;
+  central_content.clear();
+  
+  for(int j = 1; j < N_bin + 1; j++){
+    double current_content = mapfunc[current_histname + "_central" + cycle_and_sample + "rebin"] -> GetBinContent(j);
+    central_content.push_back(current_content);
+  }
+  
+  cout << "[sum_syst_error] " << endl;
+  map_syst_array[current_histname + cycle_and_sample + "Up"].clear();
+  map_syst_array[current_histname + cycle_and_sample + "Down"].clear();
+
+  for(int j = 1; j < N_bin + 1; j++){
+    double current_error_up = 0.;
+    double current_error_down = 0.;
+
+    double current_stat_error = mapfunc[current_histname + "_central" + cycle_and_sample + "rebin"] -> GetBinError(j);
+    current_error_up = current_error_up + pow(current_stat_error, 2);
+    current_error_down = current_error_down+ pow(current_stat_error, 2);
+    
+    for(int i_syst = 0; i_syst < N_syst_comparison; i_syst++){
+      cout << "[sum_syst_error] for j = " << j << ", i_syst = " << i_syst << endl;
+      
+      TString current_syst = systematics_comparison[i_syst];
+      double current_up = fabs(central_content.at(j-1) - map_syst_array[current_histname + cycle_and_sample + current_syst + "Up"].at(j-1) );
+      double current_down = fabs(central_content.at(j-1) - map_syst_array[current_histname + cycle_and_sample + current_syst + "Down"].at(j-1) );
+      
+      cout << "[sum_syst_error] current_content : " << central_content.at(j-1) << ", up : " << map_syst_array[current_histname + cycle_and_sample + current_syst + "Up"].at(j-1) << ", down : " << map_syst_array[current_histname + cycle_and_sample + current_syst + "Down"].at(j-1) << endl;
+      
+      current_error_up = current_error_up + pow(current_up, 2);
+      current_error_down = current_error_down + pow(current_down, 2);
+    }
+    
+    current_error_up = pow(current_error_up, 0.5);
+    current_error_down = pow(current_error_down, 0.5);
+    
+    map_syst_array[current_histname + cycle_and_sample + "Up"].push_back(current_error_up);
+    map_syst_array[current_histname + cycle_and_sample + "Down"].push_back(current_error_down);
+  }
+
+  cout << "[sum_syst_error] Up size : " << map_syst_array[current_histname + cycle_and_sample + "Up"].size() << endl;
+  cout << "[sum_syst_error] Down size : " << map_syst_array[current_histname + cycle_and_sample + "Down"].size() << endl;
 
 }
 
