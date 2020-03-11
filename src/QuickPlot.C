@@ -762,8 +762,8 @@ void QuickPlot(int year=2018){
   Cycle_name = "HN_pair_all_SkimTree_LRSMHighPt";
 
   
-  open_binning_file("binning_uniform_test.txt");
-  //open_binning_file("binning_uniform_few.txt");
+  //open_binning_file("binning_uniform_test.txt");
+  open_binning_file("binning_uniform_few.txt");
 
   outfile.close();
   

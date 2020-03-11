@@ -5,10 +5,12 @@ ofstream outfile;
 
 using namespace std;
 const double alpha = 1 - 0.6827;
+const double signal_scale = 0.001;
 // == Debugging Mode
-bool debug = true;
+bool debug = false;
 int tag_year = 0;
 TString Cycle_name;
+TString Cycle_name_signal;
 TString SingleMuon;
 TString DoubleEG;
 // == Call all needed maps
@@ -112,6 +114,16 @@ void Rebin_with_overflow(TString histname, int N_bin, double binx[]){
 
 }
 
+void Rebin_with_overflow_limit(TString histname, int N_bin, double binx[]){
+  //if(debug) cout << "[Rebin_with_overflow_limit]" << endl;
+  mapfunc[histname] -> Integral();
+  mapfunc[histname + "rebin"] = (TH1F*)mapfunc[histname] -> Clone();
+  mapfunc[histname + "rebin"] = (TH1F*)mapfunc[histname + "rebin"] -> Rebin(N_bin - 1, histname + "rebin", binx);
+  //if(debug) cout << "[Rebin_with_overflow_limit] " << histname + "rebin" << endl;
+  
+  //mapfunc[histname + "rebin"] -> Integral();
+}
+
 void Save_syst_array(TString current_histname, TString systematics, TString cycle_and_sample, int N_bin, double binx[]){
   
   cout << "[Save_syst_array]" << endl;
@@ -180,7 +192,6 @@ void Save_syst_array(TString current_histname, TString systematics, TString cycl
   cout << "[Save_syst_array] " << current_histname + cycle_and_sample + systematics << "Up size : " << map_syst_array[current_histname + cycle_and_sample + systematics + "Up"].size() << endl;
   cout << "[Save_syst_array] " << current_histname + cycle_and_sample + systematics << "Down size : " << map_syst_array[current_histname + cycle_and_sample + systematics + "Down"].size() << endl;
 
-
 }
 
 void sum_syst_error(TString current_histname, TString cycle_and_sample, int N_bin){
@@ -231,6 +242,91 @@ void sum_syst_error(TString current_histname, TString cycle_and_sample, int N_bi
 
 }
 
+void Write_syst_error(TString current_histname,  TString systematics, TString Cycle_name, TString current_sample, int N_bin, double binx[]){
+  
+  cout << "[Write_syst_error]" << endl;
+
+  TString cycle_and_sample = Cycle_name + current_sample;
+  TString histname_Up   = current_histname + "_" + systematics + "Up"   + cycle_and_sample;
+  TString histname_Down = current_histname + "_" + systematics + "Down" + cycle_and_sample;
+  TString histname_central = current_histname + "_central" + cycle_and_sample + "rebin"; // -- central hists are already rebinned
+
+  // -- booleans to check if there are up/down hists
+  bool up_hist = false;
+  bool down_hist = false;
+
+  if(!mapfunc[histname_Up]) return;
+
+  Int_t nx    = mapfunc[histname_Up] -> GetNbinsX()+1;
+  Double_t x1 = mapfunc[histname_Up] -> GetBinLowEdge(1);
+  Double_t bw = (binx[N_bin - 1] - binx[0]) / 20.;
+  Double_t x2 = mapfunc[histname_Up] -> GetBinLowEdge(nx)+bw;
+
+  TH1F *htmp_syst_Up = new TH1F("", "", nx, x1, x2);
+  TH1F *htmp_syst_Down = new TH1F("", "", nx, x1, x2);
+
+  for(Int_t j = 1; j <= nx; j++){
+    double current_bin_content_Up = mapfunc[histname_central] -> GetBinContent(j);
+    double current_bin_error_Up = mapfunc[histname_central] -> GetBinError(j);
+    if(mapfunc[histname_Up]){
+      current_bin_content_Up = mapfunc[histname_Up] -> GetBinContent(j);
+      current_bin_error_Up = mapfunc[histname_Up] -> GetBinError(j);
+      up_hist =true;
+    }
+    htmp_syst_Up -> SetBinContent(j, current_bin_content_Up);
+    htmp_syst_Up -> SetBinError(j, current_bin_error_Up);
+
+    double current_bin_content_Down = mapfunc[histname_central] -> GetBinContent(j);
+    double current_bin_error_Down = mapfunc[histname_central] -> GetBinError(j);
+    if(mapfunc[histname_Down]){
+      current_bin_content_Down = mapfunc[histname_Down] -> GetBinContent(j);
+      current_bin_error_Down = mapfunc[histname_Down] -> GetBinError(j);
+      down_hist = true;
+    }
+    htmp_syst_Down -> SetBinContent(j, current_bin_content_Down);
+    htmp_syst_Down -> SetBinError(j, current_bin_error_Down);
+  }
+
+  mapfunc[histname_Up + "rebin"] = dynamic_cast<TH1F*>(htmp_syst_Up -> Rebin(N_bin, histname_Up + "rebin", binx));
+  mapfunc[histname_Down + "rebin"] = dynamic_cast<TH1F*>(htmp_syst_Down -> Rebin(N_bin, histname_Down + "rebin", binx));
+  
+  mapfunc[histname_Up + "rebin"] -> SetName(current_histname + "_" + current_sample + "_" + systematics + "Up");
+  mapfunc[histname_Down + "rebin"] -> SetName(current_histname + "_" + current_sample + "_" + systematics + "Down");
+  
+
+  cout << "[Write_syst_error] histname_Up : " << histname_Up << endl;
+  //mapfunc[histname_Up + "rebin"] -> Write();
+  //mapfunc[histname_Down + "rebin"] -> Write();
+  
+}
+
+void Write_syst_error_limit(TString current_histname,  TString systematics, TString Cycle_name, TString current_sample, int N_bin, double binx[]){
+  
+  //cout << "[Write_syst_error_limit]" << endl;
+
+  TString cycle_and_sample = Cycle_name + current_sample;
+  TString histname_Up   = current_histname + "_" + systematics + "Up"   + cycle_and_sample;
+  TString histname_Down = current_histname + "_" + systematics + "Down" + cycle_and_sample;
+  TString histname_central = current_histname + "_central" + cycle_and_sample + "rebin"; // -- central hists are already rebinned
+  
+  if(!mapfunc[histname_Up]) return;
+  
+  mapfunc[histname_Up + "rebin"] = (TH1F*)mapfunc[histname_central] -> Clone();
+  mapfunc[histname_Down + "rebin"] = (TH1F*)mapfunc[histname_central] -> Clone();
+  
+  if(mapfunc[histname_Up]){
+    mapfunc[histname_Up + "rebin"] = (TH1F*)mapfunc[histname_Up] -> Clone();
+    mapfunc[histname_Up + "rebin"] = (TH1F*)mapfunc[histname_Up + "rebin"] -> Rebin(N_bin - 1, histname_Up + "rebin", binx); 
+  }
+  if(mapfunc[histname_Down]){
+    mapfunc[histname_Down + "rebin"] = (TH1F*)mapfunc[histname_Down] -> Clone();
+    mapfunc[histname_Down + "rebin"] = (TH1F*)mapfunc[histname_Down + "rebin"] -> Rebin(N_bin - 1, histname_Down + "rebin", binx);
+  }
+  mapfunc[histname_Up + "rebin"] -> SetName(current_histname + "_" + current_sample + "_" + systematics + "Up");
+  mapfunc[histname_Down + "rebin"] -> SetName(current_histname + "_" + current_sample + "_" + systematics + "Down");
+  
+  //cout << "[Write_syst_error_limit] histname_Up : " << histname_Up << endl;
+}
 void Proper_error_data(TString nameofhistogram, TString current_data, int N_bin, double binx[]){
   
   //vector<double> vx, vy, vexl, vexh, veyl, veyh;
@@ -565,73 +661,145 @@ vector<int> GetZPMassRange(int mN){
 
   if(mN==100){
     this_masses = {
-      400, 800, 1200, 1600, 2000, 2400, 2800, 3200, 3600, 4000, 4400, 4800, 
+      400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000,
+    };
+    return this_masses;
+  }
+  if(mN==200){
+    this_masses = {
+      600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000,
     };
     return this_masses;
   }
   if(mN==300){
     this_masses = {
-      800, 1200, 1600, 2000, 2400, 2800, 3200, 3600, 4000, 4400, 4800,
+      800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000,
+    };
+    return this_masses;
+  }
+  if(mN==400){
+    this_masses = {
+      1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000,
     };
     return this_masses;
   }
   if(mN==500){
     this_masses = {
-      1200, 1600, 2000, 2400, 2800, 3200, 3600, 4000, 4400, 4800,
+      1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000,
+    };
+    return this_masses;
+  }
+  if(mN==600){
+    this_masses = {
+      1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000,
     };
     return this_masses;
   }
   if(mN==700){
     this_masses = {
-      1600, 2000, 2400, 2800, 3200, 3600, 4000, 4400, 4800,
+      1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000,
+    };
+    return this_masses;
+  }
+  if(mN==800){
+    this_masses = {
+      1800, 2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000,
     };
     return this_masses;
   }
   if(mN==900){
     this_masses = {
-      2000, 2400, 2800, 3200, 3600, 4000, 4400, 4800,
+      2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000,
+    };
+    return this_masses;
+  }
+  if(mN==1000){
+    this_masses = {
+      2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000,
     };
     return this_masses;
   }
   if(mN==1100){
     this_masses = {
-      2400, 2800, 3200, 3600, 4000, 4400, 4800,
+      2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000,
+    };
+    return this_masses;
+  }
+  if(mN==1200){
+    this_masses = {
+      2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000,
     };
     return this_masses;
   }
   if(mN==1300){
     this_masses = {
-      2800, 3200, 3600, 4000, 4400, 4800,
+      2800, 3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000,
+    };
+    return this_masses;
+  }
+  if(mN==1400){
+    this_masses = {
+      3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000,
     };
     return this_masses;
   }
   if(mN==1500){
     this_masses = {
-      3200, 3600, 4000, 4400, 4800,
+      3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000,
+    };
+    return this_masses;
+  }
+  if(mN==1600){
+    this_masses = {
+      3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000,
     };
     return this_masses;
   }
   if(mN==1700){
     this_masses = {
-      3600, 4000, 4400, 4800,
+      3600, 3800, 4000, 4200, 4400, 4600, 4800, 5000,
+    };
+    return this_masses;
+  }
+  if(mN==1800){
+    this_masses = {
+      3800, 4000, 4200, 4400, 4600, 4800, 5000,
     };
     return this_masses;
   }
   if(mN==1900){
     this_masses = {
-      4000, 4400, 4800,
+      4000, 4200, 4400, 4600, 4800, 5000,
+    };
+    return this_masses;
+  }
+  if(mN==2000){
+    this_masses = {
+      4200, 4400, 4600, 4800, 5000,
     };
     return this_masses;
   }
   if(mN==2100){
     this_masses = {
-      4400, 4800,
+      4400, 4600, 4800, 5000,
+    };
+    return this_masses;
+  }
+  if(mN==2200){
+    this_masses = {
+      4600, 4800, 5000,
     };
     return this_masses;
   }
   if(mN==2300){
     this_masses = {
-      4800,
+      4800, 5000,
+    };
+    return this_masses;
+  }
+  if(mN==2400){
+    this_masses = {
+      5000,
     };
     return this_masses;
   }
@@ -645,83 +813,181 @@ vector<int> GetHNMassRange(int mZP, bool useallmass=false){
   vector<int> this_masses;
 
   if(useallmass){
-
     if(mZP==400){
       this_masses = {
-	100, 
+        100,
+      };
+      return this_masses;
+    }
+    if(mZP==600){
+      this_masses = {
+        100, 200,
       };
       return this_masses;
     }
     if(mZP==800){
       this_masses = {
-	100, 300,
+        100, 200, 300,
+      };
+      return this_masses;
+    }
+    if(mZP==1000){
+      this_masses = {
+        100, 200, 300, 400,
       };
       return this_masses;
     }
     if(mZP==1200){
       this_masses = {
-	100, 300, 500, 
+        100, 200, 300, 400, 500,
+      };
+      return this_masses;
+    }
+    if(mZP==1400){
+      this_masses = {
+        100, 200, 300, 400, 500, 600,
       };
       return this_masses;
     }
     if(mZP==1600){
       this_masses = {
-      100, 300, 500, 700, 
+        100, 200, 300, 400, 500, 600, 700,
+      };
+      return this_masses;
+    }
+    if(mZP==1800){
+      this_masses = {
+        100, 200, 300, 400, 500, 600, 700, 800,
       };
       return this_masses;
     }
     if(mZP==2000){
       this_masses = {
-      100, 300, 500, 700, 900, 
+        100, 200, 300, 400, 500, 600, 700, 800, 900,
+      };
+      return this_masses;
+    }
+    if(mZP==2200){
+      this_masses = {
+        100, 200, 300, 400, 500, 600, 700, 800, 900, 1000,
+      };
+      return this_masses;
+    }if(mZP==1400){
+      this_masses = {
+        100, 200, 300, 400, 500, 600,
+      };
+      return this_masses;
+    }
+    if(mZP==1600){
+      this_masses = {
+        100, 200, 300, 400, 500, 600, 700,
+      };
+      return this_masses;
+    }
+    if(mZP==1800){
+      this_masses = {
+        100, 200, 300, 400, 500, 600, 700, 800,
+      };
+      return this_masses;
+    }
+    if(mZP==2000){
+      this_masses = {
+        100, 200, 300, 400, 500, 600, 700, 800, 900,
+      };
+      return this_masses;
+    }
+    if(mZP==2200){
+      this_masses = {
+        100, 200, 300, 400, 500, 600, 700, 800, 900, 1000,
       };
       return this_masses;
     }
     if(mZP==2400){
       this_masses = {
-      100, 300, 500, 700, 900, 1100, 
+        100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100,
+      };
+      return this_masses;
+    }
+    if(mZP==2600){
+      this_masses = {
+        100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200,
       };
       return this_masses;
     }
     if(mZP==2800){
       this_masses = {
-      100, 300, 500, 700, 900, 1100, 1300, 
+        100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300,
+      };
+      return this_masses;
+    }
+    if(mZP==3000){
+      this_masses = {
+        100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400,
       };
       return this_masses;
     }
     if(mZP==3200){
       this_masses = {
-      100, 300, 500, 700, 900, 1100, 1300, 1500, 
+        100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500,
+      };
+      return this_masses;
+    }
+    if(mZP==3400){
+      this_masses = {
+        100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600,
       };
       return this_masses;
     }
     if(mZP==3600){
       this_masses = {
-	100, 300, 500, 700, 900, 1100, 1300, 1500, 1700,
+        100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700,
+      };
+      return this_masses;
+    }
+    if(mZP==3800){
+      this_masses = {
+        100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800,
       };
       return this_masses;
     }
     if(mZP==4000){
       this_masses = {
-	100, 300, 500, 700, 900, 1100, 1300, 1500, 1700, 1900,
+        100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900,
+      };
+      return this_masses;
+    }
+    if(mZP==4200){
+      this_masses = {
+        100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000,
       };
       return this_masses;
     }
     if(mZP==4400){
       this_masses = {
-	100, 300, 500, 700, 900, 1100, 1300, 1500, 1700, 1900, 2100,
+        100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100,
+      };
+      return this_masses;
+    }
+    if(mZP==4600){
+      this_masses = {
+        100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200,
       };
       return this_masses;
     }
     if(mZP==4800){
       this_masses = {
-        100, 300, 500, 700, 900, 1100, 1300, 1500, 1700, 1900, 2100, 2300,
+        100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300,
       };
       return this_masses;
     }
-    
+    if(mZP==5000){
+      this_masses = {
+        100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300, 2400,
+      };
+      return this_masses;
+    }
   }
   else{
-    
     if(mZP==400){
       this_masses = {
         100,
@@ -810,10 +1076,6 @@ vector<int> GetHNMassRange(int mZP, bool useallmass=false){
 
   cout << "[GetHNMassRange(int mZP)] Wrong mZP!!" << endl;
   return this_masses;
-
-
-
-
 }
 
 bool IsSignalCATSamaple(TString samplename){
@@ -822,6 +1084,14 @@ bool IsSignalCATSamaple(TString samplename){
 
   return false;
 
+}
+
+int GetLowMN(double current_mN){
+  current_mN = current_mN / 100.;
+  int low_mN = current_mN;
+  low_mN = low_mN * 100;
+
+  return low_mN;
 }
 
 
