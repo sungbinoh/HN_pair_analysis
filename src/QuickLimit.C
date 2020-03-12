@@ -3,7 +3,7 @@
 
 void QuickLimit(int xxx=0){
 
-  double r_value_time = 0.0001; // restore r value by weighting to pb from fb
+  double r_value_time = signal_scale * 0.1; // restore r value by weighting to pb from fb
   
   setTDRStyle();
 

@@ -16,6 +16,7 @@ TString DoubleEG;
 // == Call all needed maps
 map<TString, TH1*> maphist;
 map<TString, TH2D*> maphist2D;
+map<TString, TGraph*> map_gr;
 map<TString, TGraphAsymmErrors*> map_asym_gr;
 map<TString, TFile*> mapfile;
 map<TString, TCanvas*> mapcanvas;
@@ -188,10 +189,8 @@ void Save_syst_array(TString current_histname, TString systematics, TString cycl
       map_syst_array[current_histname + cycle_and_sample + systematics + "Down"].push_back(current_entry_Up);
     }
   }
-
   cout << "[Save_syst_array] " << current_histname + cycle_and_sample + systematics << "Up size : " << map_syst_array[current_histname + cycle_and_sample + systematics + "Up"].size() << endl;
   cout << "[Save_syst_array] " << current_histname + cycle_and_sample + systematics << "Down size : " << map_syst_array[current_histname + cycle_and_sample + systematics + "Down"].size() << endl;
-
 }
 
 void sum_syst_error(TString current_histname, TString cycle_and_sample, int N_bin){
