@@ -311,6 +311,9 @@ void open_files(TString histname){
   maphist.clear();
   map_syst_array.clear();
   mapfunc.clear();
+  mapcanvas.clear();
+  map_asym_gr.clear();
+  
   if(debug) cout << "[[draw_histogram]] histname : " << histname << endl;  
   
   unsigned int N_bin = map_bin_vector[histname].size();
@@ -322,7 +325,7 @@ void open_files(TString histname){
 
   // -- Get which region(CR1, CR2 , ...) and channel (DiEle, DiMu, ...)
   //int N_regions = 6;
-  int N_regions = 4;
+  int N_regions = 5;
   
   TString regions[] = {"CR_Zmass",
                        //"CR_ttbar",
@@ -331,6 +334,7 @@ void open_files(TString histname){
                        //"tight_CR_ttbar",
                        "SR",
 		       "SR_b_veto",
+		       "SR_1b",
   };
 
 

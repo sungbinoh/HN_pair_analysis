@@ -55,7 +55,7 @@ void open_files(TString histname){
       //cout << histname + "_" + this_line + "_central" << endl;
       //signal_rate = current_signal_hist -> Integral();
 
-      ofstream file_shape("./output/DataCards/" + TString::Itoa(tag_year,10) + "/shape_" + this_line + ".txt", ios::trunc);
+      ofstream file_shape("./output/DataCards/shape_" + histname + "_" + this_line + "_" + TString::Itoa(tag_year,10) + ".txt", ios::trunc);
       file_shape << "imax 1" << endl;
       file_shape << "jmax " << N_bkg << endl;
       file_shape << "kmax *" << endl;

@@ -18,17 +18,28 @@ void QuickLimit(int xxx=0){
   TString dirname = "limit_result";
   
   TString channel = "MuMu";
-
-  if(xxx==1){
+  TString binning = "";
+  // --- xxx : 0-3 MuMu, 4-7 EE, 1 5 Inclusive, 2 6 3AK8, 3 7 4AK8
+  if(xxx>3){
     channel = "EE";
   }
+  if(xxx== 1 || xxx == 5){
+    binning = "Inclusive";
+  }
+  if(xxx== 2 || xxx == 6){
+    binning = "3AK8";
+  }
+  if(xxx== 3 || xxx == 7){
+    binning = "4AK8";
+  }
 
+  
   TString ATLAS_result_file;
   if(channel.Contains("MuMu")) ATLAS_result_file = "script/ATLAS_Obs_Limit/ATLAS_mumu_limit.txt";
   if(channel.Contains("EE")) ATLAS_result_file = "script/ATLAS_Obs_Limit/ATLAS_elel_limit.txt";
   
-  TString base_filepath = WORKING_DIR+"/script/limit_result/Result_" + channel + ".txt";
-  TString base_plotpath = ENV_PLOT_PATH+"/" + channel;
+  TString base_filepath = WORKING_DIR+"/output/Result_" + binning + "_" + channel + ".txt";
+  TString base_plotpath = ENV_PLOT_PATH+"/" + binning + "/" +  channel;
 
   if( !gSystem->mkdir(base_plotpath, kTRUE) ){
     cout
@@ -985,8 +996,8 @@ void QuickLimit(int xxx=0){
     mN_crosses_95_down.push_back(mN_Cross_95_down.at(0));
   }
   else{
-    mZP_crosses_95_down.push_back(2800.);
-    mN_crosses_95_down.push_back(1350.);
+    mZP_crosses_95_down.push_back(1600.);
+    mN_crosses_95_down.push_back(750.);
   }
 
   if(mZP_Cross_68_down.size()>0){
@@ -994,8 +1005,8 @@ void QuickLimit(int xxx=0){
     mN_crosses_68_down.push_back(mN_Cross_68_down.at(0));
   }
   else{
-    mZP_crosses_68_down.push_back(2800.);
-    mN_crosses_68_down.push_back(1350.);
+    mZP_crosses_68_down.push_back(1600.);
+    mN_crosses_68_down.push_back(750.);
   }
   
   if(mZP_Cross.size()>0){
@@ -1003,8 +1014,8 @@ void QuickLimit(int xxx=0){
     mN_crosses.push_back(mN_Cross.at(0));
   }
   else{
-    mZP_crosses.push_back(2800.);
-    mN_crosses.push_back(1350.);
+    mZP_crosses.push_back(1600.);
+    mN_crosses.push_back(750.);
   }
 
   if(mZP_Cross_68_up.size()>0){
@@ -1012,8 +1023,8 @@ void QuickLimit(int xxx=0){
     mN_crosses_68_up.push_back(mN_Cross_68_up.at(0));
   }
   else{
-    mZP_crosses_68_up.push_back(2800.);
-    mN_crosses_68_up.push_back(1350.);
+    mZP_crosses_68_up.push_back(1600.);
+    mN_crosses_68_up.push_back(750.);
   }
   
   if(mZP_Cross_95_up.size()>0){
@@ -1021,8 +1032,8 @@ void QuickLimit(int xxx=0){
     mN_crosses_95_up.push_back(mN_Cross_95_up.at(0));
   }
   else{
-    mZP_crosses_95_up.push_back(2800.);
-    mN_crosses_95_up.push_back(1350.);
+    mZP_crosses_95_up.push_back(1600.);
+    mN_crosses_95_up.push_back(750.);
   }
 
   
@@ -1181,7 +1192,7 @@ void QuickLimit(int xxx=0){
   latex_CMSPriliminary.SetTextSize(0.035);
   latex_CMSPriliminary.DrawLatex(0.16, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
   latex_Lumi.SetTextSize(0.035 );
-  latex_Lumi.DrawLatex(0.68, 0.96, "77.5 fb^{-1} (13 TeV, 2017)");
+  latex_Lumi.DrawLatex(0.60, 0.96, "137.4 fb^{-1} (13 TeV, Full Run2)");
   latex_channel.SetNDC();
   latex_channel.SetTextSize(0.08);
   if(channel.Contains("MuMu")) latex_channel.DrawLatex(0.2, 0.6, "#mu#mu OS + SS");

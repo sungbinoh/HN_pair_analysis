@@ -116,9 +116,7 @@ void draw_syst_lines(TString current_histname, int N_bin, double x1_template, do
   maplegend[legend] = new TLegend(0.30, 0.75, 0.90, 0.92);
   
   Int_t line_array[] = {1, 2, 3, 4};
-  Int_t color_array[] = {632, 901, 800, 400, 416, 432, 600, 880, 883,
-			 879, 878, 877, 876, 875, 874, 873, 872, 871, 870,
-  };
+  Int_t color_array[] = {632, 901, 800, 400, 416, 432, 600, 880, 883};
   int N_legend_columns = 4;
   bool is_Wjet = true;
   for(int i_legend = 0; i_legend < 4; i_legend++){
@@ -358,13 +356,13 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
 	Save_syst_array(current_histname, systematics_comparison[i_syst], Cycle_name + current_sample, N_bin, binx);
       }
       
-      mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"] ->  SetFillColor(colour_array[i_legend]);
+      //mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"] ->  SetFillColor(colour_array[i_legend]);
       mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"] ->  SetLineColor(colour_array[i_legend]);
       
       // -- Prepare blind data point (= bkg)
       mapfunc[func + "blind_data"]  -> Add(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"));
       
-      maphstack[hstack] -> Add(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"));
+      if(current_sample.Contains("DY")) maphstack[hstack] -> Add(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"));
       //maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"), legend_list[i_legend], "lf");
       mapfunc[func + "rebin"] -> Add(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"));
       mapfunc[func + "rebin_stat_err"] -> Add(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"));
@@ -374,7 +372,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   for(int i_legend = 0; i_legend < 4; i_legend++){
     TString current_sample = map_sample_names[legend_list[4 - i_legend - 1]].at(0);
     if(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin")) {
-      maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"), legend_list[4 - i_legend - 1], "lf");
+      //maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"), legend_list[4 - i_legend - 1], "lf");
       sum_syst_error(current_histname, Cycle_name + current_sample, N_bin);
     }  
   }
@@ -433,7 +431,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   
   // -- Add DATA on Legend
   if(!nameofhistogram.Contains("SR")){
-    maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + current_data + "rebin"), "data", "lp");
+    //maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + current_data + "rebin"), "data", "lp");
   }
   GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerStyle(20);
   GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerColor(kBlack);
@@ -452,29 +450,52 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
 
   maphstack[hstack] -> GetYaxis() -> SetTitle(title_y);
   maphstack[hstack] -> Draw("histsame");
-  
+
+  TString DY_string = "";
+  for(int i_legend = 0; i_legend < 4; i_legend++){
+    TString current_sample = map_sample_names[legend_list[i_legend]].at(0);
+    if(current_sample.Contains("DY")){
+      DY_string = current_sample;
+      mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"] -> SetLineColor(kBlack);
+      mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"] -> Draw("histsame");
+      mapfunc[current_histname + "_JetsResUp" + Cycle_name + current_sample + "rebin"] -> SetLineColor(kRed);
+      mapfunc[current_histname + "_JetsResUp" + Cycle_name + current_sample + "rebin"] -> Draw("histsame");
+      mapfunc[current_histname + "_JetsResDown" + Cycle_name + current_sample + "rebin"] -> SetLineColor(kRed);
+      mapfunc[current_histname + "_JetsResDown" + Cycle_name + current_sample + "rebin"] -> Draw("histsame");
+
+      mapfunc[current_histname + "_JetsScaleUp" + Cycle_name + current_sample + "rebin"] -> SetLineColor(kBlue);
+      mapfunc[current_histname + "_JetsScaleUp" + Cycle_name + current_sample + "rebin"] -> Draw("histsame");
+      mapfunc[current_histname + "_JetsScaleDown" + Cycle_name + current_sample + "rebin"] -> SetLineColor(kBlue);
+      mapfunc[current_histname + "_JetsScaleDown" + Cycle_name + current_sample + "rebin"] -> Draw("histsame");
+      
+      maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"), legend_list[i_legend], "l");
+      maplegend[legend] -> AddEntry(GetHist(current_histname + "_JetsResUp" + Cycle_name + current_sample + "rebin"), legend_list[i_legend] + "_JetsRes", "l");
+      maplegend[legend] -> AddEntry(GetHist(current_histname + "_JetsScaleUp" + Cycle_name + current_sample + "rebin"), legend_list[i_legend] + "_JetsScale", "l");
+    }
+  }
+
   
   // -- Proper error for data : 
   Proper_error_data(nameofhistogram, current_data, N_bin, binx);
   map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> SetMarkerColor(kBlack);
-  map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> Draw("p0same");
+  //map_asym_gr[nameofhistogram + Cycle_name + current_data + "correct_error"] -> Draw("p0same");
 
   // -- Draw data
   GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetXaxis() -> SetRangeUser(x1_template, x2_template);
   mappad[pad1] -> Update();
   //GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerColor(kRed);
-  GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Draw("histsamep");
+  //GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Draw("histsamep");
     
   // -- Draw Bkg Error bar
   map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> SetFillColor(kBlack);;
   map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> SetFillStyle(3013);
   map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> SetMarkerSize(0);
-  map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> Draw("e2same");
-  maplegend[legend] -> AddEntry(map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"], "Syst. + Stat.", "pf");
+  //map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> Draw("e2same");
+  //maplegend[legend] -> AddEntry(map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"], "Syst. + Stat.", "pf");
   
   
   // -- Set y-axis range
-  double data_max = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetMaximum();
+  double data_max = GetHist(nameofhistogram + Cycle_name + DY_string + "rebin") -> GetMaximum();
   double data_min = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetMinimum();
   //maphstack[hstack] -> SetMaximum(data_max * 100000.);//logy
   maphstack[hstack] -> SetMaximum(data_max * 1.5);
@@ -490,7 +511,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   maplegend[legend] -> Draw("same");
   
   if(debug) cout << "6" << endl;
-
+  
 
   ////////////////////////////////////
   /// Pad 2
@@ -669,7 +690,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   else return;
   
   pdfname.Append(nameofhistogram);
-  pdfname.Append(".pdf");
+  pdfname.Append("_jet_syst.pdf");
   if(debug) cout << "9.1" << endl;
 
   mapcanvas[canvas] -> SaveAs(pdfname);
@@ -702,7 +723,7 @@ void open_files(TString histname){
 
   // -- Get which region(CR1, CR2 , ...) and channel (DiEle, DiMu, ...)
   //int N_regions = 6;
-  int N_regions = 5;
+  int N_regions = 4;
   
   TString regions[] = {"CR_Zmass",
                        //"CR_ttbar",
@@ -711,7 +732,6 @@ void open_files(TString histname){
                        //"tight_CR_ttbar",
                        "SR",
 		       "SR_b_veto",
-		       "SR_1b",
   };
 
 
@@ -845,7 +865,7 @@ void open_binning_file(TString filename){
   
 }
 
-void QuickPlot(int year=2018){
+void Check_JetSyst(int year=2018){
   setTDRStyle();
   
   // == Set Input Sample List
@@ -857,7 +877,7 @@ void QuickPlot(int year=2018){
     //map_sample_names["DYJets"] = {"DYJets_MG"};
     map_sample_names["DYJets"] = {"DYJets_MG_HT"};
     map_sample_names["ttbar"] = {"TT_powheg"};
-    map_sample_names["WJets"] = {"WJets_MG_HT"};
+    map_sample_names["WJets"] = {"WJets_MG"};
     map_sample_names["Other"] = {"VV"};
     map_sample_names["Muon"] = {"data_SingleMuon"};
     map_sample_names["EGamma"] = {"data_EGamma"};
@@ -870,7 +890,7 @@ void QuickPlot(int year=2018){
     //map_sample_names["DYJets"] = {"DYJets_MG"};
     map_sample_names["DYJets"] = {"DYJets_MG_HT"};
     map_sample_names["ttbar"] = {"TT_powheg"};
-    map_sample_names["WJets"] = {"WJets_MG_HT"};
+    map_sample_names["WJets"] = {"WJets_MG"};
     map_sample_names["Other"] = {"VV"};
     map_sample_names["Muon"] = {"data_SingleMuon"};
     map_sample_names["EGamma"] = {"data_DoubleEG"};
@@ -883,7 +903,7 @@ void QuickPlot(int year=2018){
     //map_sample_names["DYJets"] = {"DYJets_MG"};
     map_sample_names["DYJets"] = {"DYJets_MG_HT"};
     map_sample_names["ttbar"] = {"TT_powheg"};
-    map_sample_names["WJets"] = {"WJets_MG_HT"};
+    map_sample_names["WJets"] = {"WJets_MG"};
     map_sample_names["Other"] = {"VV"};
     map_sample_names["Muon"] = {"data_SingleMuon"};
     map_sample_names["EGamma"] = {"data_DoubleEG"};
@@ -898,10 +918,8 @@ void QuickPlot(int year=2018){
 
   
   //open_binning_file("binning_uniform_test.txt");
-  //open_binning_file("binning_uniform_few.txt");
-  open_binning_file("binning_Zp.txt");
+  open_binning_file("binning_uniform_few.txt");
 
-  
   outfile.close();
   
 }

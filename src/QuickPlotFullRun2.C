@@ -134,9 +134,14 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   }
   
   // -- Add three years histograms
+  Int_t nx_ttbar    = GetHist(nameofhistogram + Cycle_name + current_data + "2016") -> GetNbinsX();
+  Double_t x1_ttbar = GetHist(nameofhistogram + Cycle_name + current_data + "2016") -> GetBinLowEdge(1);
+  Double_t x2_ttbar = GetHist(nameofhistogram + Cycle_name + current_data + "2016") -> GetBinLowEdge(nx_ttbar+1);
+  /*
   Int_t nx_ttbar    = GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar2016"].at(0) + "2016") -> GetNbinsX();
   Double_t x1_ttbar = GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar2016"].at(0) + "2016") -> GetBinLowEdge(1);
   Double_t x2_ttbar = GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar2016"].at(0) + "2016") -> GetBinLowEdge(nx_ttbar+1);
+  */
   TH1F *htmp_add = new TH1F("", "", nx_ttbar, x1_ttbar, x2_ttbar);
   
   mapfunc[nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)] = (TH1F*)htmp_add -> Clone("DYJets");
@@ -165,32 +170,33 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   mapfunc[nameofhistogram + Cycle_name + current_data] -> Add(GetHist(nameofhistogram + Cycle_name + current_data + "2018"));
   
 
-  /*
+
   for(int i_syst = 1; i_syst < N_syst; i_syst++){
-    mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0)] = (TH1F*)htmp_add -> Clone("DYJets" + systematics[i_syst]);
-    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2016"].at(0) + "2016")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2016"].at(0) + "2016"));
-    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2017"].at(0) + "2017")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2017"].at(0) + "2017"));
-    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2018"].at(0) + "2018")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2018"].at(0) + "2018"));
+    mapfunc[current_histname + "_" +  systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0)] = (TH1F*)htmp_add -> Clone("DYJets" + systematics[i_syst]);
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2016"].at(0) + "2016")) mapfunc[current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2016"].at(0) + "2016"));
+    cout << "[make_histogram] : " << current_histname + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0) << endl;
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2017"].at(0) + "2017")) mapfunc[current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2017"].at(0) + "2017"));
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2018"].at(0) + "2018")) mapfunc[current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets2018"].at(0) + "2018"));
     
-    cout << "DY interal all syst " << systematics[i_syst] << " : " << mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0)] -> Integral() << endl;
+    cout << "DY interal all syst " << systematics[i_syst] << " : " << mapfunc[current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0)] -> Integral() << endl;
 
     
-    mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["ttbar"].at(0)] = (TH1F*)htmp_add -> Clone("ttbar" + systematics[i_syst]);
-    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["ttbar2016"].at(0) + "2016")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["ttbar"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["ttbar2016"].at(0) + "2016"));
-    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["ttbar2017"].at(0) + "2017")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["ttbar"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["ttbar2017"].at(0) + "2017"));
-    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["ttbar2018"].at(0) + "2018")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["ttbar"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["ttbar2018"].at(0) + "2018"));
+    mapfunc[current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["ttbar"].at(0)] = (TH1F*)htmp_add -> Clone("ttbar" + systematics[i_syst]);
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["ttbar2016"].at(0) + "2016")) mapfunc[current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["ttbar"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["ttbar2016"].at(0) + "2016"));
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["ttbar2017"].at(0) + "2017")) mapfunc[current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["ttbar"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["ttbar2017"].at(0) + "2017"));
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["ttbar2018"].at(0) + "2018")) mapfunc[current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["ttbar"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["ttbar2018"].at(0) + "2018"));
     
-    mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["WJets"].at(0)] = (TH1F*)htmp_add -> Clone("WJets" + systematics[i_syst]);
-    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["WJets2016"].at(0) + "2016")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["WJets"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["WJets2016"].at(0) + "2016"));
-    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["WJets2017"].at(0) + "2017")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["WJets"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["WJets2017"].at(0) + "2017"));
-    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["WJets2018"].at(0) + "2018")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["WJets"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["WJets2018"].at(0) + "2018"));
+    mapfunc[current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["WJets"].at(0)] = (TH1F*)htmp_add -> Clone("WJets" + systematics[i_syst]);
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["WJets2016"].at(0) + "2016")) mapfunc[current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["WJets"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["WJets2016"].at(0) + "2016"));
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["WJets2017"].at(0) + "2017")) mapfunc[current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["WJets"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["WJets2017"].at(0) + "2017"));
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["WJets2018"].at(0) + "2018")) mapfunc[current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["WJets"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["WJets2018"].at(0) + "2018"));
 
-    mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["Other"].at(0)] = (TH1F*)htmp_add -> Clone("Other" + systematics[i_syst]);
-    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["Other2016"].at(0) + "2016")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["Other"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["Other2016"].at(0) + "2016"));
-    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["Other2017"].at(0) + "2017")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["Other"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["Other2017"].at(0) + "2017"));
-    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["Other2018"].at(0) + "2018")) mapfunc[current_histname + systematics[i_syst] + Cycle_name + map_sample_names["Other"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["Other2018"].at(0) + "2018"));
+    mapfunc[current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["Other"].at(0)] = (TH1F*)htmp_add -> Clone("Other" + systematics[i_syst]);
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["Other2016"].at(0) + "2016")) mapfunc[current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["Other"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["Other2016"].at(0) + "2016"));
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["Other2017"].at(0) + "2017")) mapfunc[current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["Other"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["Other2017"].at(0) + "2017"));
+    if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["Other2018"].at(0) + "2018")) mapfunc[current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["Other"].at(0)] -> Add(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["Other2018"].at(0) + "2018"));
   }
-  */
+ 
   
   
   if(debug){
@@ -270,51 +276,18 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
     if(debug) cout << legend_list[i_legend] << endl;
     TString current_sample = map_sample_names[legend_list[i_legend]].at(0);
     if(mapfunc[nameofhistogram + Cycle_name + current_sample]){
-      Int_t nx    = GetHist(nameofhistogram + Cycle_name + current_sample) -> GetNbinsX()+1;
-      Double_t x1 = GetHist(nameofhistogram + Cycle_name + current_sample) -> GetBinLowEdge(1);
-      Double_t bw = bw_template;
-      Double_t x2 = GetHist(nameofhistogram + Cycle_name + current_sample) -> GetBinLowEdge(nx)+bw_template;
       
-      TH1F *htmp = new TH1F("", "", nx, x1, x2);
-      TH1F *htmp_stat_err = new TH1F("", "", nx, x1, x2);
-      
-      // -- Make rebinned central hists
-      for(Int_t j = 1; j <= nx; j++){
-        double current_bin_content = GetHist(nameofhistogram + Cycle_name + current_sample) -> GetBinContent(j);
-	double current_bin_error = GetHist(nameofhistogram + Cycle_name + current_sample) -> GetBinError(j);
-        htmp -> SetBinContent(j, current_bin_content);
-        htmp -> SetBinError(j, current_bin_error);
-        htmp_stat_err -> SetBinContent(j, current_bin_content);
-        htmp_stat_err -> SetBinError(j, current_bin_error);
-      }
-      
-      if(debug) cout << current_sample + " : called all syst hists" << endl;
-      
-      mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"] = dynamic_cast<TH1F*>(htmp -> Rebin(N_bin, nameofhistogram + Cycle_name + current_sample + "rebin", binx));
-      mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin_stat_err"] = dynamic_cast<TH1F*>(htmp_stat_err -> Rebin(N_bin, nameofhistogram + Cycle_name + current_sample + "rebin", binx));
-      
-      
+      Rebin_with_overflow(nameofhistogram + Cycle_name + current_sample, N_bin, binx);
+
+
+
+
       // -- Make rebinned hists for all systematic categories
-      for(int i_syst = 1; i_syst < N_syst; i_syst++){
+      for(int i_syst = 0; i_syst < N_syst_comparison; i_syst++){
         //if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + current_sample)){
-	if(GetHist(current_histname + systematics[i_syst] + Cycle_name + current_sample)){ // -- FIXME
-
-	  if(debug) cout << "Filling " << systematics[i_syst] << endl;
-          TH1F *htmp_syst = new TH1F("", "", nx, x1, x2);
-          for(Int_t j = 1; j <= nx; j++){
-            //double current_bin_content = GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + current_sample) -> GetBinContent(j);
-            double current_bin_content = GetHist(current_histname + systematics[i_syst] + Cycle_name + current_sample) -> GetBinContent(j); // -- FIXME
-	    htmp_syst -> SetBinContent(j, current_bin_content);
-          }
-          mapfunc[nameofhistogram + systematics[i_syst] + current_sample + "rebin"] = dynamic_cast<TH1F*>(htmp_syst -> Rebin(N_bin, nameofhistogram + Cycle_name + current_sample + "rebin", binx));
-        }
+	Save_syst_array(current_histname, systematics_comparison[i_syst], Cycle_name + current_sample, N_bin, binx);
       }
 
-      vector<double> error_vector = Get_Syst_Error(nameofhistogram, current_sample);
-
-      for(unsigned int j_syst = 0; j_syst < error_vector.size(); j_syst++){
-	mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"] -> SetBinError(j_syst, error_vector.at(j_syst));
-      }
       mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"] ->  SetFillColor(colour_array[i_legend]);
       mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"] ->  SetLineColor(colour_array[i_legend]);
       
@@ -324,27 +297,65 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
       maphstack[hstack] -> Add(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"));
       //maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"), legend_list[i_legend], "lf");
       mapfunc[func + "rebin"] -> Add(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"));
-      mapfunc[func + "rebin_stat_err"] -> Add(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin_stat_err"));
+      mapfunc[func + "rebin_stat_err"] -> Add(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"));
     }
   }
   
   for(int i_legend = 0; i_legend < 4; i_legend++){
     TString current_sample = map_sample_names[legend_list[4 - i_legend - 1]].at(0);
-    if(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin")) maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"), legend_list[4 - i_legend - 1], "lf");
+    if(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin")){
+      maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"), legend_list[4 - i_legend - 1], "lf");
+      sum_syst_error(current_histname, Cycle_name + current_sample, N_bin);
+    }
+  }
+
+  vector<double> bkg_central;
+  vector<double> bkg_up;
+  vector<double> bkg_down;
+  bkg_central.clear();
+  bkg_up.clear();
+  bkg_down.clear();
+
+  for(int j = 1; j < N_bin + 1; j++){
+    double current_bkg = mapfunc[func + "rebin"] -> GetBinContent(j);
+    bkg_central.push_back(current_bkg);
+
+    double current_up_sum = 0.;
+    double current_down_sum = 0.;
+
+    for(int i_legend = 0; i_legend < 4; i_legend++){
+      TString current_sample = map_sample_names[legend_list[4 - i_legend - 1]].at(0);
+      if(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin")) {
+        cout << "[make_histogram] Up size : " << map_syst_array[current_histname + Cycle_name + current_sample + "Up"].size() << endl;
+        cout << "[make_histogram] Down size : " << map_syst_array[current_histname + Cycle_name + current_sample + "Down"].size() << endl;
+
+        current_up_sum   = current_up_sum   + map_syst_array[current_histname + Cycle_name + current_sample + "Up"].at(j-1);
+        current_down_sum = current_down_sum + map_syst_array[current_histname + Cycle_name + current_sample + "Down"].at(j-1);
+      }
+    }
+    bkg_up.push_back(current_up_sum);
+    bkg_down.push_back(current_down_sum);
+  }
+
+  map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] = new TGraphAsymmErrors(mapfunc[func + "rebin"]);
+  map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] = new TGraphAsymmErrors(mapfunc[func + "rebin"]);
+  
+  for(int i = 0; i < N_bin; i++){
+    map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> SetPointEYlow(i,  bkg_down.at(i));
+    map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> SetPointEYhigh(i, bkg_up.at(i));
+
+    double current_x = mapfunc[func + "rebin"] -> GetBinCenter(i + 1);
+    double current_y = mapfunc[func + "rebin"] -> GetBinContent(i + 1);
+    map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> SetPoint(i, current_x, 1.);
+    map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> SetPointEYlow(i, bkg_down.at(i) / current_y);
+    map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> SetPointEYhigh(i, bkg_up.at(i) / current_y);
   }
   
   if(debug) cout << "4" << endl;
-
-  mapfunc[nameofhistogram + Cycle_name + current_data + overflow] = new TH1F("", "", nx_template, x1_template, x2_template);
-  for (Int_t i = 1; i <= nx_template; i++) {
-    mapfunc[nameofhistogram + Cycle_name + current_data +overflow] -> SetBinContent(i, GetHist(nameofhistogram + Cycle_name + current_data) -> GetBinContent(i)) ;
-    mapfunc[nameofhistogram + Cycle_name + current_data +overflow] -> SetBinError(i, GetHist(nameofhistogram + Cycle_name + current_data) -> GetBinError(i));
-  }
+  
+  Rebin_with_overflow(nameofhistogram + Cycle_name + current_data, N_bin, binx);
   if(blind){
     mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] = (TH1F*)GetHist(func + "blind_data") -> Clone(clone + "blind");
-  }
-  else{
-    mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] = dynamic_cast<TH1F*>(GetHist(nameofhistogram + Cycle_name + current_data + overflow) -> Rebin(N_bin, nameofhistogram + Cycle_name + current_data + "rebin", binx));
   }
   
   // -- Add DATA on Legend
@@ -380,15 +391,13 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   mappad[pad1] -> Update();
   //GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> SetMarkerColor(kRed);
   GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Draw("histsamep");
-  
     
-  
   // -- Draw Bkg Error bar
-  mapfunc[func + "rebin"] -> SetFillColor(kBlack);;
-  mapfunc[func + "rebin"] -> SetFillStyle(3013);
-  mapfunc[func + "rebin"] -> SetMarkerSize(0);
-  mapfunc[func + "rebin"] -> Draw("e2same");
-  maplegend[legend] -> AddEntry(mapfunc[func + "rebin"], "Syst. + Stat.", "pf");
+  map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> SetFillColor(kBlack);;
+  map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> SetFillStyle(3013);
+  map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> SetMarkerSize(0);
+  map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> Draw("e2same");
+  maplegend[legend] -> AddEntry(map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"], "Syst. + Stat.", "pf");
   
   
   // -- Set y-axis range
@@ -426,59 +435,56 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   mapfunc[clone] = (TH1F*)GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> Clone(clone);
   
   // -- Make Clone hist for Bkg. One for total error, and one for stat error
-  mapfunc["stat" + nameofhistogram] = (TH1F*)GetHist(func + "rebin") -> Clone(clone);
+  mapfunc["pad2_template" + nameofhistogram] = (TH1F*)GetHist(func + "rebin") -> Clone(clone);
   mapfunc["stat_err" + nameofhistogram] = (TH1F*)GetHist(func + "rebin_stat_err") -> Clone(clone);
-  
+  for(int i = 1; i < N_bin + 1; i++){
+    mapfunc["pad2_template" + nameofhistogram] -> SetBinContent(i, 1.);
+    mapfunc["pad2_template" + nameofhistogram] -> SetBinError(i, 0.);
+  }
+    
   if(debug) cout << "7" << endl;
 
   // -- Draw Line at Data/MC = 1
-  mapline[line] = new TLine(binx[0], 1, binx[N_bin - 1], 1);
+  mapline[line] = new TLine(binx[0], 1, binx[N_bin - 1] + bw_template, 1);
   mapline[line] -> Draw();
   mapline[line] -> SetLineStyle(1);
   mapline[line] -> SetLineColor(kBlue);
   
   // -- Draw syst box hist with all contents as 1
   TString name_x = nameofhistogram;
-  mapfunc["stat" + nameofhistogram] -> SetTitle("");
-  mapfunc["stat" + nameofhistogram] -> SetFillColor(kOrange);
-  mapfunc["stat" + nameofhistogram] -> SetMarkerSize(0);
-  mapfunc["stat" + nameofhistogram] -> SetMarkerStyle(0);
-  mapfunc["stat" + nameofhistogram] -> SetLineColor(kWhite);
-  mapfunc["stat" + nameofhistogram] -> GetXaxis() -> SetTitle(name_x);
-  mapfunc["stat" + nameofhistogram] -> GetXaxis() -> SetTitleSize(0.15);
-  mapfunc["stat" + nameofhistogram] -> GetXaxis() -> SetLabelSize(0.10);
-  mapfunc["stat" + nameofhistogram] -> GetXaxis() -> SetRangeUser(x1_template, x2_template);
+  mapfunc["pad2_template" + nameofhistogram] -> SetTitle("");
+  mapfunc["pad2_template" + nameofhistogram] -> SetLineColor(kWhite);
+  mapfunc["pad2_template" + nameofhistogram] -> GetXaxis() -> SetTitle(name_x);
+  mapfunc["pad2_template" + nameofhistogram] -> GetXaxis() -> SetTitleSize(0.15);
+  mapfunc["pad2_template" + nameofhistogram] -> GetXaxis() -> SetLabelSize(0.10);
+  mapfunc["pad2_template" + nameofhistogram] -> GetXaxis() -> SetRangeUser(x1_template, x2_template);
+  mapfunc["pad2_template" + nameofhistogram] -> GetYaxis() -> SetTitle("#frac{Obs.}{Pred.}");
+  mapfunc["pad2_template" + nameofhistogram] -> GetYaxis() -> SetTitleSize(0.15);
+  mapfunc["pad2_template" + nameofhistogram] -> GetYaxis() -> SetTitleOffset(0.5);
+  mapfunc["pad2_template" + nameofhistogram] -> GetYaxis() -> SetLabelSize(0.08);
+  mapfunc["pad2_template" + nameofhistogram] -> GetYaxis() -> SetNdivisions(505);
+  mapfunc["pad2_template" + nameofhistogram] -> SetMinimum(0.5);
+  mapfunc["pad2_template" + nameofhistogram] -> SetMaximum(1.5);
+  mapfunc["pad2_template" + nameofhistogram] -> SetStats(0);
+  mapfunc["pad2_template" + nameofhistogram] -> Draw("hist");
   
-  mapfunc["stat" + nameofhistogram] -> SetYTitle("#frac{Obs.}{Pred.}");
-  mapfunc["stat" + nameofhistogram] -> GetYaxis() -> SetTitleSize(0.12);
-  mapfunc["stat" + nameofhistogram] -> GetYaxis() -> SetTitleOffset(0.5);
-  mapfunc["stat" + nameofhistogram] -> GetYaxis() -> SetLabelSize(0.08);
-  mapfunc["stat" + nameofhistogram] -> GetYaxis() -> SetNdivisions(505);
-  
-  mapfunc["stat" + nameofhistogram] -> SetFillStyle(1001);
-  mapfunc["stat" + nameofhistogram] -> SetFillColorAlpha(45,0.35);
-  mapfunc["stat" + nameofhistogram] -> SetMinimum(0.5);
-  mapfunc["stat" + nameofhistogram] -> SetMaximum(1.5);
-  mapfunc["stat" + nameofhistogram] -> SetStats(0);
+  map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> SetFillColor(kOrange);
+  map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> SetMarkerSize(0);
+  map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> SetLineColor(kWhite);
   
   if(debug) cout << "8" << endl;
 
-  Int_t ncells = mapfunc["stat" + nameofhistogram] -> GetSize();
   for(int i = 0; i < N_bin; i++){
-    double current_error = mapfunc["stat" + nameofhistogram] -> GetBinError(i + 1) / mapfunc["stat" + nameofhistogram] -> GetBinContent(i + 1);
-    double original_error = mapfunc["stat" + nameofhistogram] -> GetBinError(i + 1);
-    double original_content = mapfunc["stat" + nameofhistogram] -> GetBinContent(i + 1);
-
     bool no_data = false;
     double data_value = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetBinContent(i + 1);;
-    if(data_value < 10e-7) current_error = 0.;
-
-    mapfunc["stat" + nameofhistogram] -> SetBinContent(i + 1, 1.);
-    mapfunc["stat" + nameofhistogram] -> SetBinError(i + 1, current_error);
-
+    if(data_value < 10e-7) no_data = true;
+    if(no_data){
+      map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> SetPointEYlow(i, 0.);
+      map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> SetPointEYhigh(i, 0.);
+    }
+    cout << "bkg_error_ration " << i << " error : " << map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> GetErrorYhigh(i) << ", " << map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> GetErrorYlow(i) << endl;
   }
-  mapfunc["stat" + nameofhistogram] -> Draw("CE2");
-  
+  map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> Draw("e2same");
 
   // -- Draw stat error box hist with all contents as 1
   mapfunc["stat_err" + nameofhistogram] -> SetMarkerSize(0);
@@ -500,7 +506,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
     mapfunc["stat_err" + nameofhistogram] -> SetBinError(i + 1, current_error);
 
   }
-
+  
   // -- Make Ratio hist
   mapfunc[clone] -> Divide(mapfunc[func + "rebin"]);
   for(int i = 0; i < N_bin; i++){
@@ -541,7 +547,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   maplegend["bottom" + legend]->SetBorderSize(0);
   maplegend["bottom" + legend]->SetNColumns(3);
   maplegend["bottom" + legend]->AddEntry(mapfunc["stat_err" + nameofhistogram], "Stat.", "f");
-  maplegend["bottom" + legend]->AddEntry(mapfunc["stat" + nameofhistogram], "Stat. + Syst.", "f");
+  maplegend["bottom" + legend]->AddEntry(map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"], "Stat. + Syst.", "f");
   maplegend["bottom" + legend]->AddEntry(mapfunc[clone] , "Obs./Pred.", "p");
   maplegend["bottom" + legend]->Draw("same");
 
@@ -596,6 +602,13 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
 }
 
 
+
+
+
+
+
+
+
 void open_files(TString histname){
   
   if(debug) cout << "[[draw_histogram]] histname : " << histname << endl;  
@@ -609,7 +622,7 @@ void open_files(TString histname){
 
   // -- Get which region(CR1, CR2 , ...) and channel (DiEle, DiMu, ...)
   //int N_regions = 6;
-  int N_regions = 4;
+  int N_regions = 5;
   
   TString regions[] = {"CR_Zmass",
                        //"CR_ttbar",
@@ -618,6 +631,7 @@ void open_files(TString histname){
                        //"tight_CR_ttbar",
                        "SR",
 		       "SR_b_veto",
+		       "SR_1b",
   };
 
 
@@ -630,6 +644,11 @@ void open_files(TString histname){
                         "EMu_DYreweight",
   };
   
+  int N_AK8_bins = 3;
+  TString AK8_bins[] = {"0AK8",
+                        "1AK8",
+                        "2AK8"
+  };
 
   TString current_dir = "empty";
   TString current_channel = "empty";
@@ -646,7 +665,14 @@ void open_files(TString histname){
   }
 
   current_dir = current_dir + "_" + current_channel;
-
+  if(!histname.Contains("mZp")){
+    for(int i_AK8_bin = 0; i_AK8_bin < N_AK8_bins; i_AK8_bin++){
+      if(histname.Contains(AK8_bins[i_AK8_bin])){
+        current_dir = AK8_bins[i_AK8_bin] + "_" + current_dir;
+      }
+    }
+  }
+  
   if(debug) cout << "current_dir : " << current_dir << "/" << histname << "+systflags" << endl;
   if(current_dir.Contains("empty") || current_channel.Contains("empty")) return;
   
@@ -737,7 +763,7 @@ void open_binning_file(TString filename){
 
       cout << "[[open_binning_file]] current_histname : " << current_histname << endl;
       
-      open_files(current_histname);
+      //open_files(current_histname);
       open_files(current_histname + "_DYreweight");
       map_bin_vector.clear();
       
@@ -758,7 +784,8 @@ void QuickPlotFullRun2(int year=2019){
   //map_sample_names["DYJets"] = {"DYJets_MG"};
   map_sample_names["DYJets2018"] = {"DYJets_MG_HT"};
   map_sample_names["ttbar2018"] = {"TT_powheg"};
-  map_sample_names["WJets2018"] = {"WJets_MG"};
+  //map_sample_names["WJets2018"] = {"WJets_MG"};
+  map_sample_names["WJets2018"] = {"WJets_MG_HT"};
   map_sample_names["Other2018"] = {"VV"};
   map_sample_names["Muon2018"] = {"data_SingleMuon"};
   map_sample_names["EGamma2018"] = {"data_DoubleEG"};
@@ -770,7 +797,8 @@ void QuickPlotFullRun2(int year=2019){
   //map_sample_names["DYJets"] = {"DYJets_MG"};
   map_sample_names["DYJets2017"] = {"DYJets_MG_HT"};
   map_sample_names["ttbar2017"] = {"TT_powheg"};
-  map_sample_names["WJets2017"] = {"WJets_MG"};
+  //map_sample_names["WJets2017"] = {"WJets_MG"};
+  map_sample_names["WJets2017"] = {"WJets_MG_HT"};
   map_sample_names["Other2017"] = {"VV"};
   map_sample_names["Muon2017"] = {"data_SingleMuon"};
   map_sample_names["EGamma2017"] = {"data_DoubleEG"};
@@ -782,7 +810,8 @@ void QuickPlotFullRun2(int year=2019){
   //map_sample_names["DYJets"] = {"DYJets_MG"};
   map_sample_names["DYJets2016"] = {"DYJets_MG_HT"};
   map_sample_names["ttbar2016"] = {"TT_powheg"};
-  map_sample_names["WJets2016"] = {"WJets_MG"};
+  //map_sample_names["WJets2016"] = {"WJets_MG"};
+  map_sample_names["WJets2016"] = {"WJets_MG_HT"};
   map_sample_names["Other2016"] = {"VV"};
   map_sample_names["Muon2016"] = {"data_SingleMuon"};
   map_sample_names["EGamma2016"] = {"data_DoubleEG"};
@@ -790,7 +819,8 @@ void QuickPlotFullRun2(int year=2019){
 
   map_sample_names["DYJets"] = {"DYJets_MG_HT"};
   map_sample_names["ttbar"] = {"TT_powheg"};
-  map_sample_names["WJets"] = {"WJets_MG"};
+  //map_sample_names["WJets"] = {"WJets_MG"};
+  map_sample_names["WJets"] = {"WJets_MG_HT"};
   map_sample_names["Other"] = {"VV"};
   map_sample_names["Muon"] = {"data_SingleMuon"};
   map_sample_names["EGamma"] = {"data_DoubleEG"};

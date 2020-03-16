@@ -7,7 +7,7 @@ using namespace std;
 const double alpha = 1 - 0.6827;
 const double signal_scale = 0.001;
 // == Debugging Mode
-bool debug = false;
+bool debug = true;
 int tag_year = 0;
 TString Cycle_name;
 TString Cycle_name_signal;
@@ -32,7 +32,7 @@ map<TString, std::vector<double> > map_bin_vector;
 map<TString, std::vector<TString> > map_sample_names;
 map<TString, std::vector<double> > map_syst_array;
 
-const int N_syst = 19;
+const int N_syst = 37;
 TString systematics[N_syst] = {"central",
 			       "ElectronScaleDown", "ElectronScaleUp",
 			       "ElectronSmearDown", "ElectronSmearUp",
@@ -44,9 +44,18 @@ TString systematics[N_syst] = {"central",
 			       "MuonScaleDown", "MuonScaleUp",
 			       "MuonSmearDown", "MuonSmearUp",
 			       //"PDFNormDown", "PDFNormUp" 
+			       "Prefire_Up", "Prefire_Down",
+			       "MuonRecoSFUp", "MuonRecoSFDown",
+			       "MuonIDSFUp", "MuonIDSFDown",
+			       "MuonISOSFUp", "MuonISOSFDown",
+			       "MuonTriggerSFUp", "MuonTriggerSFDown",
+			       "ElectronRecoSFUp", "ElectronRecoSFDown",
+			       "ElectronIDSFUp", "ElectronIDSFDown",
+			       "ElectronTriggerSFUp", "ElectronTriggerSFDown",
+			       "ZPtRwUp", "ZPtRwDown",
 };
 
-const int N_syst_comparison = 9;
+const int N_syst_comparison = 18;
 TString systematics_comparison[N_syst] = {"ElectronScale",
 					  "ElectronSmear",
 					  "JetsRes",
@@ -55,7 +64,16 @@ TString systematics_comparison[N_syst] = {"ElectronScale",
 					  "SD_JMS_",
 					  "PUReweight_",
 					  "MuonScale",
-					  "MuonSmear"
+					  "MuonSmear",
+					  "Prefire_",
+					  "MuonRecoSF",
+					  "MuonIDSF",
+					  "MuonISOSF",
+					  "MuonTriggerSF",
+					  "ElectronRecoSF",
+					  "ElectronIDSF",
+					  "ElectronTriggerSF",
+					  "ZPtRw",
 };
 
 vector<double> vx, vy, vexl, vexh, veyl, veyh;
@@ -137,8 +155,9 @@ void Save_syst_array(TString current_histname, TString systematics, TString cycl
   bool up_hist = false;
   bool down_hist = false;
   
+  cout << "[Save_syst_array] : " << histname_Up << endl;
   if(!mapfunc[histname_Up]) return;
-
+  
   Int_t nx    = mapfunc[histname_Up] -> GetNbinsX()+1;
   Double_t x1 = mapfunc[histname_Up] -> GetBinLowEdge(1);
   Double_t bw = (binx[N_bin - 1] - binx[0]) / 20.;
@@ -171,7 +190,7 @@ void Save_syst_array(TString current_histname, TString systematics, TString cycl
   
   mapfunc[histname_Up + "rebin"] = dynamic_cast<TH1F*>(htmp_syst_Up -> Rebin(N_bin, histname_Up + "rebin", binx));
   mapfunc[histname_Down + "rebin"] = dynamic_cast<TH1F*>(htmp_syst_Down -> Rebin(N_bin, histname_Down + "rebin", binx));
-
+  
   map_syst_array[current_histname + systematics + "Up"].clear();
   map_syst_array[current_histname + systematics + "Down"].clear();
   //map_syst_array
@@ -189,6 +208,7 @@ void Save_syst_array(TString current_histname, TString systematics, TString cycl
       map_syst_array[current_histname + cycle_and_sample + systematics + "Down"].push_back(current_entry_Up);
     }
   }
+  cout << "[Save_syst_array] " << current_histname + cycle_and_sample + systematics + "Up" << endl;
   cout << "[Save_syst_array] " << current_histname + cycle_and_sample + systematics << "Up size : " << map_syst_array[current_histname + cycle_and_sample + systematics + "Up"].size() << endl;
   cout << "[Save_syst_array] " << current_histname + cycle_and_sample + systematics << "Down size : " << map_syst_array[current_histname + cycle_and_sample + systematics + "Down"].size() << endl;
 }
@@ -211,15 +231,17 @@ void sum_syst_error(TString current_histname, TString cycle_and_sample, int N_bi
   for(int j = 1; j < N_bin + 1; j++){
     double current_error_up = 0.;
     double current_error_down = 0.;
-
+    
     double current_stat_error = mapfunc[current_histname + "_central" + cycle_and_sample + "rebin"] -> GetBinError(j);
     current_error_up = current_error_up + pow(current_stat_error, 2);
     current_error_down = current_error_down+ pow(current_stat_error, 2);
     
     for(int i_syst = 0; i_syst < N_syst_comparison; i_syst++){
       cout << "[sum_syst_error] for j = " << j << ", i_syst = " << i_syst << endl;
-      
+
       TString current_syst = systematics_comparison[i_syst];
+      cout << "[sum_syst_error] map_syst_array[" << current_histname + cycle_and_sample + current_syst << "Up].size() : " << map_syst_array[current_histname + cycle_and_sample + current_syst + "Up"].size() << endl;
+
       double current_up = fabs(central_content.at(j-1) - map_syst_array[current_histname + cycle_and_sample + current_syst + "Up"].at(j-1) );
       double current_down = fabs(central_content.at(j-1) - map_syst_array[current_histname + cycle_and_sample + current_syst + "Down"].at(j-1) );
       
