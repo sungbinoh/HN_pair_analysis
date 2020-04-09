@@ -702,9 +702,11 @@ void open_files(TString histname){
 
   // -- Get which region(CR1, CR2 , ...) and channel (DiEle, DiMu, ...)
   //int N_regions = 6;
-  int N_regions = 5;
+  int N_regions = 7;
   
   TString regions[] = {"CR_Zmass",
+		       "CR_Zmass_nPV40bigger",
+		       "CR_Zmass_nPV40smaller",
                        //"CR_ttbar",
                        //"CR_inv_mll",
                        "tight_CR_Zmass",

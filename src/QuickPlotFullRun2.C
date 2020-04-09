@@ -45,7 +45,138 @@ void openfile_DATA(TString cyclename, TString samplename, TString dir, TString h
   current_file -> Close();
   delete current_file;
 }
-    
+
+
+void draw_syst_lines(TString current_histname, int N_bin, double x1_template, double x2_template){
+
+  TString legend_list[4] = {"Other", "WJets", "ttbar", "DYJets"};
+  TString func = current_histname + "_central";
+  TString nameofhistogram = current_histname + "_central";
+  func.Insert(0, "ratio_");
+  std::vector<double> central_content;
+  central_content.clear();
+  for(int j = 1; j < N_bin + 1; j++){
+    double current_content = mapfunc[func+ "rebin"] -> GetBinContent(j);
+    central_content.push_back(current_content);
+  }
+
+
+  for(int i_legend = 0; i_legend < 4; i_legend++){
+    TString current_sample = map_sample_names[legend_list[4 - i_legend - 1]].at(0);
+    TString cycle_and_sample = Cycle_name + current_sample;
+    for(int i_syst = 0; i_syst < N_syst_comparison; i_syst++){
+      TString current_syst = systematics_comparison[i_syst];
+      map_gr[current_histname + current_sample + current_syst + "line_Up"] = new TGraph();
+      map_gr[current_histname + current_sample + current_syst + "line_Up"] = new TGraph();
+      map_gr[current_histname + current_sample + current_syst + "line_Down"] = new TGraph();
+
+      for(int j = 1; j < N_bin - 1; j++){
+        cout << "[draw_syst_lines] getting syst arrays : " << current_sample << ", " << current_syst << ", " << j << endl;
+
+        if(map_syst_array[current_histname + cycle_and_sample + current_syst + "Up"].size() > 0){
+          double current_content = mapfunc[current_histname + "_central" + cycle_and_sample + "rebin"] -> GetBinContent(j+1);
+          double current_up = fabs(map_syst_array[current_histname + cycle_and_sample + current_syst + "Up"].at(j) - current_content)/ central_content.at(j);
+          double current_down = (-1.) * fabs(map_syst_array[current_histname + cycle_and_sample + current_syst + "Down"].at(j) - current_content)/ central_content.at(j);
+          cout << "current_up : " << current_up << ", current_down : " << current_down << endl;
+          double current_x = mapfunc[func + "rebin"] -> GetBinCenter(j + 1);
+          map_gr[current_histname + current_sample + current_syst + "line_Up"]  -> SetPoint(j, current_x, current_up);
+          map_gr[current_histname + current_sample + current_syst + "line_Down"]  -> SetPoint(j, current_x, current_down);
+        }
+      }
+    }
+  }
+  TString canvas = current_histname + "syst_line";
+  mapcanvas[canvas] = new TCanvas(canvas,"",800,800);
+  canvas_margin(mapcanvas[canvas]);
+  gStyle -> SetOptStat(1111);
+
+  mapfunc["template_syst_line" + nameofhistogram] = (TH1F*)GetHist(func + "rebin") -> Clone("template_syst_line" + nameofhistogram);
+  for(int i = 1; i < N_bin + 1; i++){
+    mapfunc["template_syst_line" + nameofhistogram] -> SetBinContent(i, 1.);
+    mapfunc["template_syst_line" + nameofhistogram] -> SetBinError(i, 0.);
+  }
+  
+  TString name_x = nameofhistogram;
+
+  mapfunc["template_syst_line" + nameofhistogram] -> SetTitle("");
+  mapfunc["template_syst_line" + nameofhistogram] -> SetLineColor(kWhite);
+  mapfunc["template_syst_line" + nameofhistogram] -> GetXaxis() -> SetTitle(name_x);
+  mapfunc["template_syst_line" + nameofhistogram] -> GetXaxis() -> SetTitleSize(0.05);
+  mapfunc["template_syst_line" + nameofhistogram] -> GetXaxis() -> SetLabelSize(0.05);
+  mapfunc["template_syst_line" + nameofhistogram] -> GetXaxis() -> SetRangeUser(x1_template, x2_template);
+  mapfunc["template_syst_line" + nameofhistogram] -> GetYaxis() -> SetTitle("#frac{Syst.}{Pred.}");
+  mapfunc["template_syst_line" + nameofhistogram] -> GetYaxis() -> SetTitleSize(0.05);
+  mapfunc["template_syst_line" + nameofhistogram] -> GetYaxis() -> SetTitleOffset(1.0);
+  mapfunc["template_syst_line" + nameofhistogram] -> GetYaxis() -> SetLabelSize(0.05);
+  mapfunc["template_syst_line" + nameofhistogram] -> GetYaxis() -> SetNdivisions(505);
+  mapfunc["template_syst_line" + nameofhistogram] -> SetMinimum(-0.5);
+  mapfunc["template_syst_line" + nameofhistogram] -> SetMaximum(0.5);
+  mapfunc["template_syst_line" + nameofhistogram] -> SetStats(0);
+  mapfunc["template_syst_line" + nameofhistogram] -> Draw("hist");
+
+  TString legend = current_histname + "syst_line";
+  maplegend[legend] = new TLegend(0.30, 0.75, 0.90, 0.92);
+
+  Int_t line_array[] = {1, 2, 3, 4};
+  Int_t color_array[] = {632, 901, 800, 400, 416, 432, 600, 880, 883,
+                         879, 878, 877, 876, 875, 874, 873, 872, 871, 870,
+  };
+  int N_legend_columns = 4;
+  bool is_Wjet = true;
+  for(int i_legend = 0; i_legend < 4; i_legend++){
+    TString current_sample = map_sample_names[legend_list[4 - i_legend - 1]].at(0);
+    TString cycle_and_sample = Cycle_name + current_sample;
+    for(int i_syst = 0; i_syst < N_syst_comparison; i_syst++){
+      TString current_syst = systematics_comparison[i_syst];
+
+
+      if(map_syst_array[current_histname + cycle_and_sample + current_syst + "Up"].size() > 0){
+        map_gr[current_histname + current_sample + current_syst + "line_Up"] -> SetLineColor(color_array[i_syst]);
+        map_gr[current_histname + current_sample + current_syst + "line_Up"] -> SetLineStyle(line_array[i_legend]);
+        map_gr[current_histname + current_sample + current_syst + "line_Up"] -> Draw("lsame");
+
+        map_gr[current_histname + current_sample + current_syst + "line_Down"] -> SetLineColor(color_array[i_syst]);
+        map_gr[current_histname + current_sample + current_syst + "line_Down"] -> SetLineStyle(line_array[i_legend]);
+        map_gr[current_histname + current_sample + current_syst + "line_Down"] -> Draw("lsame");
+
+        maplegend[legend] -> AddEntry(map_gr[current_histname + current_sample + current_syst + "line_Up"], legend_list[4 - i_legend - 1] + "_" + current_syst, "l");
+      }
+      else is_Wjet = false;
+    }
+  }
+  if(is_Wjet) maplegend[legend] -> SetNColumns(4);
+  else maplegend[legend] -> SetNColumns(3);
+  maplegend[legend] -> Draw("same");
+  TLatex latex_CMSPriliminary, latex_Lumi;
+  latex_CMSPriliminary.SetNDC();
+  latex_Lumi.SetNDC();
+  latex_CMSPriliminary.SetTextSize(0.035);
+  latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
+  latex_Lumi.SetTextSize(0.035);
+  latex_Lumi.DrawLatex(0.7, 0.96, "137.4 fb^{-1} (13 TeV)");
+
+  TString pdfname;
+  TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
+  pdfname = WORKING_DIR + "/plots/" + TString::Itoa(tag_year,10) + "/";
+  if(nameofhistogram.Contains("EMu")){
+    pdfname = pdfname + "EMu/";
+
+  }
+  else if(nameofhistogram.Contains("DiEle")){
+    pdfname = pdfname + "DiEle/";
+
+  }
+  else if(nameofhistogram.Contains("DiMu")){
+    pdfname = pdfname + "DiMu/";
+  }
+  else return;
+
+  pdfname.Append(nameofhistogram);
+  pdfname.Append("_syst_lines.pdf");
+
+  mapcanvas[canvas] -> SaveAs(pdfname);
+  
+}  
 
 
 void make_histogram(TString nameofhistogram, TString current_histname, int N_bin, double binx[]){
@@ -350,7 +481,9 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
     map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> SetPointEYlow(i, bkg_down.at(i) / current_y);
     map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> SetPointEYhigh(i, bkg_up.at(i) / current_y);
   }
-  
+
+  draw_syst_lines(current_histname, N_bin, x1_template, x2_template);
+  mappad[pad1] -> cd();
   if(debug) cout << "4" << endl;
   
   Rebin_with_overflow(nameofhistogram + Cycle_name + current_data, N_bin, binx);

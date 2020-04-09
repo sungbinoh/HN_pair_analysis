@@ -1,10 +1,11 @@
 #include "mylib.h"
 
-void open_files(TString histname){
+void open_files(TString histname, int injected_evts){
   
+  TString str_injected_evts = TString::Itoa(injected_evts,10);
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
   TString signal_list_file_path=WORKING_DIR+"/script/Signal_list/MC_signal_" + TString::Itoa(tag_year,10) + ".txt";
-  TString root_file_path = WORKING_DIR+"/output/LimitTemplate/" + TString::Itoa(tag_year,10) + "/";
+  TString root_file_path = WORKING_DIR+"/output/LimitTemplate/Signal_injection/";
   char line[500];
   ifstream signal_file;
   signal_file.open(signal_list_file_path);
@@ -36,7 +37,7 @@ void open_files(TString histname){
       }
       if(!this_line.Contains(channel2)) continue;
       
-      TString current_input = root_file_path + "shape_" + histname + "_" + this_line + ".root";
+      TString current_input = root_file_path + "shape_" + histname + "_" + this_line + "_" + str_injected_evts + "_injected.root";
       TFile *current_input_file = new TFile ((current_input)) ;
       //TH1F *obs_hist = (TH1F *)current_input_file->Get(histname);
       //double obs = obs_hist -> Integral();
@@ -55,12 +56,12 @@ void open_files(TString histname){
       //cout << histname + "_" + this_line + "_central" << endl;
       //signal_rate = current_signal_hist -> Integral();
 
-      ofstream file_shape("./output/DataCards/shape_" + histname + "_" + this_line + "_" + TString::Itoa(tag_year,10) + ".txt", ios::trunc);
+      ofstream file_shape("./output/DataCards/Signal_injection/shape_" + histname + "_" + this_line + "_" + str_injected_evts + "_injected.txt", ios::trunc);
       file_shape << "imax 1" << endl;
       file_shape << "jmax " << N_bkg << endl;
       file_shape << "kmax *" << endl;
       file_shape << "---------------" << endl;
-      file_shape << "shapes * * /data6/Users/suoh/Limit/CMSSW_10_2_13/src/HiggsAnalysis/CombinedLimit/ZpNN/LimitTemplate/" + TString::Itoa(tag_year,10) + "/shape_"<< histname << "_" << this_line << ".root $PROCESS $PROCESS_$SYSTEMATIC" << endl;
+      file_shape << "shapes * * /data6/Users/suoh/Limit/CMSSW_10_2_13/src/HiggsAnalysis/CombinedLimit/ZpNN/LimitTemplate/Signal_injection/shape_"<< histname << "_" << this_line << "_" << str_injected_evts <<"_injected.root $PROCESS $PROCESS_$SYSTEMATIC" << endl;
       file_shape << "---------------" << endl;
       file_shape << "bin\tbin1" << endl;
       //file_shape << "observation " << obs << endl;
@@ -145,7 +146,7 @@ void open_files(TString histname){
   }
 }
 
-void open_binning_file(TString filename){
+void open_binning_file(TString filename, int injected_evts){
 
   cout << "[open_binning_file] start to open binngin file : " << filename << endl;
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
@@ -174,16 +175,16 @@ void open_binning_file(TString filename){
       
       cout << "[[open_binning_file]] current_histname : " << current_histname << endl;
 
-      open_files(current_histname + "_DYreweight");
+      open_files(current_histname + "_DYreweight", injected_evts);
     }
   }
   data_file.close();
 }
 
-void MakeDataCards(int year=2018){
+void MakeDataCards_signal_injection(int injected_evts=0){
 
-  tag_year = year;
+  tag_year = 2016;
   
-  open_binning_file("binning_limit_merged.txt");
+  open_binning_file("binning_limit_signal_injection.txt", injected_evts);
 
 }

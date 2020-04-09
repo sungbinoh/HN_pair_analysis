@@ -96,7 +96,7 @@ void openfile_Signal(TString cyclename, TString samplename, TString dir, TString
     for(int i_err = 1; i_err < 9; i_err++){
       if(i_err == 5 || i_err == 7) continue;
       TString current_histname = histname + "_Scale_" + TString::Itoa(i_err, 10);
-      //cout << "[openfile_Signal] current_histname : " <<  current_histname << endl;
+      cout << "[openfile_Signal] current_histname : " <<  current_histname << endl;
       TH1F * current_scale = (TH1F*)gDirectory -> Get(current_histname);
       mapfunc[current_histname + cyclename + samplename] = current_scale;
       mapfunc[current_histname + cyclename + samplename] -> Scale(signal_scale);
@@ -199,7 +199,8 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
     
     GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)) -> Scale(DY_norm); 
     
-        
+    outfile << nameofhistogram << "'s DY_norm : " << DY_norm << endl;
+    
     for(int i_syst = 1; i_syst < N_syst; i_syst++){
       if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0))){
 	GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0)) -> Scale(DY_norm);
@@ -272,9 +273,8 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
     mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] = (TH1F*)GetHist(func + "blind_data") -> Clone(clone + "blind");
   }
   //mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] -> SetName(current_histname);
-  
   mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] -> SetName("data_obs");
-  
+
   //mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] -> Write();
   
 }
@@ -457,55 +457,30 @@ void open_files(TString histname){
     openfile_DATA(Cycle_name, SingleMuon, current_dir_syst, current_hist_syst);
     
   }
-  
+  // -- FIXME
   //histname = histname + "_central";
   //cout << "histname : " << histname << ", current_histname : " << current_histname << endl;
-    make_histogram(histname + "_central", histname, N_bin, current_bins);
+  //TFile *MyFile = new TFile("/output/Bkg_VS_signal_" + histname + ".root","RECREATE");
+  //TFile *MyFile = new TFile("Bkg_VS_signal_" + histname + ".root","RECREATE");
+  make_histogram(histname + "_central", histname, N_bin, current_bins);
+  
   
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
-  TString signal_list_file_path=WORKING_DIR+"/script/Signal_list/MC_signal_" + TString::Itoa(tag_year,10) + ".txt"; 
-  char line[500];
-  ifstream signal_file;
-  signal_file.open(signal_list_file_path);
-  if(signal_file.is_open()){
-    int abort = 0;
-    while(!signal_file.eof()){
-      signal_file.getline(line, 500);
-      
-      cout << abort << "'th file going on, " << TString::Itoa(tag_year,10) << endl;
-      cout << line << endl;
-      TString this_line = line;
-      
-      TString channel2 = "";
-      if(histname.Contains("DiEle")){
-	channel2 = "EE";
-      }
-      if(histname.Contains("DiMu")){
-	channel2 = "MuMu";
-      }
-      abort++;
-      if(!this_line.Contains(channel2)) {
-	cout << "no matched channel" << endl;
-	continue;
-      }
-      for(int i_syst = 0; i_syst < N_syst; i_syst++){
-	TString current_hist_syst = histname + "_" + systematics[i_syst];
-	TString current_dir_syst = current_dir + "_" + systematics[i_syst];
 
-	openfile_Signal(Cycle_name_signal, this_line, current_dir_syst, current_hist_syst);
-      }
-      TFile *current_shape = new TFile("shape_" + histname + "_" + this_line + ".root","RECREATE");
-      
-      Write_data_bkg(histname);
-      make_histogram_signal(histname + "_central", histname, this_line, N_bin, current_bins); 
-      current_shape -> Close();
-      
-      //aport for test
-      abort++;
-      if(abort>1) break;
-    }
+  TString channel2 = "";
+  if(histname.Contains("DiEle")){
+    channel2 = "EE";
   }
-
+  if(histname.Contains("DiMu")){
+    channel2 = "MuMu";
+  }
+  
+  TFile *current_shape = new TFile("shape_" + histname + ".root","RECREATE");
+  
+  Write_data_bkg(histname);
+  current_shape -> Close();
+    
+  //MyFile -> Close();
 }
 
 void open_binning_file(TString filename){
@@ -565,41 +540,14 @@ void open_binning_file(TString filename){
   
 }
 
-void MakeLimitTemplate(int int_input=30){
+void MakeLimitTemplate_CR(int year=2018){
   setTDRStyle();
   
   // == Set Input Sample List
-  if(int_input < 10) tag_year = 2016;
-  else if(int_input < 20) tag_year = 2017;
-  else if(int_input < 30) tag_year = 2018;
-  else return;
+  tag_year = year;
   
-  int int_binning = int_input%10;
-  cout << "int_input : " << int_input << ", tag_year : " << tag_year << ", int_binning : " << int_binning <<  endl;
-  TString binning_file = "binning_limit_merged_";  
-  // == int_binning : 1 = mZp_0AK8_SR_DiEle, 2 = mZp_0AK8_SR_DiMu, 3 = mZp_1AK8_SR_DiEle, 4 = mZp_1AK8_SR_DiMu, 5 = mZp_2AK8_SR_DiEle, 6 = mZp_2AK8_SR_DiMu
-  if(int_binning == 1){
-    binning_file = binning_file + "mZp_0AK8_SR_DiEle.txt";
-  }
-  else if(int_binning == 2){
-    binning_file = binning_file + "mZp_0AK8_SR_DiMu.txt";
-  }
-  else if(int_binning == 3){
-    binning_file = binning_file + "mZp_1AK8_SR_DiEle.txt";
-  }
-  else if(int_binning == 4){
-    binning_file = binning_file + "mZp_1AK8_SR_DiMu.txt";
-  }
-  else if(int_binning == 5){
-    binning_file = binning_file + "mZp_2AK8_SR_DiEle.txt";
-  }
-  else if(int_binning == 6){
-    binning_file = binning_file + "mZp_2AK8_SR_DiMu.txt";
-  }
-  else return;
-  cout << "binning_file : " << binning_file << endl;
-
-
+  outfile.open("output_" + TString::Itoa(tag_year,10) + ".txt");
+  
   if(tag_year == 2018){
     //map_sample_names["DYJets"] = {"DYJets_MG"};
     map_sample_names["DYJets"] = {"DYJets_MG_HT"};
@@ -642,9 +590,8 @@ void MakeLimitTemplate(int int_input=30){
   
 
   Cycle_name = "HN_pair_all_SkimTree_LRSMHighPt";
-  //Cycle_name_signal = "HN_pair_all";
-  Cycle_name_signal = "SR_ZpNN";
-  
-  open_binning_file(binning_file);
+  open_binning_file("binning_limit_CR.txt");
+
+  outfile.close();
   
 }

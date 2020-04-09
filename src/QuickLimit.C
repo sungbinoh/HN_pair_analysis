@@ -19,7 +19,7 @@ void QuickLimit(int xxx=0){
   
   TString channel = "MuMu";
   TString binning = "";
-  // --- xxx : 0-3 MuMu, 4-7 EE, 1 5 Inclusive, 2 6 3AK8, 3 7 4AK8
+  // --- xxx : 0-3 MuMu, 4-7 EE, 1 5 Inclusive, 2 6 3AK8, 3 7 3AK8_CRs
   if(xxx>3){
     channel = "EE";
   }
@@ -30,9 +30,59 @@ void QuickLimit(int xxx=0){
     binning = "3AK8";
   }
   if(xxx== 3 || xxx == 7){
-    binning = "4AK8";
+    binning = "3AK8_CRs";
   }
-
+  // --- xxx additional definitions
+  if(xxx == 8){
+    channel = "EE";
+    binning = "0AK8";
+  }
+  if(xxx == 9){
+    channel = "EE";
+    binning = "1AK8";
+  }
+  if(xxx == 10){
+    channel = "EE";
+    binning = "2AK8";
+  }
+  if(xxx == 11){
+    channel = "MuMu";
+    binning = "0AK8";
+  }
+  if(xxx == 12){
+    channel = "MuMu";
+    binning = "1AK8";
+  }
+  if(xxx == 13){
+    channel = "MuMu";
+    binning = "2AK8";
+  }
+  if(xxx == 14){
+    channel = "EE";
+    binning = "3AK8_2016";
+  }
+  if(xxx == 15){
+    channel = "EE";
+    binning = "3AK8_2017";
+  }
+  if(xxx == 16){
+    channel = "EE";
+    binning = "3AK8_2018";
+  }
+  if(xxx == 17){
+    channel = "MuMu";
+    binning = "3AK8_2016";
+  }
+  if(xxx == 18){
+    channel = "MuMu";
+    binning = "3AK8_2017";
+  }
+  if(xxx == 19){
+    channel = "MuMu";
+    binning = "3AK8_2018";
+  }
+  
+  
   
   TString ATLAS_result_file;
   if(channel.Contains("MuMu")) ATLAS_result_file = "script/ATLAS_Obs_Limit/ATLAS_mumu_limit.txt";
@@ -40,7 +90,7 @@ void QuickLimit(int xxx=0){
   
   TString base_filepath = WORKING_DIR+"/output/Result_" + binning + "_" + channel + ".txt";
   TString base_plotpath = ENV_PLOT_PATH+"/" + binning + "/" +  channel;
-
+  cout << "Open " << base_filepath << endl;
   if( !gSystem->mkdir(base_plotpath, kTRUE) ){
     cout
     << "###################################################" << endl
@@ -1192,7 +1242,10 @@ void QuickLimit(int xxx=0){
   latex_CMSPriliminary.SetTextSize(0.035);
   latex_CMSPriliminary.DrawLatex(0.16, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
   latex_Lumi.SetTextSize(0.035 );
-  latex_Lumi.DrawLatex(0.60, 0.96, "137.4 fb^{-1} (13 TeV, Full Run2)");
+  if(binning.Contains("2016"))latex_Lumi.DrawLatex(0.60, 0.96, "35.9 fb^{-1} (13 TeV, 2016)");
+  else if(binning.Contains("2017"))latex_Lumi.DrawLatex(0.60, 0.96, "41.3 fb^{-1} (13 TeV, 2017)");
+  else if(binning.Contains("2018")) latex_Lumi.DrawLatex(0.60, 0.96, "59.7 fb^{-1} (13 TeV, 2018)");
+  else latex_Lumi.DrawLatex(0.60, 0.96, "137.4 fb^{-1} (13 TeV, Full Run2)");
   latex_channel.SetNDC();
   latex_channel.SetTextSize(0.08);
   if(channel.Contains("MuMu")) latex_channel.DrawLatex(0.2, 0.6, "#mu#mu OS + SS");

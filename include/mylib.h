@@ -7,7 +7,7 @@ using namespace std;
 const double alpha = 1 - 0.6827;
 const double signal_scale = 0.001;
 // == Debugging Mode
-bool debug = true;
+bool debug = false;
 int tag_year = 0;
 TString Cycle_name;
 TString Cycle_name_signal;
@@ -123,7 +123,7 @@ void Rebin_with_overflow(TString histname, int N_bin, double binx[]){
   Double_t x2 = mapfunc[histname] -> GetBinLowEdge(nx)+bw;
 
   TH1F *htmp = new TH1F("", "", nx, x1, x2);
-  for(Int_t j = 1; j <= nx; j++){
+  for(Int_t j = 1; j < nx + 1; j++){
     double current_bin_content = mapfunc[histname] -> GetBinContent(j);
     double current_bin_error = mapfunc[histname] -> GetBinError(j);
     htmp -> SetBinContent(j, current_bin_content);
@@ -343,11 +343,166 @@ void Write_syst_error_limit(TString current_histname,  TString systematics, TStr
     mapfunc[histname_Down + "rebin"] = (TH1F*)mapfunc[histname_Down] -> Clone();
     mapfunc[histname_Down + "rebin"] = (TH1F*)mapfunc[histname_Down + "rebin"] -> Rebin(N_bin - 1, histname_Down + "rebin", binx);
   }
-  mapfunc[histname_Up + "rebin"] -> SetName(current_histname + "_" + current_sample + "_" + systematics + "Up");
-  mapfunc[histname_Down + "rebin"] -> SetName(current_histname + "_" + current_sample + "_" + systematics + "Down");
+
+  // -- ADD year on syst name for uncorrelated systematics over years
+  TString name_up = current_histname + "_" + current_sample + "_" + systematics + TString::Itoa(tag_year,10) + "Up";
+  TString name_down = current_histname + "_" + current_sample + "_" + systematics +  TString::Itoa(tag_year,10) + "Down";
+  if(systematics.Contains("Jet") || systematics.Contains("SD") ){
+    name_up = current_histname + "_" + current_sample + "_" + systematics + "Up";
+    name_down = current_histname + "_" + current_sample + "_" + systematics + "Down";
+  }
+  
+  mapfunc[histname_Up + "rebin"] -> SetName(name_up);
+  mapfunc[histname_Down + "rebin"] -> SetName(name_down);
   
   //cout << "[Write_syst_error_limit] histname_Up : " << histname_Up << endl;
 }
+
+
+void change_to_pseudo_data(TString current_histname){
+  
+  int N_bin = mapfunc[current_histname] -> GetNbinsX();
+  for(int i = 1; i <= N_bin; i++){
+    int current_bin_int =  mapfunc[current_histname] -> GetBinContent(i);
+    double current_error = pow(current_bin_int, 0.5);
+    mapfunc[current_histname] -> SetBinContent(i, current_bin_int);
+    mapfunc[current_histname] -> SetBinError(i, current_error);
+  }
+}
+
+
+void Estimate_PDF_Error(TString current_histname, TString Cycle_name, TString current_sample, int N_bin, double binx[]){
+  
+  cout << "[Estimate_PDF_Error]" << endl;
+  TString cycle_and_sample = Cycle_name + current_sample;
+  TString histname_central = current_histname + "_central" + cycle_and_sample + "rebin"; // -- central hists are already rebinned
+  
+  // -- Rebin Hessian
+  for(int i_err = 1; i_err < 101; i_err++){
+    TString current_err_hist = current_histname + "_central_Hessian_" + TString::Itoa(i_err, 10) + cycle_and_sample;
+    //cout << "current_err_hist : " << current_err_hist << endl;
+    mapfunc[current_err_hist + "rebin"] = (TH1F*)mapfunc[current_err_hist] -> Clone();
+    mapfunc[current_err_hist + "rebin"] = (TH1F*)mapfunc[current_err_hist + "rebin"] -> Rebin(N_bin - 1, current_err_hist + "rebin", binx);
+  }
+  
+  // -- Rebin Alpha_s
+  for(int i_err = 0; i_err < 2; i_err++){
+    TString current_err_hist = current_histname + "_central_AlphaS_" + TString::Itoa(i_err, 10) + cycle_and_sample;
+    mapfunc[current_err_hist + "rebin"]= (TH1F*)mapfunc[current_err_hist] -> Clone();
+    mapfunc[current_err_hist + "rebin"] = (TH1F*)mapfunc[current_err_hist + "rebin"] ->Rebin(N_bin - 1, current_err_hist + "rebin", binx);
+  }
+
+  // -- Save PDF errors in a vector
+  std::vector<double> PDF_errors;
+  PDF_errors.clear();
+  for(int i_bin = 1; i_bin < N_bin; i_bin++){
+    double current_Hessian_err = 0.;
+    double current_AlphaS_err = 0.;
+    double current_PDF_error = 0.;
+    
+    // -- Sum Hessian Errors
+    for(int i_err = 1; i_err < 101; i_err++){
+      TString current_err_hist = current_histname + "_central_Hessian_" + TString::Itoa(i_err, 10) + cycle_and_sample + "rebin";
+      double current_diff = mapfunc[histname_central] -> GetBinContent(i_bin) - mapfunc[current_err_hist] -> GetBinContent(i_bin);
+      current_diff = pow(current_diff, 2);
+      current_Hessian_err += current_diff;
+    }
+    
+    // -- Sum AlphaS Errors
+    TString hist_alpha_0 = current_histname + "_central_AlphaS_0" + cycle_and_sample + "rebin";
+    TString hist_alpha_1 = current_histname + "_central_AlphaS_1" + cycle_and_sample + "rebin";
+    current_AlphaS_err = 0.5 * ( mapfunc[hist_alpha_0] -> GetBinContent(i_bin) - mapfunc[hist_alpha_1] -> GetBinContent(i_bin) );
+    current_AlphaS_err = pow(current_AlphaS_err, 2);
+
+    current_PDF_error = current_Hessian_err + current_AlphaS_err;
+    current_PDF_error = pow(current_PDF_error, 0.5);
+
+    PDF_errors.push_back(current_PDF_error);
+  }
+  
+  // -- Make PDF syst Up/Down Shape
+  TString PDF_Up = current_histname + "_" + current_sample + "_PDFUp";
+  TString PDF_Down = current_histname + "_" + current_sample + "_PDFDown";
+  mapfunc[PDF_Up] = (TH1F*)mapfunc[histname_central] -> Clone();
+  mapfunc[PDF_Down] = (TH1F*)mapfunc[histname_central] -> Clone();
+  for(int i_bin = 1; i_bin < N_bin; i_bin++){
+    double current_Up_content = mapfunc[histname_central] -> GetBinContent(i_bin) + PDF_errors.at(i_bin-1);
+    double current_Down_content = mapfunc[histname_central] -> GetBinContent(i_bin) - PDF_errors.at(i_bin-1);
+    current_Down_content = max(0.00000001, current_Down_content);
+    mapfunc[PDF_Up] -> SetBinContent(i_bin, current_Up_content);
+    mapfunc[PDF_Down] -> SetBinContent(i_bin, current_Down_content);
+  }
+  
+  mapfunc[PDF_Up] -> SetName(PDF_Up);
+  mapfunc[PDF_Down] -> SetName(PDF_Down);
+
+}
+
+void Estimate_Scale_Error(TString current_histname, TString Cycle_name, TString current_sample, int N_bin, double binx[]){
+  
+  cout << "[Estimate_Scale_Error]" << endl;
+  TString cycle_and_sample = Cycle_name + current_sample;
+  TString histname_central = current_histname + "_central" + cycle_and_sample + "rebin"; // -- central hists are already rebinned
+  
+  // -- Rebin Scale Hists
+  for(int i_err = 1; i_err < 9; i_err++){
+    if(i_err == 5 || i_err == 7) continue;
+    TString current_err_hist = current_histname + "_central_Scale_" + TString::Itoa(i_err, 10) + cycle_and_sample;
+    //cout << "current_err_hist : " << current_err_hist << endl;
+    mapfunc[current_err_hist + "rebin"] = (TH1F*)mapfunc[current_err_hist] -> Clone();
+    mapfunc[current_err_hist + "rebin"] = (TH1F*)mapfunc[current_err_hist + "rebin"] -> Rebin(N_bin - 1, current_err_hist + "rebin", binx);
+  }
+
+  // -- Save Scale errors in two vectors
+  std::vector<double> scale_errors_up;
+  std::vector<double> scale_errors_down;
+  scale_errors_up.clear();
+  scale_errors_down.clear();
+  for(int i_bin = 1; i_bin < N_bin; i_bin++){
+    std::vector<double> current_scale_errors;
+    current_scale_errors.clear();
+    
+    // -- Save Bin Contents from Scale error hists
+    for(int i_err = 1; i_err < 9; i_err++){
+      if(i_err == 5 || i_err == 7) continue;
+      TString current_err_hist = current_histname + "_central_Scale_" + TString::Itoa(i_err, 10) + cycle_and_sample + "rebin";
+      double current_content = mapfunc[current_err_hist] -> GetBinContent(i_bin);
+      current_scale_errors.push_back(current_content);
+    }
+    
+    // -- Get Max/Min (Envelope) among Scale Errors
+    double current_max_scale = 0.;
+    double current_min_scale = (mapfunc[histname_central] -> GetMaximum()) * 100.;
+    
+    for(unsigned int i_scale = 0; i_scale < current_scale_errors.size(); i_scale++){
+      double current_scale = current_scale_errors.at(i_scale);
+      
+      if(current_scale > current_max_scale) current_max_scale = current_scale;
+      if(current_scale < current_min_scale) current_min_scale = current_scale;
+    } 
+
+    scale_errors_up.push_back(current_max_scale);
+    scale_errors_down.push_back(current_min_scale);
+  }// -- for N_bin
+
+  // -- Make Scale syst Up/Down Shape
+  TString Scale_Up = current_histname + "_" + current_sample + "_ScaleUp";
+  TString Scale_Down = current_histname + "_" + current_sample + "_ScaleDown";
+  mapfunc[Scale_Up] = (TH1F*)mapfunc[histname_central] -> Clone();
+  mapfunc[Scale_Down] = (TH1F*)mapfunc[histname_central] -> Clone();
+  for(int i_bin = 1; i_bin < N_bin; i_bin++){
+    double current_Up_content = scale_errors_up.at(i_bin - 1);
+    double current_Down_content = scale_errors_down.at(i_bin - 1);
+    current_Down_content = max(0.00000001, current_Down_content);
+    mapfunc[Scale_Up] -> SetBinContent(i_bin, current_Up_content);
+    mapfunc[Scale_Down] -> SetBinContent(i_bin,current_Down_content);
+  }
+
+  mapfunc[Scale_Up] -> SetName(Scale_Up);
+  mapfunc[Scale_Down] -> SetName(Scale_Down);
+
+}
+
 void Proper_error_data(TString nameofhistogram, TString current_data, int N_bin, double binx[]){
   
   //vector<double> vx, vy, vexl, vexh, veyl, veyh;

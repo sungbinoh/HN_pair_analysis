@@ -273,13 +273,14 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   }
   //mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] -> SetName(current_histname);
   
+  change_to_pseudo_data(nameofhistogram + Cycle_name + current_data + "rebin");
   mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] -> SetName("data_obs");
   
   //mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] -> Write();
   
 }
 
-void Write_data_bkg(TString current_histname){
+void Write_data_bkg(TString current_histname, int injected_evts){
   
   TString nameofhistogram = current_histname + "_central";
   TString legend_list[4] = {"Other", "WJets", "ttbar", "DYJets"};
@@ -303,7 +304,11 @@ void Write_data_bkg(TString current_histname){
   if(nameofhistogram.Contains("EMu") || nameofhistogram.Contains("DiMu")) current_data = SingleMuon;
   else if(nameofhistogram.Contains("DiEle")) current_data = DoubleEG;
   else return;
+
+  mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] -> SetBinContent(10, 3 + injected_evts);
   mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] -> Write();
+
+
 }
 
 void make_histogram_signal(TString nameofhistogram, TString current_histname, TString mass_point, int N_bin, double binx[]){
@@ -359,7 +364,7 @@ void make_histogram_signal(TString nameofhistogram, TString current_histname, TS
 }
 
 
-void open_files(TString histname){
+void open_files(TString histname, int injected_evts){
   
   maphist.clear();
   map_syst_array.clear();
@@ -494,21 +499,21 @@ void open_files(TString histname){
 
 	openfile_Signal(Cycle_name_signal, this_line, current_dir_syst, current_hist_syst);
       }
-      TFile *current_shape = new TFile("shape_" + histname + "_" + this_line + ".root","RECREATE");
+      TFile *current_shape = new TFile("shape_" + histname + "_" + this_line + + "_" + TString::Itoa(injected_evts,10) + "_injected.root","RECREATE");
       
-      Write_data_bkg(histname);
+      Write_data_bkg(histname, injected_evts);
       make_histogram_signal(histname + "_central", histname, this_line, N_bin, current_bins); 
       current_shape -> Close();
       
       //aport for test
-      abort++;
-      if(abort>1) break;
+      //abort++;
+      //if(abort>1) break;
     }
   }
 
 }
 
-void open_binning_file(TString filename){
+void open_binning_file(TString filename, int injected_evts){
   
   cout << "[open_binning_file] start to open binngin file : " << filename << endl;
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
@@ -556,7 +561,7 @@ void open_binning_file(TString filename){
       cout << "[[open_binning_file]] current_histname : " << current_histname << endl;
       
       //open_files(current_histname);
-      open_files(current_histname + "_DYreweight");
+      open_files(current_histname + "_DYreweight", injected_evts);
       map_bin_vector.clear();
       
     }//while not end of file
@@ -565,69 +570,18 @@ void open_binning_file(TString filename){
   
 }
 
-void MakeLimitTemplate(int int_input=30){
+void MakeLimitTemplate_signal_injection(int injected_evts=0){
   setTDRStyle();
   
   // == Set Input Sample List
-  if(int_input < 10) tag_year = 2016;
-  else if(int_input < 20) tag_year = 2017;
-  else if(int_input < 30) tag_year = 2018;
-  else return;
-  
-  int int_binning = int_input%10;
-  cout << "int_input : " << int_input << ", tag_year : " << tag_year << ", int_binning : " << int_binning <<  endl;
+  tag_year = 2016;
+    
   TString binning_file = "binning_limit_merged_";  
   // == int_binning : 1 = mZp_0AK8_SR_DiEle, 2 = mZp_0AK8_SR_DiMu, 3 = mZp_1AK8_SR_DiEle, 4 = mZp_1AK8_SR_DiMu, 5 = mZp_2AK8_SR_DiEle, 6 = mZp_2AK8_SR_DiMu
-  if(int_binning == 1){
-    binning_file = binning_file + "mZp_0AK8_SR_DiEle.txt";
-  }
-  else if(int_binning == 2){
-    binning_file = binning_file + "mZp_0AK8_SR_DiMu.txt";
-  }
-  else if(int_binning == 3){
-    binning_file = binning_file + "mZp_1AK8_SR_DiEle.txt";
-  }
-  else if(int_binning == 4){
-    binning_file = binning_file + "mZp_1AK8_SR_DiMu.txt";
-  }
-  else if(int_binning == 5){
-    binning_file = binning_file + "mZp_2AK8_SR_DiEle.txt";
-  }
-  else if(int_binning == 6){
-    binning_file = binning_file + "mZp_2AK8_SR_DiMu.txt";
-  }
-  else return;
+  binning_file = binning_file + "mZp_2AK8_SR_DiMu.txt";
   cout << "binning_file : " << binning_file << endl;
 
-
-  if(tag_year == 2018){
-    //map_sample_names["DYJets"] = {"DYJets_MG"};
-    map_sample_names["DYJets"] = {"DYJets_MG_HT"};
-    map_sample_names["ttbar"] = {"TT_powheg"};
-    map_sample_names["WJets"] = {"WJets_MG_HT"};
-    map_sample_names["Other"] = {"VV"};
-    map_sample_names["Muon"] = {"data_SingleMuon"};
-    map_sample_names["EGamma"] = {"data_EGamma"};
-    
-    SingleMuon = "data_SingleMuon";
-    DoubleEG = "data_EGamma";
-  }
-
-  if(tag_year == 2017){
-    //map_sample_names["DYJets"] = {"DYJets_MG"};
-    map_sample_names["DYJets"] = {"DYJets_MG_HT"};
-    map_sample_names["ttbar"] = {"TT_powheg"};
-    map_sample_names["WJets"] = {"WJets_MG_HT"};
-    map_sample_names["Other"] = {"VV"};
-    map_sample_names["Muon"] = {"data_SingleMuon"};
-    map_sample_names["EGamma"] = {"data_DoubleEG"};
-
-    SingleMuon = "data_SingleMuon";
-    DoubleEG = "data_DoubleEG";
-  }
-
   if(tag_year == 2016){
-    //map_sample_names["DYJets"] = {"DYJets_MG"};
     map_sample_names["DYJets"] = {"DYJets_MG_HT"};
     map_sample_names["ttbar"] = {"TT_powheg"};
     map_sample_names["WJets"] = {"WJets_MG_HT"};
@@ -645,6 +599,6 @@ void MakeLimitTemplate(int int_input=30){
   //Cycle_name_signal = "HN_pair_all";
   Cycle_name_signal = "SR_ZpNN";
   
-  open_binning_file(binning_file);
+  open_binning_file(binning_file, injected_evts);
   
 }
