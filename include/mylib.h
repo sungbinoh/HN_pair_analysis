@@ -31,6 +31,8 @@ map<TString, TList*> maplist;
 map<TString, std::vector<double> > map_bin_vector;
 map<TString, std::vector<TString> > map_sample_names;
 map<TString, std::vector<double> > map_syst_array;
+map<TString, std::vector<double> > map_syst_table;
+
 
 const int N_syst = 37;
 TString systematics[N_syst] = {"central",

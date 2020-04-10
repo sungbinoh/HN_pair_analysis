@@ -2,7 +2,8 @@
 
 void open_files(TString histname, int injected_evts){
   
-  TString str_injected_evts = TString::Itoa(injected_evts,10);
+  TString str_injected_evts = "_" + TString::Itoa(injected_evts,10) + "_injected";
+  if(injected_evts == -1) str_injected_evts = "";
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
   TString signal_list_file_path=WORKING_DIR+"/script/Signal_list/MC_signal_" + TString::Itoa(tag_year,10) + ".txt";
   TString root_file_path = WORKING_DIR+"/output/LimitTemplate/Signal_injection/";
@@ -37,7 +38,7 @@ void open_files(TString histname, int injected_evts){
       }
       if(!this_line.Contains(channel2)) continue;
       
-      TString current_input = root_file_path + "shape_" + histname + "_" + this_line + "_" + str_injected_evts + "_injected.root";
+      TString current_input = root_file_path + "shape_" + histname + "_" + this_line + str_injected_evts + ".root";
       TFile *current_input_file = new TFile ((current_input)) ;
       //TH1F *obs_hist = (TH1F *)current_input_file->Get(histname);
       //double obs = obs_hist -> Integral();
@@ -56,12 +57,12 @@ void open_files(TString histname, int injected_evts){
       //cout << histname + "_" + this_line + "_central" << endl;
       //signal_rate = current_signal_hist -> Integral();
 
-      ofstream file_shape("./output/DataCards/Signal_injection/shape_" + histname + "_" + this_line + "_" + str_injected_evts + "_injected.txt", ios::trunc);
+      ofstream file_shape("./output/DataCards/Signal_injection/shape_" + histname + "_" + this_line + str_injected_evts + ".txt", ios::trunc);
       file_shape << "imax 1" << endl;
       file_shape << "jmax " << N_bkg << endl;
       file_shape << "kmax *" << endl;
       file_shape << "---------------" << endl;
-      file_shape << "shapes * * /data6/Users/suoh/Limit/CMSSW_10_2_13/src/HiggsAnalysis/CombinedLimit/ZpNN/LimitTemplate/Signal_injection/shape_"<< histname << "_" << this_line << "_" << str_injected_evts <<"_injected.root $PROCESS $PROCESS_$SYSTEMATIC" << endl;
+      file_shape << "shapes * * /data6/Users/suoh/Limit/CMSSW_10_2_13/src/HiggsAnalysis/CombinedLimit/ZpNN/LimitTemplate/Signal_injection/shape_"<< histname << "_" << this_line << str_injected_evts <<".root $PROCESS $PROCESS_$SYSTEMATIC" << endl;
       file_shape << "---------------" << endl;
       file_shape << "bin\tbin1" << endl;
       //file_shape << "observation " << obs << endl;
@@ -181,7 +182,7 @@ void open_binning_file(TString filename, int injected_evts){
   data_file.close();
 }
 
-void MakeDataCards_signal_injection(int injected_evts=0){
+void MakeDataCards_signal_injection(int injected_evts=-1){
 
   tag_year = 2016;
   
