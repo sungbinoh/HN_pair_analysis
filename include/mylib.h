@@ -34,13 +34,13 @@ map<TString, std::vector<double> > map_syst_array;
 map<TString, std::vector<double> > map_syst_table;
 
 
-const int N_syst = 37;
+const int N_syst = 35;
 TString systematics[N_syst] = {"central",
 			       "ElectronScaleDown", "ElectronScaleUp",
 			       "ElectronSmearDown", "ElectronSmearUp",
 			       "JetsResDown", "JetsResUp",
 			       "JetsScaleDown", "JetsScaleUp",
-			       "SD_JMR_Down", "SD_JMR_Up",
+			       //"SD_JMR_Down", "SD_JMR_Up", // -- Because there is no W/Z tagging in the analysis
 			       "SD_JMS_Down", "SD_JMS_Up",
 			       "PUReweight_Down", "PUReweight_Up",
 			       "MuonScaleDown", "MuonScaleUp",
@@ -57,12 +57,12 @@ TString systematics[N_syst] = {"central",
 			       "ZPtRwUp", "ZPtRwDown",
 };
 
-const int N_syst_comparison = 18;
+const int N_syst_comparison = 17;
 TString systematics_comparison[N_syst] = {"ElectronScale",
 					  "ElectronSmear",
 					  "JetsRes",
 					  "JetsScale",
-					  "SD_JMR_",
+					  //"SD_JMR_", // -- Because there is no W/Z tagging in the analysis
 					  "SD_JMS_",
 					  "PUReweight_",
 					  "MuonScale",
@@ -349,7 +349,7 @@ void Write_syst_error_limit(TString current_histname,  TString systematics, TStr
   // -- ADD year on syst name for uncorrelated systematics over years
   TString name_up = current_histname + "_" + current_sample + "_" + systematics + TString::Itoa(tag_year,10) + "Up";
   TString name_down = current_histname + "_" + current_sample + "_" + systematics +  TString::Itoa(tag_year,10) + "Down";
-  if(systematics.Contains("Jet") || systematics.Contains("SD") ){
+  if(systematics.Contains("Jet") || systematics.Contains("SD") || systematics.Contains("ZPtRw") ){
     name_up = current_histname + "_" + current_sample + "_" + systematics + "Up";
     name_down = current_histname + "_" + current_sample + "_" + systematics + "Down";
   }

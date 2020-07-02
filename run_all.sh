@@ -1,8 +1,8 @@
-#root -l -b -q "src/QuickPlot.C(2018)"
-#root -l -b -q "src/QuickPlot.C(2017)"
-#root -l -b -q "src/QuickPlot.C(2016)"
-#root -l -b -q "src/QuickPlotFullRun2.C(2019)"
-#root -l -b -q "src/QuickPlotFullRun2_signal.C(2019)"
+root -l -b -q "src/QuickPlot.C(2018)"
+root -l -b -q "src/QuickPlot.C(2017)"
+root -l -b -q "src/QuickPlot.C(2016)"
+root -l -b -q "src/QuickPlotFullRun2.C(2019)"
+root -l -b -q "src/QuickPlotFullRun2_signal.C(2019)"
 
 root -l -b -q "src/QuickPlot_signal.C(2018)"
 root -l -b -q "src/QuickPlot_signal.C(2017)"

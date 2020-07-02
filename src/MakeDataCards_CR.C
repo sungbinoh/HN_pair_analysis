@@ -113,11 +113,11 @@ void open_files(TString histname){
   file_shape << "MuonTriggerSF" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
   file_shape << "JetsRes\tshapeN2" + adding_bkgs << endl;
   file_shape << "JetsScale\tshapeN2" + adding_bkgs << endl;
-  file_shape << "SD_JMR_\tshapeN2" + adding_bkgs << endl;
+  //file_shape << "SD_JMR_\tshapeN2" + adding_bkgs << endl;
   file_shape << "SD_JMS_\tshapeN2" + adding_bkgs << endl;
   file_shape << "PUReweight_" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
   file_shape << "Prefire_" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
-  file_shape << "ZPtRw" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
+  file_shape << "ZPtRw\tshapeN2" + adding_bkgs << endl;
     
   file_shape << "* autoMCStats 0 0 1" << endl;
   file_shape.close();

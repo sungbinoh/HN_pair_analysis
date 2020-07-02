@@ -11,7 +11,8 @@ year = sys.argv[1]
 #year = "2016"
 
 a = 0
-f = open("./Zprime_to_NN_" + year + ".txt", 'r')
+#f = open("./Zprime_to_NN_" + year + ".txt", 'r')
+f = open("./Zprime_to_NN_2016.txt", 'r')
 
 for line in f: # -- loop over mass points 
     if not line: break

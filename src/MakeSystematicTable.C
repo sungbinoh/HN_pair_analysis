@@ -215,7 +215,7 @@ void MakeSystematicTable(int year=2018){
 				       "ElectronSmear",
 				       "JetsRes",
 				       "JetsScale",
-				       "SD Mass Res",
+				       //"SD Mass Res",
 				       "SD Mass Scale",
 				       "PU Reweight",
 				       "MuonScale",
@@ -231,6 +231,26 @@ void MakeSystematicTable(int year=2018){
 				       "ZPtRw",
   };  
   
+  TString syst_correlation[N_syst] = {"Unco.",
+				      "Unco.",
+				      "Correlated",
+				      "Correlated",
+				      //"Correlated",
+				      "Correlated",
+				      "Unco.",
+				      "Unco.",
+				      "Not Done",
+				      "Unco.",
+				      "Unco.",
+				      "Unco.",
+				      "Unco.",
+				      "Unco.",
+				      "Unco.",
+				      "Unco.",
+				      "Not Done",
+				      "Not Done",
+  };
+  
   ofstream file_syst_table("./output/latex/syst_table_" + TString::Itoa(tag_year,10) + ".tex", ios::trunc);
   
   file_syst_table << "\\begin{table}"<< endl;
@@ -238,12 +258,12 @@ void MakeSystematicTable(int year=2018){
   file_syst_table << "\\topcaption{The list of systematics and their impacts on total number of events at $\\Pe\\Pe$ siganl region in " << TString::Itoa(tag_year,10) << ".}" << endl;
   file_syst_table << "\\label{tab:syst_ee_" + TString::Itoa(tag_year,10) + "}" << endl;
   file_syst_table << "\\resizebox{\\textwidth}{!}{" << endl;
-  file_syst_table << "\\begin{tabular}{l l l l l l }" << endl;
+  file_syst_table << "\\begin{tabular}{l l l l l l l}" << endl;
   file_syst_table << "\\hline\\hline" << endl;
-  file_syst_table << "Systematics (\\%) & DY & ttbar & W+Jets & Others & Signal \\\\" << endl;
+  file_syst_table << "Systematics (\\%) & Handling &DY & ttbar & W+Jets & Others & Signal \\\\" << endl;
   file_syst_table << "\\hline" << endl;
   for(int j = 0; j < N_syst_comparison; j++){
-    file_syst_table << systematics_table[j];
+    file_syst_table << systematics_table[j] << " & " << syst_correlation[j];
     for(int i = 0; i < 4; i++){
       file_syst_table << fixed <<setprecision(3) << " & " << map_syst_table[bkgs[i] + systematics_comparison[j] + "EE"].at(0) << " - " << map_syst_table[bkgs[i] + systematics_comparison[j] + "EE"].at(1);
     }
@@ -251,7 +271,7 @@ void MakeSystematicTable(int year=2018){
   }
   for(int j = 0; j < 2; j++){
     file_syst_table << PDF_uncertainty[j];
-    file_syst_table << " & 0 - 0 & 0 - 0 & 0 - 0 & 0 - 0 & " <<  map_syst_table[PDF_uncertainty[j] + "EE"].at(0) << " - " << map_syst_table[PDF_uncertainty[j] + "EE"].at(1) << "\\\\" << endl;
+    file_syst_table << " & Correlated & - & - & - & - & " <<  map_syst_table[PDF_uncertainty[j] + "EE"].at(0) << " - " << map_syst_table[PDF_uncertainty[j] + "EE"].at(1) << "\\\\" << endl;
   }
   file_syst_table << "\\hline\\hline" << endl;
   file_syst_table << "\\end{tabular}" << endl;
@@ -264,12 +284,12 @@ void MakeSystematicTable(int year=2018){
   file_syst_table << "\\topcaption{The list of systematics and their impacts on total number of events at $\\mu\\mu$ siganl region in " << TString::Itoa(tag_year,10) << ".}" << endl;
   file_syst_table << "\\label{tab:syst_mumu_" + TString::Itoa(tag_year,10) + "}" << endl;
   file_syst_table << "\\resizebox{\\textwidth}{!}{" << endl;
-  file_syst_table << "\\begin{tabular}{l l l l l l }" << endl;
+  file_syst_table << "\\begin{tabular}{l l l l l l l}" << endl;
   file_syst_table << "\\hline\\hline" << endl;
-  file_syst_table << "Systematics (\\%) & DY & ttbar & W+Jets & Others & Signal \\\\" << endl;
+  file_syst_table << "Systematics (\\%) & Handling  & DY & ttbar & W+Jets & Others & Signal \\\\" << endl;
   file_syst_table << "\\hline" << endl;
   for(int j = 0; j < N_syst_comparison; j++){
-    file_syst_table << systematics_table[j];
+    file_syst_table << systematics_table[j] << " & " << syst_correlation[j];
     for(int i = 0; i < 4; i++){
       file_syst_table << fixed << setprecision(3) << " & " << map_syst_table[bkgs[i] + systematics_comparison[j] + "MuMu"].at(0) << " - " << map_syst_table[bkgs[i] + systematics_comparison[j] + "MuMu"].at(1);
     }
@@ -277,7 +297,7 @@ void MakeSystematicTable(int year=2018){
   }
   for(int j = 0; j < 2; j++){
     file_syst_table << PDF_uncertainty[j];
-    file_syst_table << " & 0 - 0 & 0 - 0 & 0 - 0 & 0 - 0 & " <<  map_syst_table[PDF_uncertainty[j] + "MuMu"].at(0) << " - " << map_syst_table[PDF_uncertainty[j] + "MuMu"].at(1) << "\\\\" << endl;
+    file_syst_table << " & Correlated & - & - & - & - & " <<  map_syst_table[PDF_uncertainty[j] + "MuMu"].at(0) << " - " << map_syst_table[PDF_uncertainty[j] + "MuMu"].at(1) << "\\\\" << endl;
   }
   file_syst_table << "\\hline\\hline" << endl;
   file_syst_table << "\\end{tabular}" << endl;

@@ -11,7 +11,7 @@ year = sys.argv[1]
 #year = "2016"
 
 a = 0
-f = open("./Zprime_to_NN_" + year + ".txt", 'r')
+f = open("./Zprime_to_NN_2016.txt", 'r')
 
 for line in f: # -- loop over mass points 
     if not line: break
@@ -30,7 +30,7 @@ for line in f: # -- loop over mass points
     print list_name
     f_current_list = open("./list_" + year + "/" + list_name, 'w')
     
-    current_target_dir = "/gv0/DATA/SKFlat/Run2Legacy_v4/" + year + "/PrivateMC/ZpNN/" + mass_point
+    current_target_dir = "/gv0/DATA/SKFlat/Run2Legacy_v4/" + year + "/PrivateMC/ZpNN/" + mass_point + "_" + year
     print current_target_dir
     
     file_list = commands.getstatusoutput("ls " + current_target_dir)

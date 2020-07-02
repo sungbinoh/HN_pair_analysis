@@ -3,7 +3,8 @@
 void open_files(TString histname){
   
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
-  TString signal_list_file_path=WORKING_DIR+"/script/Signal_list/MC_signal_" + TString::Itoa(tag_year,10) + ".txt";
+  //TString signal_list_file_path=WORKING_DIR+"/script/Signal_list/MC_signal_" + TString::Itoa(tag_year,10) + ".txt";
+  TString signal_list_file_path=WORKING_DIR+"/script/Signal_list/MC_signal_2016.txt";
   TString root_file_path = WORKING_DIR+"/output/LimitTemplate/" + TString::Itoa(tag_year,10) + "/";
   char line[500];
   ifstream signal_file;
@@ -126,11 +127,11 @@ void open_files(TString histname){
       file_shape << "MuonTriggerSF" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
       file_shape << "JetsRes\tshapeN2" + adding_bkgs << endl;
       file_shape << "JetsScale\tshapeN2" + adding_bkgs << endl;
-      file_shape << "SD_JMR_\tshapeN2" + adding_bkgs << endl;
+      //file_shape << "SD_JMR_\tshapeN2" + adding_bkgs << endl;
       file_shape << "SD_JMS_\tshapeN2" + adding_bkgs << endl;
       file_shape << "PUReweight_" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
       file_shape << "Prefire_" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
-      file_shape << "ZPtRw" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
+      file_shape << "ZPtRw\tshapeN2" + adding_bkgs << endl;
       file_shape << "PDF\tshapeN2" + adding_bkgs_signal_only << endl;
       file_shape << "Scale\tshapeN2" + adding_bkgs_signal_only << endl;
 

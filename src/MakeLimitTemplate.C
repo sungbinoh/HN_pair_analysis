@@ -463,7 +463,9 @@ void open_files(TString histname){
     make_histogram(histname + "_central", histname, N_bin, current_bins);
   
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
-  TString signal_list_file_path=WORKING_DIR+"/script/Signal_list/MC_signal_" + TString::Itoa(tag_year,10) + ".txt"; 
+  //TString signal_list_file_path=WORKING_DIR+"/script/Signal_list/MC_signal_" + TString::Itoa(tag_year,10) + ".txt"; 
+  TString signal_list_file_path=WORKING_DIR+"/script/Signal_list/MC_signal_2016.txt";
+  
   char line[500];
   ifstream signal_file;
   signal_file.open(signal_list_file_path);
@@ -502,7 +504,7 @@ void open_files(TString histname){
       
       //aport for test
       abort++;
-      if(abort>1) break;
+      //if(abort>1) break;
     }
   }
 

@@ -6,10 +6,10 @@
 #root -l -b -q "src/QuickLimit.C(5)"
 #root -l -b -q "src/QuickLimit.C(6)"
 #root -l -b -q "src/QuickLimit.C(7)"
-root -l -b -q "src/QuickLimit.C(8)"
+#root -l -b -q "src/QuickLimit.C(8)"
 #root -l -b -q "src/QuickLimit.C(9)"
 #root -l -b -q "src/QuickLimit.C(10)"
-root -l -b -q "src/QuickLimit.C(11)"
+#root -l -b -q "src/QuickLimit.C(11)"
 #root -l -b -q "src/QuickLimit.C(12)"
 #root -l -b -q "src/QuickLimit.C(13)"
 #root -l -b -q "src/QuickLimit.C(14)"
@@ -27,6 +27,11 @@ root -l -b -q "src/QuickLimit.C(11)"
 
 #scp -r ./plots/limit suoh@147.47.242.44:/home/suoh/Dropbox/HN_pair/
 
-root -l -b -q "src/Quick_Contour_overlap.C(0)"
+#root -l -b -q "src/Quick_Contour_overlap.C(0)"
 
-scp -r ./plots/limit/comparison suoh@147.47.242.44:/home/suoh/Dropbox/HN_pair/limit/
+#scp -r ./plots/limit/comparison suoh@147.47.242.44:/home/suoh/Dropbox/HN_pair/limit/
+
+
+root -l -b -q src/Comparison_Hybrid_Asym.C
+scp /data6/Users/suoh/HN_pair_analysis/plots/limit/3AK8_CRs/MuMu/Asym_vs_Hybridnew.pdf suoh@147.47.242.44:/home/suoh/Dropbox/HN_pair/limit/3AK8_CRs/MuMu
+scp /data6/Users/suoh/HN_pair_analysis/plots/limit/3AK8_CRs/EE/Asym_vs_Hybridnew.pdf suoh@147.47.242.44:/home/suoh/Dropbox/HN_pair/limit/3AK8_CRs/EE
