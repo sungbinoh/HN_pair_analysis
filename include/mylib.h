@@ -7,7 +7,7 @@ using namespace std;
 const double alpha = 1 - 0.6827;
 const double signal_scale = 0.001;
 // == Debugging Mode
-bool debug = false;
+bool debug = true;
 int tag_year = 0;
 TString Cycle_name;
 TString Cycle_name_signal;
@@ -57,7 +57,7 @@ TString systematics[N_syst] = {"central",
 			       "ZPtRwUp", "ZPtRwDown",
 };
 
-const int N_syst_comparison = 17;
+const int N_syst_comparison = 16;
 TString systematics_comparison[N_syst] = {"ElectronScale",
 					  "ElectronSmear",
 					  "JetsRes",
@@ -66,7 +66,7 @@ TString systematics_comparison[N_syst] = {"ElectronScale",
 					  "SD_JMS_",
 					  "PUReweight_",
 					  "MuonScale",
-					  "MuonSmear",
+					  //"MuonSmear",
 					  "Prefire_",
 					  "MuonRecoSF",
 					  "MuonIDSF",
@@ -346,12 +346,13 @@ void Write_syst_error_limit(TString current_histname,  TString systematics, TStr
     mapfunc[histname_Down + "rebin"] = (TH1F*)mapfunc[histname_Down + "rebin"] -> Rebin(N_bin - 1, histname_Down + "rebin", binx);
   }
 
-  // -- ADD year on syst name for uncorrelated systematics over years
-  TString name_up = current_histname + "_" + current_sample + "_" + systematics + TString::Itoa(tag_year,10) + "Up";
-  TString name_down = current_histname + "_" + current_sample + "_" + systematics +  TString::Itoa(tag_year,10) + "Down";
-  if(systematics.Contains("Jet") || systematics.Contains("SD") || systematics.Contains("ZPtRw") ){
-    name_up = current_histname + "_" + current_sample + "_" + systematics + "Up";
-    name_down = current_histname + "_" + current_sample + "_" + systematics + "Down";
+  // -- ADD year on syst name for correlated systematics over years
+  TString name_up = current_histname + "_" + current_sample + "_" + systematics + "Up";
+  TString name_down = current_histname + "_" + current_sample + "_" + systematics + "Down";
+  // -- Uncorrelated Systematics
+  if(systematics.Contains("TriggerSF")){
+    name_up = current_histname + "_" + current_sample + "_" + systematics + TString::Itoa(tag_year,10) + "Up";
+    name_down = current_histname + "_" + current_sample + "_" + systematics +  TString::Itoa(tag_year,10) + "Down";
   }
   
   mapfunc[histname_Up + "rebin"] -> SetName(name_up);
@@ -360,6 +361,18 @@ void Write_syst_error_limit(TString current_histname,  TString systematics, TStr
   //cout << "[Write_syst_error_limit] histname_Up : " << histname_Up << endl;
 }
 
+void Remove_Negative_Bins(TString current_histname){
+  int N_bin = mapfunc[current_histname] -> GetNbinsX();
+  for(int i = 1; i <= N_bin; i++){
+    double current_bin_content = mapfunc[current_histname] -> GetBinContent(i);
+    if (current_bin_content < 0.){
+      current_bin_content = 0.00001;
+      double current_error = current_bin_content / 1.0;
+      mapfunc[current_histname] -> SetBinContent(i, current_bin_content);
+      mapfunc[current_histname] -> SetBinError(i, current_error);
+    }
+  }
+}
 
 void change_to_pseudo_data(TString current_histname){
   
@@ -555,7 +568,6 @@ void Proper_error_data(TString nameofhistogram, TString current_data, int N_bin,
   }//end for i on N_bin
     
 }
-
 
 TGraphAsymmErrors* hist_to_graph(TH1D* hist, bool YErrorZero=false){
 

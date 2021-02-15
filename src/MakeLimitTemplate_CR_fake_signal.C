@@ -96,7 +96,7 @@ void openfile_Signal(TString cyclename, TString samplename, TString dir, TString
     for(int i_err = 1; i_err < 9; i_err++){
       if(i_err == 5 || i_err == 7) continue;
       TString current_histname = histname + "_Scale_" + TString::Itoa(i_err, 10);
-      //cout << "[openfile_Signal] current_histname : " <<  current_histname << endl;
+      cout << "[openfile_Signal] current_histname : " <<  current_histname << endl;
       TH1F * current_scale = (TH1F*)gDirectory -> Get(current_histname);
       mapfunc[current_histname + cyclename + samplename] = current_scale;
       mapfunc[current_histname + cyclename + samplename] -> Scale(signal_scale);
@@ -160,46 +160,48 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   double DY_norm = 1.;
   if( GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0))){
       
-    N_DY = GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)) -> Integral();
-  
     if(debug) cout << "N_DY " << map_sample_names["DYJets"].at(0) << " : " << N_DY << endl;
-    
-    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)))     N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)) -> Integral();
-    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar"].at(0)) ) N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["ttbar"].at(0)) -> Integral();
-    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["WJets"].at(0)) )  N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["WJets"].at(0)) -> Integral();
-    if(GetHist(nameofhistogram + Cycle_name + map_sample_names["Other"].at(0)) )        N_MC += GetHist(nameofhistogram + Cycle_name + map_sample_names["Other"].at(0)) -> Integral();
-    
-    if(GetHist(nameofhistogram + Cycle_name + current_data) )N_Data = GetHist(nameofhistogram + Cycle_name + current_data) -> Integral();
-    
-    DY_norm = (N_DY + N_Data - N_MC) / N_DY;
     
     if(tag_year == 2016){
       if(nameofhistogram.Contains("DiMu")){
-	DY_norm = 0.801;
+	if(nameofhistogram.Contains("0AK8")) DY_norm = 0.812047; 
+	if(nameofhistogram.Contains("1AK8")) DY_norm = 0.708608;
+        if(nameofhistogram.Contains("2AK8")) DY_norm = 0.603515;
       }
       if(nameofhistogram.Contains("DiEle")){
-        DY_norm = 0.907;
+	if(nameofhistogram.Contains("0AK8")) DY_norm = 0.961725;
+	if(nameofhistogram.Contains("1AK8")) DY_norm = 0.688508;
+        if(nameofhistogram.Contains("2AK8")) DY_norm = 0.511236;
       }
     }
     if(tag_year == 2017){
       if(nameofhistogram.Contains("DiMu")){
-        DY_norm = 1.084;
+	if(nameofhistogram.Contains("0AK8")) DY_norm = 1.09545;
+	if(nameofhistogram.Contains("1AK8")) DY_norm = 1.05588;
+        if(nameofhistogram.Contains("2AK8")) DY_norm = 0.74721;
       }
       if(nameofhistogram.Contains("DiEle")){
-	DY_norm = 1.078;
+	if(nameofhistogram.Contains("0AK8")) DY_norm = 1.09268;
+	if(nameofhistogram.Contains("1AK8")) DY_norm = 1.06172;
+        if(nameofhistogram.Contains("2AK8")) DY_norm = 0.880778;
       }
     }if(tag_year == 2018){
       if(nameofhistogram.Contains("DiMu")){
-        DY_norm = 1.06015;
+	if(nameofhistogram.Contains("0AK8")) DY_norm = 1.12716;
+	if(nameofhistogram.Contains("1AK8")) DY_norm = 0.946549;
+        if(nameofhistogram.Contains("2AK8")) DY_norm = 0.997479;
       }
       if(nameofhistogram.Contains("DiEle")){
-	DY_norm = 1.0312;
+	if(nameofhistogram.Contains("0AK8")) DY_norm = 1.08663;
+	if(nameofhistogram.Contains("1AK8")) DY_norm = 0.951804;
+        if(nameofhistogram.Contains("2AK8")) DY_norm = 0.957299;
       }
     }
     
     GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)) -> Scale(DY_norm); 
     
-        
+    outfile << nameofhistogram << "'s DY_norm : " << DY_norm << endl;
+    
     for(int i_syst = 1; i_syst < N_syst; i_syst++){
       if(GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0))){
 	GetHist(current_histname + "_" + systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0)) -> Scale(DY_norm);
@@ -214,7 +216,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   TString clone = nameofhistogram;
   func.Insert(0, "ratio_");
   clone.Insert(0, "h3_");
-
+  
   TString legend_list[4] = {"Other", "WJets", "ttbar", "DYJets"};
   
   TString name_cycle = nameofhistogram + Cycle_name;
@@ -272,9 +274,8 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
     mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] = (TH1F*)GetHist(func + "blind_data") -> Clone(clone + "blind");
   }
   //mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] -> SetName(current_histname);
-  
   mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] -> SetName("data_obs");
-  
+
   //mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] -> Write();
   
 }
@@ -306,12 +307,43 @@ void Write_data_bkg(TString current_histname){
       }    
     }
   }
+  
+  TH1F *fake_signal = (TH1F*)mapfunc[nameofhistogram + Cycle_name + map_sample_names["Other"].at(0) + "rebin"] -> Clone();
+  fake_signal -> Scale(0.1);
+  fake_signal -> SetName("signal");
+  fake_signal -> Write();
+  for(int i_syst = 0; i_syst < N_syst_comparison; i_syst++){
+    TString current_sample = map_sample_names["Other"].at(0);
+    TString systematics = systematics_comparison[i_syst];
+    TString cycle_and_sample = Cycle_name + current_sample;
+    TString histname_Up   = current_histname + "_" + systematics + "Up"   + cycle_and_sample;
+    TString histname_Down = current_histname + "_" + systematics + "Down" + cycle_and_sample;
+    
+    TString name_up = "signal_" + systematics + "Up";
+    TString name_down = "signal_" + systematics + "Down";
+    // -- Uncorrelated syst
+    if(systematics.Contains("TriggerSF")){
+      name_up = "signal_" + systematics + TString::Itoa(tag_year,10) + "Up";
+      name_down = "signal_" + systematics +  TString::Itoa(tag_year,10) + "Down";
+    }
+ 
+    TH1F *current_syst_up = (TH1F*)mapfunc[histname_Up + "rebin"] -> Clone();
+    TH1F *current_syst_down = (TH1F*)mapfunc[histname_Down + "rebin"] -> Clone();
+    current_syst_up -> Scale(0.1);
+    current_syst_down -> Scale(0.1);
+    current_syst_up -> SetName(name_up);
+    current_syst_down -> SetName(name_down);
+    current_syst_up -> Write();
+    current_syst_down -> Write();
+  }
+  
 
   TString current_data;
   if(nameofhistogram.Contains("EMu") || nameofhistogram.Contains("DiMu")) current_data = SingleMuon;
   else if(nameofhistogram.Contains("DiEle")) current_data = DoubleEG;
   else return;
   mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] -> Write();
+
 }
 
 void make_histogram_signal(TString nameofhistogram, TString current_histname, TString mass_point, int N_bin, double binx[]){
@@ -340,7 +372,6 @@ void make_histogram_signal(TString nameofhistogram, TString current_histname, TS
       Write_syst_error_limit(current_histname, systematics_comparison[i_syst], Cycle_name_signal, current_sample, N_bin, binx);
     }
     mapfunc[nameofhistogram + Cycle_name_signal + current_sample + "rebin"] -> SetName(current_histname + "_" + current_sample);// + "_central");
-    Remove_Negative_Bins(nameofhistogram + Cycle_name_signal + current_sample + "rebin");
     mapfunc[nameofhistogram + Cycle_name_signal + current_sample + "rebin"] -> Write();
     
 
@@ -351,21 +382,16 @@ void make_histogram_signal(TString nameofhistogram, TString current_histname, TS
       TString histname_Down = current_histname + "_" + systematics + "Down" + cycle_and_sample;
 
       if(debug) cout << "[make_histogram_signal] histname_Up : " << histname_Up <<endl;
-      Remove_Negative_Bins(histname_Up + "rebin");
-      Remove_Negative_Bins(histname_Down + "rebin");
+
       mapfunc[histname_Up + "rebin"] -> Write();
       mapfunc[histname_Down + "rebin"] -> Write();
     }
 
     Estimate_PDF_Error(current_histname, Cycle_name_signal, current_sample, N_bin, binx);
-    Remove_Negative_Bins(current_histname + "_" + current_sample + "_PDFUp");
-    Remove_Negative_Bins(current_histname + "_" + current_sample + "_PDFDown");
     mapfunc[current_histname + "_" + current_sample + "_PDFUp"] -> Write();
     mapfunc[current_histname + "_" + current_sample + "_PDFDown"] -> Write();
 
     Estimate_Scale_Error(current_histname, Cycle_name_signal, current_sample, N_bin, binx);
-    Remove_Negative_Bins(current_histname + "_" + current_sample + "_ScaleUp");
-    Remove_Negative_Bins(current_histname + "_" + current_sample + "_ScaleDown");
     mapfunc[current_histname + "_" + current_sample + "_ScaleUp"] -> Write();
     mapfunc[current_histname + "_" + current_sample + "_ScaleDown"] -> Write();
 
@@ -471,57 +497,30 @@ void open_files(TString histname){
     openfile_DATA(Cycle_name, SingleMuon, current_dir_syst, current_hist_syst);
     
   }
-  
+  // -- FIXME
   //histname = histname + "_central";
   //cout << "histname : " << histname << ", current_histname : " << current_histname << endl;
-    make_histogram(histname + "_central", histname, N_bin, current_bins);
+  //TFile *MyFile = new TFile("/output/Bkg_VS_signal_" + histname + ".root","RECREATE");
+  //TFile *MyFile = new TFile("Bkg_VS_signal_" + histname + ".root","RECREATE");
+  make_histogram(histname + "_central", histname, N_bin, current_bins);
+  
   
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
-  //TString signal_list_file_path=WORKING_DIR+"/script/Signal_list/MC_signal_" + TString::Itoa(tag_year,10) + ".txt"; 
-  TString signal_list_file_path=WORKING_DIR+"/script/Signal_list/MC_signal_2016.txt";
-  
-  char line[500];
-  ifstream signal_file;
-  signal_file.open(signal_list_file_path);
-  if(signal_file.is_open()){
-    int abort = 0;
-    while(!signal_file.eof()){
-      signal_file.getline(line, 500);
-      
-      cout << abort << "'th file going on, " << TString::Itoa(tag_year,10) << endl;
-      cout << line << endl;
-      TString this_line = line;
-      
-      TString channel2 = "";
-      if(histname.Contains("DiEle")){
-	channel2 = "EE";
-      }
-      if(histname.Contains("DiMu")){
-	channel2 = "MuMu";
-      }
-      abort++;
-      if(!this_line.Contains(channel2)) {
-	cout << "no matched channel" << endl;
-	continue;
-      }
-      for(int i_syst = 0; i_syst < N_syst; i_syst++){
-	TString current_hist_syst = histname + "_" + systematics[i_syst];
-	TString current_dir_syst = current_dir + "_" + systematics[i_syst];
 
-	openfile_Signal(Cycle_name_signal, this_line, current_dir_syst, current_hist_syst);
-      }
-      TFile *current_shape = new TFile("shape_" + histname + "_" + this_line + ".root","RECREATE");
-      
-      Write_data_bkg(histname);
-      make_histogram_signal(histname + "_central", histname, this_line, N_bin, current_bins); 
-      current_shape -> Close();
-      
-      //aport for test
-      abort++;
-      //if(abort>1) break;
-    }
+  TString channel2 = "";
+  if(histname.Contains("DiEle")){
+    channel2 = "EE";
   }
-
+  if(histname.Contains("DiMu")){
+    channel2 = "MuMu";
+  }
+  
+  TFile *current_shape = new TFile("shape_" + histname + "_fake_signal.root","RECREATE");
+  
+  Write_data_bkg(histname);
+  current_shape -> Close();
+    
+  //MyFile -> Close();
 }
 
 void open_binning_file(TString filename){
@@ -581,47 +580,14 @@ void open_binning_file(TString filename){
   
 }
 
-void MakeLimitTemplate(int int_input=30){
+void MakeLimitTemplate_CR_fake_signal(int year=2018){
   setTDRStyle();
   
   // == Set Input Sample List
-  if(int_input < 10) tag_year = 2016;
-  else if(int_input < 20) tag_year = 2017;
-  else if(int_input < 30) tag_year = 2018;
-  else return;
+  tag_year = year;
   
-  int int_binning = int_input%10;
-  cout << "int_input : " << int_input << ", tag_year : " << tag_year << ", int_binning : " << int_binning <<  endl;
-  TString binning_file = "binning_limit_merged_";  
-  // == int_binning : 1 = mZp_0AK8_SR_DiEle, 2 = mZp_0AK8_SR_DiMu, 3 = mZp_1AK8_SR_DiEle, 4 = mZp_1AK8_SR_DiMu, 5 = mZp_2AK8_SR_DiEle, 6 = mZp_2AK8_SR_DiMu
-  if(int_binning == 1){
-    binning_file = binning_file + "mZp_0AK8_SR_DiEle.txt";
-  }
-  else if(int_binning == 2){
-    binning_file = binning_file + "mZp_0AK8_SR_DiMu.txt";
-  }
-  else if(int_binning == 3){
-    binning_file = binning_file + "mZp_1AK8_SR_DiEle.txt";
-  }
-  else if(int_binning == 4){
-    binning_file = binning_file + "mZp_1AK8_SR_DiMu.txt";
-  }
-  else if(int_binning == 5){
-    binning_file = binning_file + "mZp_2AK8_SR_DiEle.txt";
-  }
-  else if(int_binning == 6){
-    binning_file = binning_file + "mZp_2AK8_SR_DiMu.txt";
-  }
-  else if(int_binning == 7){
-    binning_file = binning_file + "mZp_SR_DiMu.txt";
-  }
-  else if(int_binning == 8){
-    binning_file = binning_file + "mZp_SR_DiEle.txt";
-  }
-  else return;
-  cout << "binning_file : " << binning_file << endl;
-
-
+  outfile.open("output_" + TString::Itoa(tag_year,10) + ".txt");
+  
   if(tag_year == 2018){
     //map_sample_names["DYJets"] = {"DYJets_MG"};
     map_sample_names["DYJets"] = {"DYJets_MG_HT"};
@@ -667,9 +633,8 @@ void MakeLimitTemplate(int int_input=30){
   
 
   Cycle_name = "HN_pair_all_SkimTree_LRSMHighPt";
-  //Cycle_name_signal = "HN_pair_all";
-  Cycle_name_signal = "SR_ZpNN";
-  
-  open_binning_file(binning_file);
+  open_binning_file("binning_limit_CR.txt");
+
+  outfile.close();
   
 }

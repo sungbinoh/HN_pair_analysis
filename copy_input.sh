@@ -7,11 +7,10 @@ cp_2018_SR_ZpNN="cp "${path_SR_ZpNN}'2018/SR_ZpNN_HNPairToJJJJ_*.root '$FILE_PAT
 echo "copying 2018 Background"
 eval $cp_2018_bkg
 echo "copying 2018 signal"
-#eval $cp_2018_signal
 eval $cp_2018_SR_ZpNN
 echo "copying 2018 DATA"
 eval $cp_2018_DATA
-
+#:<<END
 cp_2017_bkg="cp "${path_2017}'HN_pair_all_SkimTree_LRSMHighPt*.root '$FILE_PATH'/2017/Background/'
 rm_signal_bkg_2017="rm "$FILE_PATH'/2017/Background/HN_pair_all_HNPairToJJJJ_*.root'
 cp_2017_DATA="cp "${path_2017}'/DATA/HN_pair_all_SkimTree_LRSMHighPt_data*.root '$FILE_PATH'/2017/DATA/'

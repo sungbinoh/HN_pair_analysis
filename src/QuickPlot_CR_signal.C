@@ -44,7 +44,30 @@ void openfile_DATA(TString cyclename, TString samplename, TString dir, TString h
   current_file -> Close();
   delete current_file;
 }
-    
+ 
+void openfile_signal(TString samplename, TString channel, TString dir, TString histname){
+
+  TString filename = "SR_ZpNN_HNPairToJJJJ_" + channel + "_" + samplename + "_WR5000.root";
+  cout << "[[openfile_signal]] Open " << filename << endl;
+
+  TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
+  TString root_file_path = WORKING_DIR+"/rootfiles/" +TString::Itoa(tag_year,10) + "/Signal/";
+  filename = root_file_path + filename;
+  TFile *current_file = new TFile ((filename)) ;
+  gDirectory->cd(dir);
+
+  TH1F * current_hist = (TH1F*)gDirectory -> Get(histname);
+  if(current_hist){
+    current_hist -> SetDirectory(0);
+  }
+  TH1::AddDirectory(kFALSE);
+
+  mapfunc[histname + samplename] = current_hist;
+
+  current_file -> Close();
+  delete current_file;
+}
+   
 void draw_syst_lines(TString current_histname, int N_bin, double x1_template, double x2_template){
   
   TString legend_list[4] = {"Other", "Non-prompt", "ttbar", "DYJets"};
@@ -313,7 +336,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   mappad[pad1] -> SetRightMargin( 0.03 );
   mappad[pad1] -> Draw();
   mappad[pad1] -> cd();
-  mappad[pad1] -> SetLogy();
+  //mappad[pad1] -> SetLogy();
   
   maplegend[legend] = new TLegend(0.60, 0.60, 0.96, 0.92);
 
@@ -472,12 +495,21 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> Draw("e2same");
   maplegend[legend] -> AddEntry(map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"], "Syst. + Stat.", "pf");
   
-  
+  // -- Draw Signal
+  Int_t signal_colour_array[] = {622, 632, 432, 600};
+  for(unsigned int i_signal = 0; i_signal < map_sample_names["Signal"].size(); i_signal++){
+    Rebin_with_overflow(nameofhistogram + map_sample_names["Signal"].at(i_signal), N_bin, binx);
+    mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "rebin"] -> SetLineColor(signal_colour_array[i_signal]);
+    mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "rebin"] -> SetLineWidth(2);
+    maplegend[legend] -> AddEntry(mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "rebin"],  map_sample_names["Signal"].at(i_signal), "l");
+    mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "rebin"] -> Draw("histsame");
+  }
+
   // -- Set y-axis range
   double data_max = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetMaximum();
   double data_min = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetMinimum();
-  maphstack[hstack] -> SetMaximum(data_max * 100000.);//logy
-  //maphstack[hstack] -> SetMaximum(data_max * 1.5);
+  //maphstack[hstack] -> SetMaximum(data_max * 100000.);//logy
+  maphstack[hstack] -> SetMaximum(data_max * 1.5);
   maphstack[hstack] -> SetMinimum(0.0001);
   
   // -- Draw Legend
@@ -669,7 +701,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   else return;
   
   pdfname.Append(nameofhistogram);
-  pdfname.Append(".pdf");
+  pdfname.Append("_signal.pdf");
   if(debug) cout << "9.1" << endl;
 
   mapcanvas[canvas] -> SaveAs(pdfname);
@@ -782,6 +814,16 @@ void open_files(TString histname){
     openfile_DATA(Cycle_name, DoubleEG, current_dir_syst, current_hist_syst);
     openfile_DATA(Cycle_name, SingleMuon, current_dir_syst, current_hist_syst);
     
+    if(systematics[i_syst] == "central"){
+      TString current_signal_channel = "";
+      if(current_hist_syst.Contains("DiMu")) current_signal_channel = "MuMu";
+      if(current_hist_syst.Contains("DiEle")) current_signal_channel = "EE";
+
+      for(unsigned int i_signal = 0; i_signal < map_sample_names["Signal"].size(); i_signal++){
+	openfile_signal(map_sample_names["Signal"].at(i_signal), current_signal_channel, current_dir_syst, current_hist_syst);
+      }
+    }
+
   }
   // -- FIXME
   //histname = histname + "_central";
@@ -847,7 +889,7 @@ void open_binning_file(TString filename){
   
 }
 
-void QuickPlot(int year=2018){
+void QuickPlot_CR_signal(int year=2018){
   setTDRStyle();
   
   // == Set Input Sample List
@@ -897,7 +939,7 @@ void QuickPlot(int year=2018){
     DoubleEG = "data_DoubleEG";
   }
   
-  
+  map_sample_names["Signal"] = {"ZP1000_N200", "ZP2000_N500", "ZP3000_N1000", "ZP4000_N1500"};
 
   Cycle_name = "HN_pair_all_SkimTree_LRSMHighPt";
 
@@ -906,8 +948,8 @@ void QuickPlot(int year=2018){
   //open_binning_file("binning_uniform_few.txt");
   //open_binning_file("binning_Zp.txt");
   //open_binning_file("binning_mZp.txt");
-  open_binning_file("binning_limit_CR.txt");
-  //open_binning_file("binning_limit.txt");
+  open_binning_file("binning_signal_vs_data.txt");
+  
   outfile.close();
   
 }

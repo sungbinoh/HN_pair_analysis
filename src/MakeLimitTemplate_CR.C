@@ -215,7 +215,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   TString clone = nameofhistogram;
   func.Insert(0, "ratio_");
   clone.Insert(0, "h3_");
-
+  
   TString legend_list[4] = {"Other", "WJets", "ttbar", "DYJets"};
   
   TString name_cycle = nameofhistogram + Cycle_name;
@@ -286,16 +286,24 @@ void Write_data_bkg(TString current_histname){
   for(int i_legend = 0; i_legend < 4; i_legend++){
     if(debug) cout << legend_list[i_legend] << endl;
     TString current_sample = map_sample_names[legend_list[i_legend]].at(0);
-    if(mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"]) mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"] -> Write();
-    
+    if(mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"]){
+      Remove_Negative_Bins(nameofhistogram + Cycle_name + current_sample + "rebin");
+      mapfunc[nameofhistogram + Cycle_name + current_sample + "rebin"] -> Write();
+    }
     for(int i_syst = 0; i_syst < N_syst_comparison; i_syst++){
       TString systematics = systematics_comparison[i_syst];
       TString cycle_and_sample = Cycle_name + current_sample;
       TString histname_Up   = current_histname + "_" + systematics + "Up"   + cycle_and_sample;
       TString histname_Down = current_histname + "_" + systematics + "Down" + cycle_and_sample;
       
-      if(mapfunc[histname_Up + "rebin"]) mapfunc[histname_Up + "rebin"] -> Write();
-      if(mapfunc[histname_Down + "rebin"]) mapfunc[histname_Down + "rebin"] -> Write();
+      if(mapfunc[histname_Up + "rebin"]){
+	Remove_Negative_Bins(histname_Up + "rebin");
+	mapfunc[histname_Up + "rebin"] -> Write();
+      }      
+      if(mapfunc[histname_Down + "rebin"]){
+	Remove_Negative_Bins(histname_Down + "rebin");
+	mapfunc[histname_Down + "rebin"] -> Write();
+      }    
     }
   }
 
@@ -304,6 +312,7 @@ void Write_data_bkg(TString current_histname){
   else if(nameofhistogram.Contains("DiEle")) current_data = DoubleEG;
   else return;
   mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] -> Write();
+
 }
 
 void make_histogram_signal(TString nameofhistogram, TString current_histname, TString mass_point, int N_bin, double binx[]){
@@ -552,7 +561,8 @@ void MakeLimitTemplate_CR(int year=2018){
     //map_sample_names["DYJets"] = {"DYJets_MG"};
     map_sample_names["DYJets"] = {"DYJets_MG_HT"};
     map_sample_names["ttbar"] = {"TT_powheg"};
-    map_sample_names["WJets"] = {"WJets_MG_HT"};
+    //map_sample_names["WJets"] = {"WJets_MG_HT"};
+    map_sample_names["WJets"] = {"fake"};
     map_sample_names["Other"] = {"VV"};
     map_sample_names["Muon"] = {"data_SingleMuon"};
     map_sample_names["EGamma"] = {"data_EGamma"};
@@ -565,7 +575,8 @@ void MakeLimitTemplate_CR(int year=2018){
     //map_sample_names["DYJets"] = {"DYJets_MG"};
     map_sample_names["DYJets"] = {"DYJets_MG_HT"};
     map_sample_names["ttbar"] = {"TT_powheg"};
-    map_sample_names["WJets"] = {"WJets_MG_HT"};
+    //map_sample_names["WJets"] = {"WJets_MG_HT"};
+    map_sample_names["WJets"] = {"fake"};
     map_sample_names["Other"] = {"VV"};
     map_sample_names["Muon"] = {"data_SingleMuon"};
     map_sample_names["EGamma"] = {"data_DoubleEG"};
@@ -578,7 +589,8 @@ void MakeLimitTemplate_CR(int year=2018){
     //map_sample_names["DYJets"] = {"DYJets_MG"};
     map_sample_names["DYJets"] = {"DYJets_MG_HT"};
     map_sample_names["ttbar"] = {"TT_powheg"};
-    map_sample_names["WJets"] = {"WJets_MG_HT"};
+    //map_sample_names["WJets"] = {"WJets_MG_HT"};
+    map_sample_names["WJets"] = {"fake"};
     map_sample_names["Other"] = {"VV"};
     map_sample_names["Muon"] = {"data_SingleMuon"};
     map_sample_names["EGamma"] = {"data_DoubleEG"};

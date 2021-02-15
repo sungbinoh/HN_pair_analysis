@@ -2,6 +2,7 @@
 
 void open_files(TString histname){
   
+  bool exo_datacard = false;
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
   //TString signal_list_file_path=WORKING_DIR+"/script/Signal_list/MC_signal_" + TString::Itoa(tag_year,10) + ".txt";
   TString signal_list_file_path=WORKING_DIR+"/script/Signal_list/MC_signal_2016.txt";
@@ -10,8 +11,9 @@ void open_files(TString histname){
   ifstream signal_file;
   signal_file.open(signal_list_file_path);
  
-  TString bkgs[4] = {"VV", "TT_powheg", "DYJets_MG_HT", "WJets_MG_HT"};
- 
+  //TString bkgs[4] = {"VV", "TT_powheg", "DYJets_MG_HT", "WJets_MG_HT"};
+  TString bkgs[4] = {"VV", "TT_powheg", "DYJets_MG_HT", "fake"};
+
   double lumi_error = 1.;
   if(tag_year == 2016) lumi_error = 1.025;
   if(tag_year == 2017) lumi_error = 1.023;
@@ -61,7 +63,9 @@ void open_files(TString histname){
       file_shape << "jmax " << N_bkg << endl;
       file_shape << "kmax *" << endl;
       file_shape << "---------------" << endl;
-      file_shape << "shapes * * /data6/Users/suoh/Limit/CMSSW_10_2_13/src/HiggsAnalysis/CombinedLimit/ZpNN/LimitTemplate/" + TString::Itoa(tag_year,10) + "/shape_"<< histname << "_" << this_line << ".root $PROCESS $PROCESS_$SYSTEMATIC" << endl;
+      if(exo_datacard) 
+	file_shape << "shapes * * shapes/" + TString::Itoa(tag_year,10) + "/shape_" << histname << "_" << this_line << ".root $PROCESS $PROCESS_$SYSTEMATIC" << endl;
+      else file_shape << "shapes * * /data6/Users/suoh/Limit/CMSSW_10_2_13/src/HiggsAnalysis/CombinedLimit/ZpNN/LimitTemplate/" + TString::Itoa(tag_year,10) + "/shape_"<< histname << "_" << this_line << ".root $PROCESS $PROCESS_$SYSTEMATIC" << endl;
       file_shape << "---------------" << endl;
       file_shape << "bin\tbin1" << endl;
       //file_shape << "observation " << obs << endl;
@@ -108,34 +112,60 @@ void open_files(TString histname){
 	}	
       }
       
+      TString ttbar_xsec = "\t1";
+      for(int i = 0; i < 4; i++){
+	if(bkg_bool[i]){
+	  if(i == 1) ttbar_xsec = ttbar_xsec + "\t1.05";
+	  else ttbar_xsec = ttbar_xsec + "\t1";
+	}
+      }
+
+      TString fake_norm = "\t1";
+      for(int i = 0; i < 4; i++){
+	if(bkg_bool[i]){
+	  if(i == 3) fake_norm = fake_norm + "\t1.50";
+	  else fake_norm = fake_norm + "\t1";
+	}
+      }
+      
+      TString Minor_MC_norm = "\t1";
+      for(int i = 0; i < 4; i++){
+        if(bkg_bool[i]){
+          if(i == 0) Minor_MC_norm = Minor_MC_norm + "\t1.50";
+          else Minor_MC_norm = Minor_MC_norm + "\t1";
+        }
+      }
+
       file_shape << "--------------------------------" << endl;
-      file_shape << "lumi\tlnN\t" << lumi_error;// << "\t"<< lumi_error << "\t"<< lumi_error << "\t" << lumi_error << "\t" << lumi_error << endl;
+      file_shape << "lumi" + TString::Itoa(tag_year,10) + "\tlnN\t" << lumi_error;// << "\t"<< lumi_error << "\t"<< lumi_error << "\t" << lumi_error << "\t" << lumi_error << endl;
       for(int i = 0; i < 4; i++){
 	if(bkg_bool[i]) file_shape << "\t" << lumi_error;
       }
       file_shape << "\n";
-      file_shape << "ElectronScale" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
-      file_shape << "ElectronSmear" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
-      file_shape << "ElectronRecoSF" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
-      file_shape << "ElectronIDSF" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
+      file_shape << "fake_norm\tlnN" + fake_norm << endl;
+      file_shape << "Minor_MC_norm\tlnN" + Minor_MC_norm << endl;
+      file_shape << "ElectronScale\tshapeN2" + adding_bkgs << endl;
+      file_shape << "ElectronSmear\tshapeN2" + adding_bkgs << endl;
+      file_shape << "ElectronRecoSF\tshapeN2" + adding_bkgs << endl;
+      file_shape << "ElectronIDSF\tshapeN2" + adding_bkgs << endl;
       file_shape << "ElectronTriggerSF" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
-      file_shape << "MuonScale" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
-      file_shape << "MuonSmear" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
-      file_shape << "MuonRecoSF" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
-      file_shape << "MuonIDSF" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
-      file_shape << "MuonISOSF" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
+      file_shape << "MuonScale\tshapeN2" + adding_bkgs << endl;
+      file_shape << "MuonSmear\tshapeN2" + adding_bkgs << endl;
+      file_shape << "MuonRecoSF\tshapeN2" + adding_bkgs << endl;
+      file_shape << "MuonIDSF\tshapeN2" + adding_bkgs << endl;
+      file_shape << "MuonISOSF\tshapeN2" + adding_bkgs << endl;
       file_shape << "MuonTriggerSF" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
       file_shape << "JetsRes\tshapeN2" + adding_bkgs << endl;
       file_shape << "JetsScale\tshapeN2" + adding_bkgs << endl;
       //file_shape << "SD_JMR_\tshapeN2" + adding_bkgs << endl;
       file_shape << "SD_JMS_\tshapeN2" + adding_bkgs << endl;
-      file_shape << "PUReweight_" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
-      file_shape << "Prefire_" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
+      file_shape << "PUReweight_\tshapeN2" + adding_bkgs << endl;
+      file_shape << "Prefire_\tshapeN2" + adding_bkgs << endl;
       file_shape << "ZPtRw\tshapeN2" + adding_bkgs << endl;
       file_shape << "PDF\tshapeN2" + adding_bkgs_signal_only << endl;
       file_shape << "Scale\tshapeN2" + adding_bkgs_signal_only << endl;
-
-
+      file_shape << "R_" + histname + "\trateParam\tbin1\t" << histname + "_" + bkgs[1] << "\t1" << endl;
+      file_shape << "R_" + histname + "\trateParam\tbin1\t" << histname + "_" + bkgs[2] << "\t1" << endl;
       file_shape << "* autoMCStats 0 0 1" << endl;
       file_shape.close();
       current_input_file -> Close();

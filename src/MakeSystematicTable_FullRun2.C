@@ -1,11 +1,11 @@
 #include "mylib.h"
 
-void open_files(TString histname){
+void open_files(TString histname, int year){
   
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
   //TString signal_list_file_path=WORKING_DIR+"/script/Signal_list/MC_signal_" + TString::Itoa(tag_year,10) + ".txt";
   TString signal_list_file_path=WORKING_DIR+"/script/Signal_list/MC_signal_2018.txt";
-  TString root_file_path = WORKING_DIR+"/output/LimitTemplate/" + TString::Itoa(tag_year,10) + "/";
+  TString root_file_path = WORKING_DIR+"/output/LimitTemplate/" + TString::Itoa(year,10) + "/";
   char line[500];
   ifstream signal_file;
   signal_file.open(signal_list_file_path);
@@ -15,9 +15,9 @@ void open_files(TString histname){
   TString bkgs[4] = {"DYJets_MG_HT", "TT_powheg", "fake", "VV"};
 
   double lumi_error = 1.;
-  if(tag_year == 2016) lumi_error = 1.025;
-  if(tag_year == 2017) lumi_error = 1.023;
-  if(tag_year == 2018) lumi_error = 1.025;
+  if(year == 2016) lumi_error = 1.025;
+  if(year == 2017) lumi_error = 1.023;
+  if(year == 2018) lumi_error = 1.025;
   
   if(signal_file.is_open()){
 
@@ -69,8 +69,8 @@ void open_files(TString histname){
 	  TString str_current_hist_Down = histname + "_" + bkgs[i] + "_" + systematics_comparison[j] + "Down";
 	  //if(systematics_comparison[j].Contains("Jets") || systematics_comparison[j].Contains("SD") || systematics_comparison[j].Contains("ZPtRw")){
 	  if(systematics_comparison[j].Contains("TriggerSF")){
-	    str_current_hist_Up = histname + "_" + bkgs[i] + "_" + systematics_comparison[j] + TString::Itoa(tag_year,10) + "Up";
-	    str_current_hist_Down = histname + "_" + bkgs[i] + "_" + systematics_comparison[j] + TString::Itoa(tag_year,10) + "Down";
+	    str_current_hist_Up = histname + "_" + bkgs[i] + "_" + systematics_comparison[j] + TString::Itoa(year,10) + "Up";
+	    str_current_hist_Down = histname + "_" + bkgs[i] + "_" + systematics_comparison[j] + TString::Itoa(year,10) + "Down";
 	    //str_current_hist_Up = histname + "_" + bkgs[i] + "_" + systematics_comparison[j] + "Up";
 	    //str_current_hist_Down = histname + "_" + bkgs[i] + "_" + systematics_comparison[j] + "Down";
 	  }
@@ -88,12 +88,12 @@ void open_files(TString histname){
 	  
 	  double new_min, new_max;
 	  if(map_syst_table[bkgs[i] + systematics_comparison[j] + channel2].at(0) > current_syst) new_min = current_syst;
-	  else new_min = map_syst_table[bkgs[i] + systematics_comparison[j] + channel2].at(0);
+	  else new_min = map_syst_table[bkgs[i] + systematics_comparison[j] + channel2 + TString::Itoa(year,10) ].at(0);
 	  
 	  if(map_syst_table[bkgs[i] + systematics_comparison[j] + channel2].at(1) < current_syst) new_max = current_syst;
-	  else new_max = map_syst_table[bkgs[i] + systematics_comparison[j] + channel2].at(1);
+	  else new_max = map_syst_table[bkgs[i] + systematics_comparison[j] + channel2 + TString::Itoa(year,10)].at(1);
 
-	  map_syst_table[bkgs[i] + systematics_comparison[j] + channel2] = {new_min, new_max};
+	  map_syst_table[bkgs[i] + systematics_comparison[j] + channel2 + TString::Itoa(year,10)] = {new_min, new_max};
 	}
       }
 
@@ -102,8 +102,8 @@ void open_files(TString histname){
 	TString str_current_hist_Up = histname + "_" + this_line + "_" + systematics_comparison[j] + "Up";
 	TString str_current_hist_Down = histname + "_" + this_line + "_" + systematics_comparison[j] + "Down";
 	if(systematics_comparison[j].Contains("TriggerSF")){
-	  str_current_hist_Up = histname + "_" + this_line + "_" + systematics_comparison[j] + TString::Itoa(tag_year,10) + "Up";
-	  str_current_hist_Down = histname + "_" + this_line + "_" + systematics_comparison[j] + TString::Itoa(tag_year,10) + "Down";
+	  str_current_hist_Up = histname + "_" + this_line + "_" + systematics_comparison[j] + TString::Itoa(year,10) + "Up";
+	  str_current_hist_Down = histname + "_" + this_line + "_" + systematics_comparison[j] + TString::Itoa(year,10) + "Down";
 	}
 	
 	TH1F *current_hist_Up = (TH1F *)current_input_file->Get(str_current_hist_Up);
@@ -117,13 +117,13 @@ void open_files(TString histname){
 	current_syst = current_syst * 100.;
 
 	double new_min, new_max;
-	if(map_syst_table[systematics_comparison[j] + channel2].at(0) > current_syst) new_min = current_syst;
-	else new_min = map_syst_table[systematics_comparison[j] + channel2].at(0);
+	if(map_syst_table[systematics_comparison[j] + channel2 + TString::Itoa(year,10)].at(0) > current_syst) new_min = current_syst;
+	else new_min = map_syst_table[systematics_comparison[j] + channel2 + TString::Itoa(year,10)].at(0);
 
-	if(map_syst_table[systematics_comparison[j] + channel2].at(1) < current_syst) new_max = current_syst;
-	else new_max = map_syst_table[systematics_comparison[j] + channel2].at(1);
+	if(map_syst_table[systematics_comparison[j] + channel2 + TString::Itoa(year,10)].at(1) < current_syst) new_max = current_syst;
+	else new_max = map_syst_table[systematics_comparison[j] + channel2 + TString::Itoa(year,10)].at(1);
 
-	map_syst_table[systematics_comparison[j] + channel2] = {new_min, new_max};
+	map_syst_table[systematics_comparison[j] + channel2 + TString::Itoa(year,10)] = {new_min, new_max};
       }
 
       TString PDF_uncertainty[2] = {"PDF", "Scale"};
@@ -143,13 +143,13 @@ void open_files(TString histname){
         current_syst = current_syst * 100.;
 
         double new_min, new_max;
-        if(map_syst_table[PDF_uncertainty[j] + channel2].at(0) > current_syst) new_min = current_syst;
-        else new_min = map_syst_table[PDF_uncertainty[j] + channel2].at(0);
+        if(map_syst_table[PDF_uncertainty[j] + channel2 + TString::Itoa(year,10)].at(0) > current_syst) new_min = current_syst;
+        else new_min = map_syst_table[PDF_uncertainty[j] + channel2 + TString::Itoa(year,10)].at(0);
 
-        if(map_syst_table[PDF_uncertainty[j] + channel2].at(1) < current_syst) new_max = current_syst;
-        else new_max = map_syst_table[PDF_uncertainty[j] + channel2].at(1);
+        if(map_syst_table[PDF_uncertainty[j] + channel2 + TString::Itoa(year,10)].at(1) < current_syst) new_max = current_syst;
+        else new_max = map_syst_table[PDF_uncertainty[j] + channel2 + TString::Itoa(year,10)].at(1);
 
-        map_syst_table[PDF_uncertainty[j] + channel2] = {new_min, new_max};
+        map_syst_table[PDF_uncertainty[j] + channel2 + TString::Itoa(year,10)] = {new_min, new_max};
       }
 
 
@@ -160,7 +160,7 @@ void open_files(TString histname){
   }
 }
 
-void open_binning_file(TString filename){
+void open_binning_file(TString filename, int year){
 
   cout << "[open_binning_file] start to open binngin file : " << filename << endl;
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
@@ -189,15 +189,13 @@ void open_binning_file(TString filename){
       
       cout << "[[open_binning_file]] current_histname : " << current_histname << endl;
 
-      open_files(current_histname + "_DYreweight");
+      open_files(current_histname + "_DYreweight", year);
     }
   }
   data_file.close();
 }
 
-void MakeSystematicTable(int year=2018){
-
-  tag_year = year;
+void MakeSystematicTable_FullRun2(int ahahah){
 
   //TString bkgs[4] = {"VV", "TT_powheg", "DYJets_MG_HT", "WJets_MG_HT"};
   //TString bkgs[4] = {"DYJets_MG_HT", "TT_powheg", "WJets_MG_HT", "VV"};
@@ -205,6 +203,21 @@ void MakeSystematicTable(int year=2018){
 
   for(int i = 0; i < 4; i++){
     for(int j = 0; j < N_syst_comparison; j++){
+      map_syst_table[bkgs[i] + systematics_comparison[j] + "EE2016"]   = {100., 0.};
+      map_syst_table[bkgs[i] + systematics_comparison[j] + "MuMu2016"] = {100., 0.};
+      map_syst_table[systematics_comparison[j] + "EE2016"] = {100., 0.};
+      map_syst_table[systematics_comparison[j] + "MuMu2016"] = {100., 0.};
+
+      map_syst_table[bkgs[i] + systematics_comparison[j] + "EE2017"]   = {100., 0.};
+      map_syst_table[bkgs[i] + systematics_comparison[j] + "MuMu2017"] = {100., 0.};
+      map_syst_table[systematics_comparison[j] + "EE2017"] = {100., 0.};
+      map_syst_table[systematics_comparison[j] + "MuMu2017"] = {100., 0.};
+
+      map_syst_table[bkgs[i] + systematics_comparison[j] + "EE2018"]   = {100., 0.};
+      map_syst_table[bkgs[i] + systematics_comparison[j] + "MuMu2018"] = {100., 0.};
+      map_syst_table[systematics_comparison[j] + "EE2018"] = {100., 0.};
+      map_syst_table[systematics_comparison[j] + "MuMu2018"] = {100., 0.};
+
       map_syst_table[bkgs[i] + systematics_comparison[j] + "EE"]   = {100., 0.};
       map_syst_table[bkgs[i] + systematics_comparison[j] + "MuMu"] = {100., 0.};
       map_syst_table[systematics_comparison[j] + "EE"] = {100., 0.};
@@ -214,12 +227,60 @@ void MakeSystematicTable(int year=2018){
 
   TString PDF_uncertainty[2] = {"PDF", "Scale"};
   for(int j = 0; j < 2; j++){
+    map_syst_table[PDF_uncertainty[j] + "EE2016"] = {100., 0.};
+    map_syst_table[PDF_uncertainty[j] + "MuMu2016"] = {100., 0.};
+
+    map_syst_table[PDF_uncertainty[j] + "EE2017"] = {100., 0.};
+    map_syst_table[PDF_uncertainty[j] + "MuMu2017"] = {100., 0.};
+
+    map_syst_table[PDF_uncertainty[j] + "EE2018"] = {100., 0.};
+    map_syst_table[PDF_uncertainty[j] + "MuMu2018"] = {100., 0.};
+
     map_syst_table[PDF_uncertainty[j] + "EE"] = {100., 0.};
     map_syst_table[PDF_uncertainty[j] + "MuMu"] = {100., 0.};
 
   }
    
-  open_binning_file("binning_limit_merged.txt");
+  open_binning_file("binning_limit_merged.txt", 2016);
+  open_binning_file("binning_limit_merged.txt", 2017);
+  open_binning_file("binning_limit_merged.txt", 2018);
+
+  for(int i = 0; i < 4; i++){
+    for(int j = 0; j < N_syst_comparison; j++){
+      map_syst_table[bkgs[i] + systematics_comparison[j] + "EE"] = { 
+	std::min(std::min(map_syst_table[bkgs[i] + systematics_comparison[j] + "EE2016"].at(0), map_syst_table[bkgs[i] + systematics_comparison[j] + "EE2017"].at(0)), map_syst_table[bkgs[i] + systematics_comparison[j] + "EE2018"].at(0)),
+	std::max(std::max(map_syst_table[bkgs[i] + systematics_comparison[j] + "EE2016"].at(1), map_syst_table[bkgs[i] + systematics_comparison[j] + "EE2017"].at(1)), map_syst_table[bkgs[i] + systematics_comparison[j] + "EE2018"].at(1))
+      };
+      
+      map_syst_table[bkgs[i] + systematics_comparison[j] + "MuMu"] = {
+	std::min(std::min(map_syst_table[bkgs[i] + systematics_comparison[j] + "MuMu2016"].at(0), map_syst_table[bkgs[i] + systematics_comparison[j] + "MuMu2017"].at(0)), map_syst_table[bkgs[i] + systematics_comparison[j] + "MuMu2018"].at(0)),
+        std::max(std::max(map_syst_table[bkgs[i] + systematics_comparison[j] + "MuMu2016"].at(1), map_syst_table[bkgs[i] + systematics_comparison[j] + "MuMu2017"].at(1)), map_syst_table[bkgs[i] + systematics_comparison[j] + "MuMu2018"].at(1))
+      };
+      
+      map_syst_table[systematics_comparison[j] + "EE"] = {
+	std::min(std::min(map_syst_table[systematics_comparison[j] + "EE2016"].at(0), map_syst_table[systematics_comparison[j] + "EE2017"].at(0)), map_syst_table[systematics_comparison[j] + "EE2018"].at(0)),
+        std::max(std::max(map_syst_table[systematics_comparison[j] + "EE2016"].at(1), map_syst_table[systematics_comparison[j] + "EE2017"].at(1)), map_syst_table[systematics_comparison[j] + "EE2018"].at(1))
+      };
+      
+      map_syst_table[systematics_comparison[j] + "MuMu"] = {
+	std::min(std::min(map_syst_table[systematics_comparison[j] + "MuMu2016"].at(0), map_syst_table[systematics_comparison[j] + "MuMu2017"].at(0)), map_syst_table[systematics_comparison[j] + "MuMu2018"].at(0)),
+        std::max(std::max(map_syst_table[systematics_comparison[j] + "MuMu2016"].at(1), map_syst_table[systematics_comparison[j] + "MuMu2017"].at(1)), map_syst_table[systematics_comparison[j] + "MuMu2018"].at(1))
+      };
+    }
+  }
+  
+  for(int j = 0; j < 2; j++){
+    map_syst_table[PDF_uncertainty[j] + "EE"] = {
+      std::min(std::min(map_syst_table[PDF_uncertainty[j] + "EE2016"].at(0), map_syst_table[PDF_uncertainty[j] + "EE2017"].at(0)), map_syst_table[PDF_uncertainty[j] + "EE2018"].at(0)),
+      std::max(std::max(map_syst_table[PDF_uncertainty[j] + "EE2016"].at(1), map_syst_table[PDF_uncertainty[j] + "EE2017"].at(1)), map_syst_table[PDF_uncertainty[j] + "EE2018"].at(1))
+    };
+    
+    map_syst_table[PDF_uncertainty[j] + "MuMu"] = {
+      std::min(std::min(map_syst_table[PDF_uncertainty[j] + "MuMu2016"].at(0), map_syst_table[PDF_uncertainty[j] + "MuMu2017"].at(0)), map_syst_table[PDF_uncertainty[j] + "MuMu2018"].at(0)),
+      std::max(std::max(map_syst_table[PDF_uncertainty[j] + "MuMu2016"].at(1), map_syst_table[PDF_uncertainty[j] + "MuMu2017"].at(1)), map_syst_table[PDF_uncertainty[j] + "MuMu2018"].at(1))
+    };
+  }
+
 
   TString systematics_table[N_syst] = {"ElectronScale",
 				       "ElectronSmear",
@@ -229,7 +290,7 @@ void MakeSystematicTable(int year=2018){
 				       "SD Mass Scale",
 				       "PU Reweight",
 				       "MuonScale",
-				       "MuonSmear",
+				       //"MuonSmear",
 				       "L1 Prefire",
 				       "MuonRecoSF",
 				       "MuonIDSF",
@@ -249,7 +310,7 @@ void MakeSystematicTable(int year=2018){
 				      "Correlated",
 				      "Unco.",
 				      "Unco.",
-				      "Not Done",
+				      //"Not Done",
 				      "Unco.",
 				      "Unco.",
 				      "Unco.",
@@ -261,12 +322,12 @@ void MakeSystematicTable(int year=2018){
 				      "Correlated",
   };
   
-  ofstream file_syst_table("./output/latex/syst_table_" + TString::Itoa(tag_year,10) + ".tex", ios::trunc);
+  ofstream file_syst_table("./output/latex/syst_table.tex", ios::trunc);
   
   file_syst_table << "\\begin{table}"<< endl;
   file_syst_table << "\\centering" << endl;
-  file_syst_table << "\\topcaption{The list of systematics and their impacts on total number of events at $\\Pe\\Pe$ siganl region in " << TString::Itoa(tag_year,10) << ".}" << endl;
-  file_syst_table << "\\label{tab:syst_ee_" + TString::Itoa(tag_year,10) + "}" << endl;
+  file_syst_table << "\\topcaption{The list of systematics and their impacts on total number of events at $\\Pe\\Pe$ siganl region.}" << endl;
+  file_syst_table << "\\label{tab:syst_ee}" << endl;
   file_syst_table << "\\resizebox{\\textwidth}{!}{" << endl;
   file_syst_table << "\\begin{tabular}{l l l l l l l}" << endl;
   file_syst_table << "\\hline\\hline" << endl;
@@ -293,8 +354,8 @@ void MakeSystematicTable(int year=2018){
   
   file_syst_table << "\\begin{table}"<< endl;
   file_syst_table << "\\centering" << endl;
-  file_syst_table << "\\topcaption{The list of systematics and their impacts on total number of events at $\\mu\\mu$ siganl region in " << TString::Itoa(tag_year,10) << ".}" << endl;
-  file_syst_table << "\\label{tab:syst_mumu_" + TString::Itoa(tag_year,10) + "}" << endl;
+  file_syst_table << "\\topcaption{The list of systematics and their impacts on total number of events at $\\mu\\mu$ siganl region.}" << endl;
+  file_syst_table << "\\label{tab:syst_mumu}" << endl;
   file_syst_table << "\\resizebox{\\textwidth}{!}{" << endl;
   file_syst_table << "\\begin{tabular}{l l l l l l l}" << endl;
   file_syst_table << "\\hline\\hline" << endl;

@@ -2,18 +2,16 @@
 
 void open_files(TString histname){
   
-  bool exo_datacard = false;
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
   TString root_file_path = WORKING_DIR+"/output/LimitTemplate/" + TString::Itoa(tag_year,10) + "/";
    
   //TString bkgs[4] = {"VV", "TT_powheg", "DYJets_MG_HT", "WJets_MG_HT"};
   TString bkgs[4] = {"VV", "TT_powheg", "DYJets_MG_HT", "fake"};
-
+ 
   double lumi_error = 1.;
   if(tag_year == 2016) lumi_error = 1.025;
   if(tag_year == 2017) lumi_error = 1.023;
   if(tag_year == 2018) lumi_error = 1.025;
-  
   
   TString channel = "";
   TString channel2 = "";
@@ -26,7 +24,7 @@ void open_files(TString histname){
     channel2 = "MuMu";
   }
   
-  TString current_input = root_file_path + "shape_" + histname + ".root";
+  TString current_input = root_file_path + "shape_" + histname + "_fake_signal.root";
   TFile *current_input_file = new TFile ((current_input)) ;
   //TH1F *obs_hist = (TH1F *)current_input_file->Get(histname);
   //double obs = obs_hist -> Integral();
@@ -48,32 +46,31 @@ void open_files(TString histname){
   //cout << histname + "_" + this_line + "_central" << endl;
   //signal_rate = current_signal_hist -> Integral();
   
-  ofstream file_shape("./output/DataCards/shape_" + histname + "_" + TString::Itoa(tag_year,10) + ".txt", ios::trunc);
+  ofstream file_shape("./output/DataCards/shape_" + histname + "_" + TString::Itoa(tag_year,10) + "_fake_signal.txt", ios::trunc);
   //file_shape << "imax 1" << endl;
   //file_shape << "jmax " << N_bkg << endl;
   file_shape << "imax *" << endl;
   file_shape << "jmax *" << endl;
   file_shape << "kmax *" << endl;
   file_shape << "---------------" << endl;
-  if(exo_datacard) 
-    file_shape << "shapes * * shapes/" + TString::Itoa(tag_year,10) + "/shape_"<< histname << ".root $PROCESS $PROCESS_$SYSTEMATIC" << endl;
-  else file_shape << "shapes * * /data6/Users/suoh/Limit/CMSSW_10_2_13/src/HiggsAnalysis/CombinedLimit/ZpNN/LimitTemplate/" + TString::Itoa(tag_year,10) + "/shape_"<< histname << ".root $PROCESS $PROCESS_$SYSTEMATIC" << endl;
+  file_shape << "shapes * * /data6/Users/suoh/Limit/CMSSW_10_2_13/src/HiggsAnalysis/CombinedLimit/ZpNN/LimitTemplate/" + TString::Itoa(tag_year,10) + "/shape_"<< histname << "_fake_signal.root $PROCESS $PROCESS_$SYSTEMATIC" << endl;
   file_shape << "---------------" << endl;
   file_shape << "bin\tbin1" << endl;
   //file_shape << "observation " << obs << endl;
   file_shape << "observation\t-1" << endl;
   file_shape << "------------------------------" << endl;
-  file_shape << "bin";//\tbin1\tbin1\tbin1\tbin1" << endl;
+  file_shape << "bin\tbin1";//\tbin1\tbin1\tbin1\tbin1" << endl;
   for(int i= 0; i < 4; i++){
     if(bkg_bool[i]) file_shape << "\tbin1";
   }
   file_shape << "\n";
   file_shape << "process";
+  file_shape << "\tsignal";
   for(int i = 0; i < 4; i++){
     if(bkg_bool[i]) file_shape << "\t" << histname + "_" + bkgs[i];
   }
   file_shape << "\n";
-  file_shape << "process";//\t1\t2\t3\t4" << endl;
+  file_shape << "process\t0";//\t1\t2\t3\t4" << endl;
   int current_process = 1;
   for(int i = 0; i < 4; i++){
     if(bkg_bool[i]){
@@ -82,7 +79,7 @@ void open_files(TString histname){
     }
   }
   file_shape << "\n";
-  file_shape << "rate";//\t-1\t-1\t-1\t-1" << endl;;
+  file_shape << "rate\t-1";//\t-1\t-1\t-1\t-1" << endl;;
   for(int i = 0; i < 4; i++){
     if(bkg_bool[i]) file_shape << "\t-1";
   }
@@ -94,14 +91,14 @@ void open_files(TString histname){
     }
     file_shape << "\t" << signal_rate << endl;
   */
-  TString adding_bkgs = "";
+  TString adding_bkgs = "\t1";
   for(int i = 0; i < 4; i++){
     if(bkg_bool[i]){
       adding_bkgs = adding_bkgs + "\t1";
     }	
   }
   
-  TString ttbar_xsec = "";
+  TString ttbar_xsec = "\t1";
   for(int i = 0; i < 4; i++){
     if(bkg_bool[i]){
       if(i == 1) ttbar_xsec = ttbar_xsec + "\t1.05";
@@ -109,7 +106,7 @@ void open_files(TString histname){
     }
   }
 
-  TString fake_norm = "";
+  TString fake_norm = "\t1";
   for(int i = 0; i < 4; i++){
     if(bkg_bool[i]){
       if(i == 3) fake_norm = fake_norm + "\t1.50";
@@ -117,13 +114,14 @@ void open_files(TString histname){
     }
   }
 
-  TString Minor_MC_norm = "";
+  TString Minor_MC_norm = "\t1";
   for(int i = 0; i < 4; i++){
     if(bkg_bool[i]){
       if(i == 0) Minor_MC_norm = Minor_MC_norm + "\t1.50";
       else Minor_MC_norm = Minor_MC_norm + "\t1";
     }
   }
+  
 
   file_shape << "--------------------------------" << endl;
   file_shape << "lumi" + TString::Itoa(tag_year,10) + "\tlnN\t" << lumi_error;// << "\t"<< lumi_error << "\t"<< lumi_error << "\t" << lumi_error << "\t" << lumi_error << endl;
@@ -131,6 +129,7 @@ void open_files(TString histname){
     if(bkg_bool[i]) file_shape << "\t" << lumi_error;
   }
   file_shape << "\n";
+  //file_shape << "ttbar_xsec\tlnN" + ttbar_xsec << endl;
   file_shape << "fake_norm\tlnN" + fake_norm << endl;
   file_shape << "Minor_MC_norm\tlnN" + Minor_MC_norm << endl;
   file_shape << "ElectronScale\tshapeN2" + adding_bkgs << endl;
@@ -193,7 +192,7 @@ void open_binning_file(TString filename){
   data_file.close();
 }
 
-void MakeDataCards_CR(int year=2018){
+void MakeDataCards_CR_fake_signal(int year=2018){
 
   tag_year = year;
   

@@ -50,6 +50,7 @@ void openfile_DATA(TString cyclename, TString samplename, TString dir, TString h
 void draw_syst_lines(TString current_histname, int N_bin, double x1_template, double x2_template){
 
   TString legend_list[4] = {"Other", "WJets", "ttbar", "DYJets"};
+  TString legend_string[4] = {"Other", "Non-prompt", "ttbar", "DYJets"};
   TString func = current_histname + "_central";
   TString nameofhistogram = current_histname + "_central";
   func.Insert(0, "ratio_");
@@ -139,7 +140,7 @@ void draw_syst_lines(TString current_histname, int N_bin, double x1_template, do
         map_gr[current_histname + current_sample + current_syst + "line_Down"] -> SetLineStyle(line_array[i_legend]);
         map_gr[current_histname + current_sample + current_syst + "line_Down"] -> Draw("lsame");
 
-        maplegend[legend] -> AddEntry(map_gr[current_histname + current_sample + current_syst + "line_Up"], legend_list[4 - i_legend - 1] + "_" + current_syst, "l");
+        maplegend[legend] -> AddEntry(map_gr[current_histname + current_sample + current_syst + "line_Up"], legend_string[4 - i_legend - 1] + "_" + current_syst, "l");
       }
       else is_Wjet = false;
     }
@@ -382,6 +383,8 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   gStyle->SetOptTitle(0);
   
   TString legend_list[4] = {"Other", "WJets", "ttbar", "DYJets"};
+  TString legend_string[4] = {"Other", "Non-prompt", "ttbar", "DYJets"};
+
   Int_t colour_array[] = {419, 901, 416, 400};
 
   TString name_cycle = nameofhistogram + Cycle_name;
@@ -435,7 +438,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   for(int i_legend = 0; i_legend < 4; i_legend++){
     TString current_sample = map_sample_names[legend_list[4 - i_legend - 1]].at(0);
     if(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin")){
-      maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"), legend_list[4 - i_legend - 1], "lf");
+      maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"), legend_string[4 - i_legend - 1], "lf");
       sum_syst_error(current_histname, Cycle_name + current_sample, N_bin);
     }
   }
@@ -817,6 +820,7 @@ void open_files(TString histname){
     TString current_dir_syst = current_dir + "_" + systematics[i_syst];
     //TString current_hist_syst = histname + "_DYreweight_" + systematics[i_syst]; // -- FIXME
     TString legend_list[4] = {"DYJets", "ttbar", "WJets", "Other"};
+
     for(int i_legend_list = 0; i_legend_list < 4; i_legend_list++){
       
       unsigned int vector_size = map_sample_names[legend_list[i_legend_list]].size();
@@ -833,9 +837,9 @@ void open_files(TString histname){
     
     //cout << "current_dir_syst : " << current_dir_syst << endl;
     //cout << "current_hist_syst : " << current_hist_syst << endl;
-    openfile_DATA(Cycle_name, DoubleEG, current_dir_syst, current_hist_syst, 2016);
-    openfile_DATA(Cycle_name, DoubleEG, current_dir_syst, current_hist_syst, 2017);
-    openfile_DATA(Cycle_name, DoubleEG, current_dir_syst, current_hist_syst, 2018);
+    openfile_DATA(Cycle_name, map_sample_names["EGamma2016"].at(0), current_dir_syst, current_hist_syst, 2016);
+    openfile_DATA(Cycle_name, map_sample_names["EGamma2017"].at(0), current_dir_syst, current_hist_syst, 2017);
+    openfile_DATA(Cycle_name, map_sample_names["EGamma2018"].at(0), current_dir_syst, current_hist_syst, 2018);
 
     openfile_DATA(Cycle_name, SingleMuon, current_dir_syst, current_hist_syst, 2016);
     openfile_DATA(Cycle_name, SingleMuon, current_dir_syst, current_hist_syst, 2017);
@@ -918,10 +922,11 @@ void QuickPlotFullRun2(int year=2019){
   map_sample_names["DYJets2018"] = {"DYJets_MG_HT"};
   map_sample_names["ttbar2018"] = {"TT_powheg"};
   //map_sample_names["WJets2018"] = {"WJets_MG"};
-  map_sample_names["WJets2018"] = {"WJets_MG_HT"};
+  //map_sample_names["WJets2018"] = {"WJets_MG_HT"};
+  map_sample_names["WJets2018"] = {"fake"};
   map_sample_names["Other2018"] = {"VV"};
   map_sample_names["Muon2018"] = {"data_SingleMuon"};
-  map_sample_names["EGamma2018"] = {"data_DoubleEG"};
+  map_sample_names["EGamma2018"] = {"data_EGamma"};
     
   SingleMuon = "data_SingleMuon";
   DoubleEG = "data_DoubleEG";
@@ -931,7 +936,8 @@ void QuickPlotFullRun2(int year=2019){
   map_sample_names["DYJets2017"] = {"DYJets_MG_HT"};
   map_sample_names["ttbar2017"] = {"TT_powheg"};
   //map_sample_names["WJets2017"] = {"WJets_MG"};
-  map_sample_names["WJets2017"] = {"WJets_MG_HT"};
+  //map_sample_names["WJets2017"] = {"WJets_MG_HT"};
+  map_sample_names["WJets2017"] = {"fake"};
   map_sample_names["Other2017"] = {"VV"};
   map_sample_names["Muon2017"] = {"data_SingleMuon"};
   map_sample_names["EGamma2017"] = {"data_DoubleEG"};
@@ -944,7 +950,8 @@ void QuickPlotFullRun2(int year=2019){
   map_sample_names["DYJets2016"] = {"DYJets_MG_HT"};
   map_sample_names["ttbar2016"] = {"TT_powheg"};
   //map_sample_names["WJets2016"] = {"WJets_MG"};
-  map_sample_names["WJets2016"] = {"WJets_MG_HT"};
+  //map_sample_names["WJets2016"] = {"WJets_MG_HT"};
+  map_sample_names["WJets2016"] = {"fake"};
   map_sample_names["Other2016"] = {"VV"};
   map_sample_names["Muon2016"] = {"data_SingleMuon"};
   map_sample_names["EGamma2016"] = {"data_DoubleEG"};
@@ -953,7 +960,8 @@ void QuickPlotFullRun2(int year=2019){
   map_sample_names["DYJets"] = {"DYJets_MG_HT"};
   map_sample_names["ttbar"] = {"TT_powheg"};
   //map_sample_names["WJets"] = {"WJets_MG"};
-  map_sample_names["WJets"] = {"WJets_MG_HT"};
+  //map_sample_names["WJets"] = {"WJets_MG_HT"};
+  map_sample_names["WJets"] = {"fake"};
   map_sample_names["Other"] = {"VV"};
   map_sample_names["Muon"] = {"data_SingleMuon"};
   map_sample_names["EGamma"] = {"data_DoubleEG"};
@@ -965,7 +973,8 @@ void QuickPlotFullRun2(int year=2019){
   Cycle_name = "HN_pair_all_SkimTree_LRSMHighPt";
   
   //open_binning_file("binning_uniform_test.txt");
-  open_binning_file("binning_Zp.txt");
+  //open_binning_file("binning_Zp.txt");
+  open_binning_file("binning_Zp_2019.txt");
   //open_binning_file("binning_test.txt");
 
   outfile.close();

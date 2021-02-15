@@ -48,7 +48,7 @@ void openfile_DATA(TString cyclename, TString samplename, TString dir, TString h
     
 void openfile_signal(TString samplename, TString channel, TString dir, TString histname, int year){
 
-  TString filename = "HN_pair_all_HNPairToJJJJ_" + channel + "_" + samplename + "_WR5000.root";
+  TString filename = "SR_ZpNN_HNPairToJJJJ_" + channel + "_" + samplename + "_WR5000.root";
   cout << "[[openfile_signal]] Open " << filename << endl;
 
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
@@ -262,7 +262,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   mappad[pad1] -> SetRightMargin( 0.03 );
   mappad[pad1] -> Draw();
   mappad[pad1] -> cd();
-  //mappad[pad1] -> SetLogy();
+  mappad[pad1] -> SetLogy();
   
   maplegend[legend] = new TLegend(0.60, 0.60, 0.96, 0.92);
 
@@ -272,6 +272,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   gStyle->SetOptTitle(0);
   
   TString legend_list[4] = {"Other", "WJets", "ttbar", "DYJets"};
+  TString legend_string[4] = {"Other", "Non-prompt", "ttbar", "DYJets"};
   Int_t colour_array[] = {419, 901, 416, 400};
 
   TString name_cycle = nameofhistogram + Cycle_name;
@@ -325,7 +326,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   for(int i_legend = 0; i_legend < 4; i_legend++){
     TString current_sample = map_sample_names[legend_list[4 - i_legend - 1]].at(0);
     if(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin")){
-      maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"), legend_list[4 - i_legend - 1], "lf");
+      maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"), legend_string[4 - i_legend - 1], "lf");
       sum_syst_error(current_histname, Cycle_name + current_sample, N_bin);
     }
   }
@@ -437,8 +438,8 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   // -- Set y-axis range
   double data_max = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetMaximum();
   double data_min = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetMinimum();
-  //maphstack[hstack] -> SetMaximum(data_max * 100000.);//logy
-  maphstack[hstack] -> SetMaximum(data_max * 1.5);
+  maphstack[hstack] -> SetMaximum(data_max * 100000.);//logy
+  //maphstack[hstack] -> SetMaximum(data_max * 1.5);
   maphstack[hstack] -> SetMinimum(0.0001);
   
   // -- Draw Legend
@@ -486,6 +487,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   
   // -- Draw syst box hist with all contents as 1
   TString name_x = nameofhistogram;
+  if(nameofhistogram.Contains("mZp")) name_x = "Reco. m_{Z'} (GeV)";
   mapfunc["pad2_template" + nameofhistogram] -> SetTitle("");
   mapfunc["pad2_template" + nameofhistogram] -> SetLineColor(kWhite);
   mapfunc["pad2_template" + nameofhistogram] -> GetXaxis() -> SetTitle(name_x);
@@ -600,6 +602,34 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   latex_Lumi.DrawLatex(0.7, 0.96, total_lumi + " fb^{-1} (13 TeV)");
 
   if(debug) cout << "9" << endl;
+
+  TLatex latex_channel;
+  latex_channel.SetTextSize(0.035);
+  if(nameofhistogram.Contains("EMu")){
+    latex_channel.DrawLatex(0.20, 0.90, "e#mu");
+  }
+  if(nameofhistogram.Contains("DiEle")){
+    latex_channel.DrawLatex(0.20, 0.90, "ee");
+  }
+  if(nameofhistogram.Contains("DiMu")){
+    latex_channel.DrawLatex(0.20, 0.90, "#mu#mu");
+  }
+
+
+  TLatex latex_region;
+  latex_region.SetTextSize(0.035);
+  if(nameofhistogram.Contains("0AK8")){
+    latex_region.DrawLatex(0.20, 0.85, "0AK8");
+  }
+  if(nameofhistogram.Contains("1AK8")){
+    latex_region.DrawLatex(0.20, 0.85, "1AK8");
+  }
+  if(nameofhistogram.Contains("2AK8")){
+    latex_region.DrawLatex(0.20, 0.85, "2AK8");
+  }
+  
+
+
 
 
   TString pdfname;
@@ -734,9 +764,9 @@ void open_files(TString histname){
     
     //cout << "current_dir_syst : " << current_dir_syst << endl;
     //cout << "current_hist_syst : " << current_hist_syst << endl;
-    openfile_DATA(Cycle_name, DoubleEG, current_dir_syst, current_hist_syst, 2016);
-    openfile_DATA(Cycle_name, DoubleEG, current_dir_syst, current_hist_syst, 2017);
-    openfile_DATA(Cycle_name, DoubleEG, current_dir_syst, current_hist_syst, 2018);
+    openfile_DATA(Cycle_name, map_sample_names["EGamma2016"].at(0), current_dir_syst, current_hist_syst, 2016);
+    openfile_DATA(Cycle_name, map_sample_names["EGamma2017"].at(0), current_dir_syst, current_hist_syst, 2017);
+    openfile_DATA(Cycle_name, map_sample_names["EGamma2018"].at(0), current_dir_syst, current_hist_syst, 2018);
 
     openfile_DATA(Cycle_name, SingleMuon, current_dir_syst, current_hist_syst, 2016);
     openfile_DATA(Cycle_name, SingleMuon, current_dir_syst, current_hist_syst, 2017);
@@ -829,17 +859,19 @@ void QuickPlotFullRun2_signal(int year=2019){
   
   map_sample_names["DYJets2018"] = {"DYJets_MG_HT"};
   map_sample_names["ttbar2018"] = {"TT_powheg"};
-  map_sample_names["WJets2018"] = {"WJets_MG_HT"};
+  //map_sample_names["WJets2018"] = {"WJets_MG_HT"};
+  map_sample_names["WJets2018"] = {"fake"};
   map_sample_names["Other2018"] = {"VV"};
   map_sample_names["Muon2018"] = {"data_SingleMuon"};
-  map_sample_names["EGamma2018"] = {"data_DoubleEG"};
+  map_sample_names["EGamma2018"] = {"data_EGamma"};
     
   SingleMuon = "data_SingleMuon";
   DoubleEG = "data_DoubleEG";
   
   map_sample_names["DYJets2017"] = {"DYJets_MG_HT"};
   map_sample_names["ttbar2017"] = {"TT_powheg"};
-  map_sample_names["WJets2017"] = {"WJets_MG_HT"};
+  //map_sample_names["WJets2017"] = {"WJets_MG_HT"};
+  map_sample_names["WJets2017"] = {"fake"};
   map_sample_names["Other2017"] = {"VV"};
   map_sample_names["Muon2017"] = {"data_SingleMuon"};
   map_sample_names["EGamma2017"] = {"data_DoubleEG"};
@@ -847,7 +879,8 @@ void QuickPlotFullRun2_signal(int year=2019){
   
   map_sample_names["DYJets2016"] = {"DYJets_MG_HT"};
   map_sample_names["ttbar2016"] = {"TT_powheg"};
-  map_sample_names["WJets2016"] = {"WJets_MG_HT"};
+  //map_sample_names["WJets2016"] = {"WJets_MG_HT"};
+  map_sample_names["WJets2016"] = {"fake"};
   map_sample_names["Other2016"] = {"VV"};
   map_sample_names["Muon2016"] = {"data_SingleMuon"};
   map_sample_names["EGamma2016"] = {"data_DoubleEG"};
@@ -855,7 +888,8 @@ void QuickPlotFullRun2_signal(int year=2019){
 
   map_sample_names["DYJets"] = {"DYJets_MG_HT"};
   map_sample_names["ttbar"] = {"TT_powheg"};
-  map_sample_names["WJets"] = {"WJets_MG_HT"};
+  //map_sample_names["WJets"] = {"WJets_MG_HT"};
+  map_sample_names["WJets"] = {"fake"};
   map_sample_names["Other"] = {"VV"};
   map_sample_names["Muon"] = {"data_SingleMuon"};
   map_sample_names["EGamma"] = {"data_DoubleEG"};
@@ -865,8 +899,8 @@ void QuickPlotFullRun2_signal(int year=2019){
   Cycle_name = "HN_pair_all_SkimTree_LRSMHighPt";
   
   //open_binning_file("binning_uniform_test.txt");
-  open_binning_file("binning_signal_vs_data.txt");
-  //open_binning_file("binning_test.txt");
+  //open_binning_file("binning_signal_vs_data.txt");
+  open_binning_file("binning_limit_merged.txt");
 
   outfile.close();
   

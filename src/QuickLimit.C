@@ -285,7 +285,15 @@ void QuickLimit(int xxx=0){
     hist_axis(hist_dummy);
     hist_dummy->Draw("hist");
     hist_dummy->GetYaxis()->SetRangeUser(1E-6,100);
-    hist_dummy->GetYaxis()->SetTitle("#sigma (pb)");
+    //hist_dummy->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z')BR(Z' #rightarrow NN #rightarrow ee) (pb)");
+    hist_dummy->GetYaxis()->SetTitleSize(0.04);
+    hist_dummy->GetYaxis()->SetTitleOffset(1.5);
+    if(channel == "EE"){
+      hist_dummy->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z')BR(Z' #rightarrow NN #rightarrow eejjjj) (pb)");
+    }
+    if(channel == "MuMu"){
+      hist_dummy->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z')BR(Z' #rightarrow NN #rightarrow #mu#mujjjj) (pb)");
+    }
     hist_dummy->GetXaxis()->SetRangeUser(hnmasses.at(0),hnmasses.at(hnmasses.size()-1));
     hist_dummy->GetXaxis()->SetTitle("m_{N} (GeV)");
     c1->SetLogy();
@@ -530,7 +538,17 @@ void QuickLimit(int xxx=0){
     hist_dummy->Draw("hist");
     hist_dummy->GetYaxis()->SetRangeUser(1E-6,100);
     hist_dummy->GetYaxis()->SetTitle("#sigma (pb)");
-    hist_dummy->GetXaxis()->SetRangeUser(zpmasses.at(0),zpmasses.at(zpmasses.size()-1));
+    hist_dummy->GetYaxis()->SetTitleSize(0.04);
+    hist_dummy->GetYaxis()->SetTitleOffset(1.5);
+    if(channel == "EE"){
+      hist_dummy->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z')BR(Z' #rightarrow NN #rightarrow eejjjj) (pb)");
+    }
+    if(channel == "MuMu"){
+      hist_dummy->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z')BR(Z' #rightarrow NN #rightarrow #mu#mujjjj) (pb)");
+    }
+
+    //hist_dummy->GetXaxis()->SetRangeUser(zpmasses.at(0),zpmasses.at(zpmasses.size()-1));
+    hist_dummy->GetXaxis()->SetRangeUser(400., 4400.); // -- FIXME
     hist_dummy->GetXaxis()->SetTitle("m_{Z'} (GeV)");
     c1->SetLogy();
 
@@ -569,9 +587,19 @@ void QuickLimit(int xxx=0){
     lg->Draw();
 
     TLatex latex_zpmass;
-    latex_zpmass.SetTextSize(0.05);
+    latex_zpmass.SetTextSize(0.035);
     latex_zpmass.SetNDC();
-    latex_zpmass.DrawLatex(0.2, 0.9,"m_{N} = "+TString::Itoa(mN,10)+" GeV");
+    latex_zpmass.DrawLatex(0.25, 0.9,"m_{N} = "+TString::Itoa(mN,10)+" GeV");
+
+    TLatex latex_channel;
+    latex_channel.SetTextSize(0.035);
+    latex_channel.SetNDC();
+    if(channel == "EE"){
+      latex_channel.DrawLatex(0.25, 0.85,"Combined ee channel");
+    }
+    if(channel == "MuMu"){
+      latex_channel.DrawLatex(0.25, 0.85,"Combined #mu#mu channel");
+    }
 
     c1->SaveAs(base_plotpath+"/Limit_N"+TString::Itoa(mN,10)+".pdf");
     //c1->SaveAs(base_plotpath+"/Limit_N"+TString::Itoa(mN,10)+".png");
@@ -586,6 +614,214 @@ void QuickLimit(int xxx=0){
 
   }
 
+  //========================================
+  //==== 3) Save Limits on Map
+  //========================================
+  map<TString, double> limit_exp;
+  map<TString, double> limit_exp_95_down;
+  map<TString, double> limit_exp_68_down;
+  map<TString, double> limit_exp_68_up;
+  map<TString, double> limit_exp_95_up;
+  map<TString, double> limit_theory;
+
+  string elline;
+  ifstream in(WORKING_DIR+"/"+XSEC_file);
+  while(getline(in,elline)){
+    std::istringstream is( elline );
+    int a,b;
+    double xsec;
+    is >> a;
+    is >> b;
+    is >> xsec;
+    TString mZP = TString::Itoa(a, 10);
+    TString mN = TString::Itoa(b, 10);
+    limit_theory[mZP + "_" + mN] = xsec;
+  }
+
+  string elline2;
+  ifstream in2(base_filepath);
+  while(getline(in2,elline2)){
+    std::istringstream is( elline2 );
+    TString a, b;
+    double c_95_down;
+    double c_68_down;
+    double c;
+    double c_68_up;
+    double c_95_up;
+
+    is >> a;
+    is >> b;
+    is >> c_95_down;
+    is >> c_68_down;
+    is >> c;
+    is >> c_68_up;
+    is >> c_95_up;
+
+    TString mZp = a;
+    TString mN = b;
+
+    if(a.Atoi() > 0 && b.Atoi() > 0){
+      limit_exp_95_down[mZp + "_" + mN] = c_95_down * r_value_time;
+      limit_exp_68_down[mZp + "_" + mN] = c_68_down * r_value_time;
+      limit_exp[mZp + "_" + mN] = c*r_value_time;
+      limit_exp_68_up[mZp + "_" + mN] = c_68_up * r_value_time;
+      limit_exp_95_up[mZp + "_" + mN] = c_95_up * r_value_time;
+
+      double mZp_double = mZp.Atof() + 10.;
+      double mN_double = mN.Atof() + 10.;
+      //exp_limit_2D -> Fill(mZp_double, mN_double, c*r_value_time);
+    }
+  }
+
+
+
+  //==================================
+  //==== 4) Cross section limit for  mN = 0.25 mZ'
+  //==================================
+  TCanvas *c_quarter = new TCanvas("c_quarter", "", 600, 600);
+  canvas_margin(c_quarter);
+  c_quarter->cd();
+  
+  double a_quarter = 0.25; // y = 0.25 x for mN = 0.25 mZ'
+  int N_mZ_quarter = 21; // 21 = to 4400
+  double current_mN_quarter[N_mZ_quarter];
+  int mZp_array_quarter[] = {400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400};
+  vector<double> Cross_95_down;
+  vector<double> Cross_68_down;
+  vector<double> Cross;
+  vector<double> Cross_68_up;
+  vector<double> Cross_95_up;
+  
+  double y_theory_quarter[N_mZ_quarter];
+  double y_exp_quarter[N_mZ_quarter], y_exp_quarter_95_down[N_mZ_quarter], y_exp_quarter_68_down[N_mZ_quarter], y_exp_quarter_68_up[N_mZ_quarter], y_exp_quarter_95_up[N_mZ_quarter];
+  double x_quarter[N_mZ_quarter];
+  
+  //Get mN values needed
+  for(int i_N = 0; i_N < N_mZ_quarter; i_N++){
+    current_mN_quarter[i_N] = a_quarter * (mZp_array_quarter[i_N] + 0.); // mN = 0.25 mZ'
+    x_quarter[i_N] = mZp_array_quarter[i_N];
+  }
+  
+  for(int i_N = 0; i_N < N_mZ_quarter; i_N++){
+    double mN = current_mN_quarter[i_N];
+    int mN_low;
+    int mN_high;
+    mN_low = GetLowMN(mN);
+    mN_high = mN_low + 100;
+    TString current_mZp_str = TString::Itoa(mZp_array_quarter[i_N], 10);
+    TString current_mN_low_str = TString::Itoa(mN_low, 10);
+    TString current_mN_high_str = TString::Itoa(mN_high, 10);
+    
+    //Linear extrapolate theory cross sections                                                                                                                                                                                                                                
+    double mN_low_xsec = limit_theory[current_mZp_str + "_" +current_mN_low_str];
+    double mN_high_xsec = limit_theory[current_mZp_str + "_" +current_mN_high_str];
+    y_theory_quarter[i_N] = mN_low_xsec - 0.005 * (mN_low_xsec - mN_high_xsec) * (mN - mN_low + 0.);
+   
+    // -- Linear extrapolate cross section limits
+    mN_low_xsec = limit_exp[current_mZp_str + "_" +current_mN_low_str];
+    mN_high_xsec = limit_exp[current_mZp_str + "_" +current_mN_high_str];
+    y_exp_quarter[i_N] = mN_low_xsec - 0.005 * (mN_low_xsec - mN_high_xsec) * (mN - mN_low + 0.);
+
+    mN_low_xsec = limit_exp_95_down[current_mZp_str + "_" +current_mN_low_str];
+    mN_high_xsec = limit_exp_95_down[current_mZp_str + "_" +current_mN_high_str];
+    y_exp_quarter_95_down[i_N] = mN_low_xsec - 0.005 * (mN_low_xsec - mN_high_xsec) * (mN - mN_low + 0.);
+
+    mN_low_xsec = limit_exp_68_down[current_mZp_str + "_" +current_mN_low_str];
+    mN_high_xsec = limit_exp_68_down[current_mZp_str + "_" +current_mN_high_str];
+    y_exp_quarter_68_down[i_N] = mN_low_xsec - 0.005 * (mN_low_xsec - mN_high_xsec) * (mN - mN_low + 0.);
+
+    mN_low_xsec = limit_exp_68_up[current_mZp_str + "_" +current_mN_low_str];
+    mN_high_xsec = limit_exp_68_up[current_mZp_str + "_" +current_mN_high_str];
+    y_exp_quarter_68_up[i_N] = mN_low_xsec - 0.005 * (mN_low_xsec - mN_high_xsec) * (mN - mN_low + 0.);
+
+    mN_low_xsec = limit_exp_95_up[current_mZp_str + "_" +current_mN_low_str];
+    mN_high_xsec = limit_exp_95_up[current_mZp_str + "_" +current_mN_high_str];
+    y_exp_quarter_95_up[i_N] = mN_low_xsec - 0.005 * (mN_low_xsec - mN_high_xsec) * (mN - mN_low + 0.);
+    
+  }
+
+  double e_95_down[N_mZ_quarter], e_68_down[N_mZ_quarter], e_68_up[N_mZ_quarter], e_95_up[N_mZ_quarter], e_x_down[N_mZ_quarter], e_x_up[N_mZ_quarter];
+  for(int i_band = 0; i_band < N_mZ_quarter; i_band ++){
+    e_95_down[i_band] = fabs(y_exp_quarter[i_band] - y_exp_quarter_95_down[i_band]);
+    e_68_down[i_band] = fabs(y_exp_quarter[i_band] - y_exp_quarter_68_down[i_band]);
+    e_68_up[i_band] = fabs(y_exp_quarter[i_band] - y_exp_quarter_68_up[i_band]);
+    e_95_up[i_band] = fabs(y_exp_quarter[i_band] - y_exp_quarter_95_up[i_band]);
+    e_x_down[i_band] = 100.;
+    e_x_up[i_band] = 100.;
+  }
+
+  TGraph *Theory_quarter = new TGraph(N_mZ_quarter, x_quarter , y_theory_quarter);
+  TGraph *Limit_quarter = new TGraph(N_mZ_quarter, x_quarter , y_exp_quarter);
+  TGraphAsymmErrors *Limit_quarter_95_band = new TGraphAsymmErrors(N_mZ_quarter, x_quarter, y_exp_quarter, e_x_down, e_x_up, e_95_down, e_95_up);
+  TGraphAsymmErrors *Limit_quarter_68_band = new TGraphAsymmErrors(N_mZ_quarter, x_quarter, y_exp_quarter, e_x_down, e_x_up, e_68_down, e_68_up);
+  
+  TH1D *hist_dummy = new TH1D("hist_dummy", "", 4000, 400., 4400.);
+  hist_axis(hist_dummy);
+  hist_dummy->Draw("hist");
+  hist_dummy->GetYaxis()->SetRangeUser(1E-6,100);
+  hist_dummy->GetYaxis()->SetTitle("#sigma (pb)");
+  hist_dummy->GetYaxis()->SetTitleSize(0.04);
+  hist_dummy->GetYaxis()->SetTitleOffset(1.5);
+  if(channel == "EE"){
+    hist_dummy->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z')BR(Z' #rightarrow NN #rightarrow eejjjj) (pb)");
+  }
+  if(channel == "MuMu"){
+    hist_dummy->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z')BR(Z' #rightarrow NN #rightarrow #mu#mujjjj) (pb)");
+  }
+  hist_dummy->GetXaxis()->SetTitle("m_{Z'} (GeV)");
+  c_quarter->SetLogy();
+
+  Limit_quarter_95_band -> SetFillColor(kYellow);
+  Limit_quarter_95_band -> SetLineStyle(3);
+  if(N_mZ_quarter > 1) Limit_quarter_95_band -> Draw("3same");
+  else Limit_quarter_95_band -> Draw("e2same");
+
+  Limit_quarter_68_band -> SetFillColor(kGreen);
+  Limit_quarter_68_band -> SetLineStyle(3);
+  if(N_mZ_quarter > 1) Limit_quarter_68_band -> Draw("3same");
+  else Limit_quarter_68_band -> Draw("e2same");
+
+  Theory_quarter->SetLineColor(kRed);
+  Theory_quarter->SetLineWidth(3);
+  Theory_quarter->SetMarkerStyle(15);
+  Theory_quarter->SetMarkerColor(kRed);
+  Theory_quarter->Draw("lpsame");
+
+  Limit_quarter->SetLineColor(kBlack);
+  Limit_quarter->SetLineStyle(3);
+  Limit_quarter->SetLineWidth(3);
+  Limit_quarter->SetMarkerStyle(15);
+  Limit_quarter->SetMarkerColor(kBlack);
+  Limit_quarter->Draw("lpsame");
+
+  TLegend *lg_quarter = new TLegend(0.7, 0.7, 0.95, 0.95);
+  lg_quarter->SetBorderSize(0);
+  lg_quarter->SetFillStyle(0);
+  lg_quarter->AddEntry(Theory_quarter, "Theory", "lp");
+  lg_quarter->AddEntry(Limit_quarter, "Expected", "lp");
+  lg_quarter->AddEntry(Limit_quarter_68_band, "Expected #pm 1 #sigma", "lf");
+  lg_quarter->AddEntry(Limit_quarter_95_band, "Expected #pm 2 #sigma", "lf");
+  lg_quarter->Draw();
+
+  TLatex latex_quarter;
+  latex_quarter.SetTextSize(0.035);
+  latex_quarter.SetNDC();
+  latex_quarter.DrawLatex(0.25, 0.9,"m_{N} = m_{Z'}/4");
+
+  TLatex latex_channel_quarter;
+  latex_channel_quarter.SetTextSize(0.035);
+  latex_channel_quarter.SetNDC();
+  if(channel == "EE"){
+    latex_channel_quarter.DrawLatex(0.25, 0.85,"Combined ee channel");
+  }
+  if(channel == "MuMu"){
+    latex_channel_quarter.DrawLatex(0.25, 0.85,"Combined #mu#mu channel");
+  }
+  
+  
+  c_quarter->SaveAs(base_plotpath+"/Limit_quarter.pdf");
+  
+  c_quarter->Close();
 
   //=============================
   //==== Okay, Now Draw Contour
@@ -615,69 +851,6 @@ void QuickLimit(int xxx=0){
   
   TH2D *exp_limit_2D = new TH2D("", "", 12 ,400., 5200., 16, 100., 3300); //for 2D xsec limit plot
   
-  
-  //========================================
-  //==== 1) Save Limits on Map
-  //======================================== 
-  map<TString, double> limit_exp;
-  map<TString, double> limit_exp_95_down;
-  map<TString, double> limit_exp_68_down;
-  map<TString, double> limit_exp_68_up;
-  map<TString, double> limit_exp_95_up;
-  map<TString, double> limit_theory;
-  
-  string elline;
-  ifstream in(WORKING_DIR+"/"+XSEC_file);
-  while(getline(in,elline)){
-    std::istringstream is( elline );
-    int a,b;
-    double xsec;
-    is >> a;
-    is >> b;
-    is >> xsec;
-    TString mZP = TString::Itoa(a, 10);
-    TString mN = TString::Itoa(b, 10);
-    limit_theory[mZP + "_" + mN] = xsec;
-    //if(a==mZP&&mN==b) this_xsec = xsec;
-  }
-  
-  string elline2;
-  ifstream in2(base_filepath);
-  while(getline(in2,elline2)){
-    std::istringstream is( elline2 );
-    TString a, b;
-    double c_95_down;
-    double c_68_down;
-    double c;
-    double c_68_up;
-    double c_95_up;
-    
-    //cout << "a : " << a << endl;
-    
-    is >> a;
-    is >> b;
-    is >> c_95_down;
-    is >> c_68_down;
-    is >> c;
-    is >> c_68_up;
-    is >> c_95_up;
-    
-    TString mZp = a;
-    TString mN = b;
-    
-    if(a.Atoi() > 0 && b.Atoi() > 0){
-      limit_exp_95_down[mZp + "_" + mN] = c_95_down * r_value_time;
-      limit_exp_68_down[mZp + "_" + mN] = c_68_down * r_value_time;
-      limit_exp[mZp + "_" + mN] = c*r_value_time;
-      limit_exp_68_up[mZp + "_" + mN] = c_68_up * r_value_time;
-      limit_exp_95_up[mZp + "_" + mN] = c_95_up * r_value_time;
-      
-      double mZp_double = mZp.Atof() + 10.;
-      double mN_double = mN.Atof() + 10.;
-      exp_limit_2D -> Fill(mZp_double, mN_double, c*r_value_time);
-    }
-  }
-
   //========================================
   //==== 2) For loop over y = ax + 100(1 - 4a)
   //========================================
