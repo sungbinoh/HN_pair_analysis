@@ -41,6 +41,7 @@ void openfile_DATA(TString cyclename, TString samplename, TString dir, TString h
 
   mapfunc[histname + cyclename + samplename] = current_hist;
 
+  cout << "[openfile_DATA] " << histname + cyclename + samplename << endl;
   current_file -> Close();
   delete current_file;
 }
@@ -76,7 +77,7 @@ void draw_syst_lines(TString current_histname, int N_bin, double x1_template, do
   func.Insert(0, "ratio_");
   std::vector<double> central_content;
   central_content.clear();
-  for(int j = 1; j < N_bin + 1; j++){
+  for(int j = 1; j < N_bin; j++){
     double current_content = mapfunc[func+ "rebin"] -> GetBinContent(j);
     central_content.push_back(current_content);
   }
@@ -112,7 +113,7 @@ void draw_syst_lines(TString current_histname, int N_bin, double x1_template, do
   gStyle -> SetOptStat(1111);
   
   mapfunc["template_syst_line" + nameofhistogram] = (TH1F*)GetHist(func + "rebin") -> Clone("template_syst_line" + nameofhistogram);
-  for(int i = 1; i < N_bin + 1; i++){
+  for(int i = 1; i < N_bin; i++){
     mapfunc["template_syst_line" + nameofhistogram] -> SetBinContent(i, 1.);
     mapfunc["template_syst_line" + nameofhistogram] -> SetBinError(i, 0.);
   }
@@ -261,31 +262,85 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
     if(GetHist(nameofhistogram + Cycle_name + current_data) )N_Data = GetHist(nameofhistogram + Cycle_name + current_data) -> Integral();
     
     DY_norm = (N_DY + N_Data - N_MC) / N_DY;
-    /*
     if(tag_year == 2016){
-      if(nameofhistogram.Contains("DiMu")){
-	DY_norm = 0.801;
+      if(nameofhistogram.Contains("0AK8")){
+        if(nameofhistogram.Contains("DiMu")){
+          DY_norm = 0.812;
+        }
+        if(nameofhistogram.Contains("DiEle")){
+          DY_norm = 0.962;
+        }
       }
-      if(nameofhistogram.Contains("DiEle")){
-        DY_norm = 0.907;
+      if(nameofhistogram.Contains("1AK8")){
+        if(nameofhistogram.Contains("DiMu")){
+          DY_norm = 0.709;
+        }
+        if(nameofhistogram.Contains("DiEle")){
+          DY_norm = 0.689;
+        }
+      }
+      if(nameofhistogram.Contains("2AK8")){
+        if(nameofhistogram.Contains("DiMu")){
+          DY_norm = 0.604;
+        }
+        if(nameofhistogram.Contains("DiEle")){
+          DY_norm = 0.511;
+        }
       }
     }
     if(tag_year == 2017){
-      if(nameofhistogram.Contains("DiMu")){
-        DY_norm = 1.084;
+      if(nameofhistogram.Contains("0AK8")){
+        if(nameofhistogram.Contains("DiMu")){
+          DY_norm = 1.095;
+        }
+        if(nameofhistogram.Contains("DiEle")){
+          DY_norm = 1.093;
+        }
       }
-      if(nameofhistogram.Contains("DiEle")){
-	DY_norm = 1.078;
+      if(nameofhistogram.Contains("1AK8")){
+        if(nameofhistogram.Contains("DiMu")){
+          DY_norm = 1.056;
+        }
+        if(nameofhistogram.Contains("DiEle")){
+          DY_norm = 1.062;
+        }
       }
-    }if(tag_year == 2018){
-      if(nameofhistogram.Contains("DiMu")){
-        DY_norm = 1.06015;
-      }
-      if(nameofhistogram.Contains("DiEle")){
-	DY_norm = 1.0312;
+      if(nameofhistogram.Contains("2AK8")){
+        if(nameofhistogram.Contains("DiMu")){
+          DY_norm = 0.747;
+	}
+        if(nameofhistogram.Contains("DiEle")){
+          DY_norm = 0.881;
+	}
       }
     }
-    */
+    if(tag_year == 2018){
+      if(nameofhistogram.Contains("0AK8")){
+        if(nameofhistogram.Contains("DiMu")){
+          DY_norm = 1.127;
+        }
+        if(nameofhistogram.Contains("DiEle")){
+          DY_norm = 1.087;
+        }
+      }
+      if(nameofhistogram.Contains("1AK8")){
+        if(nameofhistogram.Contains("DiMu")){
+          DY_norm = 0.947;
+        }
+        if(nameofhistogram.Contains("DiEle")){
+          DY_norm = 0.952;
+        }
+      }
+      if(nameofhistogram.Contains("2AK8")){
+        if(nameofhistogram.Contains("DiMu")){
+          DY_norm = 0.997;
+        }
+        if(nameofhistogram.Contains("DiEle")){
+          DY_norm = 0.957;
+        }
+      }
+    }
+
     GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)) -> Scale(DY_norm); 
     
     outfile << nameofhistogram << "'s DY_norm : " << DY_norm << endl;
@@ -303,7 +358,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   else title_y = "Events/bin";
 
   bool blind = false;
-  blind = (nameofhistogram.Contains("SR")) && (!nameofhistogram.Contains("EMu"));
+  if((nameofhistogram.Contains("SR")) && (!nameofhistogram.Contains("EMu"))) blind = blind_SR;
 
   TString pad1 = nameofhistogram;
   TString pad2 = nameofhistogram;
@@ -346,24 +401,20 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   gStyle->SetOptTitle(0);
 
   TString legend_list[4] = {"Other", "Non-prompt", "ttbar", "DYJets"};
-  Int_t colour_array[] = {419, 901, 416, 400};
+  //TString legend_list[5] = {"Other", "Non-prompt", "ttbar", "DYJets", "QCD"}; 
+  Int_t colour_array[] = {419, 901, 416, 400, 600};
 
   TString name_cycle = nameofhistogram + Cycle_name;
   if(debug) cout << "check1" << endl;
   
   // -- Add Overflow bin
   TString overflow = "overflow";
-  Int_t nx_template = GetHist(nameofhistogram + Cycle_name + current_data) -> GetNbinsX()+1;
-  Double_t x1_template = GetHist(nameofhistogram + Cycle_name + current_data) -> GetBinLowEdge(1);
-  Double_t bw_template = (binx[N_bin - 1] - binx[0]) / 20.;
-  Double_t x2_template = GetHist(nameofhistogram + Cycle_name + current_data) -> GetBinLowEdge(nx_template)+bw_template;
-  binx[N_bin] = binx[N_bin - 1] + bw_template;
-  if(debug) cout << "[[make_histogram]] binx[N_bin] ; " << binx[N_bin]  << endl;
-  mapfunc[func] = new TH1F("", "", nx_template, x1_template, x2_template);
-  if(debug) cout << "func rebin rebinning" << endl;
-  mapfunc[func + "rebin"] = (TH1F*)mapfunc[func] -> Rebin(N_bin, func + "rebin", binx);
-  mapfunc[func + "rebin_stat_err"] = (TH1F*)mapfunc[func] -> Rebin(N_bin, func + "rebin", binx);
-  mapfunc[func + "blind_data"] = (TH1F*)mapfunc[func] -> Rebin(N_bin, func + "blind_Data", binx);
+  mapfunc[func] = new TH1F("", "", N_bin - 1, binx);
+  mapfunc[func + "rebin"] = new TH1F("", "", N_bin - 1, binx);
+  mapfunc[func + "rebin_stat_err"] = new TH1F("", "", N_bin - 1, binx);
+  mapfunc[func + "blind_data"] = new TH1F("", "", N_bin - 1, binx);
+  double x1_template = binx[0];
+  double x2_template = binx[N_bin - 1];
   // -- For each Bkg Legend : Add overflow, Rebin, Syst error bar, Add on legend, and set fill & line colors
   for(int i_legend = 0; i_legend < 4; i_legend++){
     if(debug) cout << legend_list[i_legend] << endl;
@@ -371,6 +422,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
     if(mapfunc[nameofhistogram + Cycle_name + current_sample]){
       
       Rebin_with_overflow(nameofhistogram + Cycle_name + current_sample, N_bin, binx);
+      Remove_Negative_Bins(nameofhistogram + Cycle_name + current_sample + "rebin");
       //cout << "GetHist  integral " << current_sample << " : " << GetHist(nameofhistogram + Cycle_name + current_sample)->Integral() << endl;
       //cout << "temp integral " << current_sample << " : " << htmp->Integral() << endl;
       
@@ -408,7 +460,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   bkg_central.clear();
   bkg_up.clear();
   bkg_down.clear();
-  for(int j = 1; j < N_bin + 1; j++){
+  for(int j = 1; j < N_bin ; j++){
     double current_bkg = mapfunc[func + "rebin"] -> GetBinContent(j);
     bkg_central.push_back(current_bkg);
     
@@ -418,6 +470,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
     for(int i_legend = 0; i_legend < 4; i_legend++){
       TString current_sample = map_sample_names[legend_list[4 - i_legend - 1]].at(0);
       if(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin")) {
+	cout << "[make_histogram] current_sample : " << current_sample << endl;
 	cout << "[make_histogram] Up size : " << map_syst_array[current_histname + Cycle_name + current_sample + "Up"].size() << endl;
 	cout << "[make_histogram] Down size : " << map_syst_array[current_histname + Cycle_name + current_sample + "Down"].size() << endl;
 	
@@ -428,11 +481,12 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
     bkg_up.push_back(current_up_sum);
     bkg_down.push_back(current_down_sum);
   }
-  
+
+
   map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] = new TGraphAsymmErrors(mapfunc[func + "rebin"]);
   map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] = new TGraphAsymmErrors(mapfunc[func + "rebin"]);
   
-  for(int i = 0; i < N_bin; i++){
+  for(int i = 0; i < N_bin - 1; i++){
     map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> SetPointEYlow(i,  bkg_down.at(i));
     map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> SetPointEYhigh(i, bkg_up.at(i));
     
@@ -443,11 +497,11 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
     map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] -> SetPointEYhigh(i, bkg_up.at(i) / current_y);
   }
     
-  draw_syst_lines(current_histname, N_bin, x1_template, x2_template);
+  //draw_syst_lines(current_histname, N_bin, x1_template, x2_template);
   mappad[pad1] -> cd();
 
   if(debug) cout << "4" << endl;
-
+  cout << "nameofhistogram + Cycle_name + current_data : " << nameofhistogram + Cycle_name + current_data << endl;
   Rebin_with_overflow(nameofhistogram + Cycle_name + current_data, N_bin, binx);
 
   if(blind){
@@ -497,6 +551,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   
   // -- Draw Signal
   Int_t signal_colour_array[] = {622, 632, 432, 600};
+  /*
   for(unsigned int i_signal = 0; i_signal < map_sample_names["Signal"].size(); i_signal++){
     Rebin_with_overflow(nameofhistogram + map_sample_names["Signal"].at(i_signal), N_bin, binx);
     mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "rebin"] -> SetLineColor(signal_colour_array[i_signal]);
@@ -504,13 +559,13 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
     maplegend[legend] -> AddEntry(mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "rebin"],  map_sample_names["Signal"].at(i_signal), "l");
     mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "rebin"] -> Draw("histsame");
   }
-
+  */
   // -- Set y-axis range
   double data_max = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetMaximum();
   double data_min = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetMinimum();
-  //maphstack[hstack] -> SetMaximum(data_max * 100000.);//logy
+  //maphstack[hstack] -> SetMaximum(data_max * 1000.);//logy
   maphstack[hstack] -> SetMaximum(data_max * 1.5);
-  maphstack[hstack] -> SetMinimum(0.0001);
+  maphstack[hstack] -> SetMinimum(0.01);
   
   // -- Draw Legend
   maplegend[legend] -> SetFillColor(kWhite);
@@ -543,14 +598,14 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   mapfunc["pad2_template" + nameofhistogram] = (TH1F*)GetHist(func + "rebin") -> Clone(clone);
   mapfunc["stat_err" + nameofhistogram] = (TH1F*)GetHist(func + "rebin_stat_err") -> Clone(clone);
   
-  for(int i = 1; i < N_bin + 1; i++){
+  for(int i = 1; i < N_bin; i++){
     mapfunc["pad2_template" + nameofhistogram] -> SetBinContent(i, 1.);
     mapfunc["pad2_template" + nameofhistogram] -> SetBinError(i, 0.);
   }
   if(debug) cout << "7" << endl;
 
   // -- Draw Line at Data/MC = 1
-  mapline[line] = new TLine(binx[0], 1, binx[N_bin - 1] + bw_template, 1);
+  mapline[line] = new TLine(binx[0], 1, binx[N_bin - 1], 1);
   mapline[line] -> Draw();
   mapline[line] -> SetLineStyle(1);
   mapline[line] -> SetLineColor(kBlue);
@@ -569,8 +624,8 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   mapfunc["pad2_template" + nameofhistogram] -> GetYaxis() -> SetTitleOffset(0.5);
   mapfunc["pad2_template" + nameofhistogram] -> GetYaxis() -> SetLabelSize(0.08);
   mapfunc["pad2_template" + nameofhistogram] -> GetYaxis() -> SetNdivisions(505);
-  mapfunc["pad2_template" + nameofhistogram] -> SetMinimum(0.5);
-  mapfunc["pad2_template" + nameofhistogram] -> SetMaximum(1.5);
+  mapfunc["pad2_template" + nameofhistogram] -> SetMinimum(0.0);
+  mapfunc["pad2_template" + nameofhistogram] -> SetMaximum(3.0);
   mapfunc["pad2_template" + nameofhistogram] -> SetStats(0);
   mapfunc["pad2_template" + nameofhistogram] -> Draw("hist");
 
@@ -786,6 +841,10 @@ void open_files(TString histname){
       } 
     }
   }
+  
+  if(histname.Contains("Problematic")){
+    current_dir = "Problematic_" + current_dir;
+  }
 
   if(debug) cout << "current_dir : " << current_dir << "/" << histname << "+systflags" << endl;
   if(current_dir.Contains("empty") || current_channel.Contains("empty")) return;
@@ -798,6 +857,7 @@ void open_files(TString histname){
     TString current_dir_syst = current_dir + "_" + systematics[i_syst];
     //TString current_hist_syst = histname + "_DYreweight_" + systematics[i_syst]; // -- FIXME
     TString legend_list[4] = {"DYJets", "ttbar", "Non-prompt", "Other"};
+    //TString legend_list[5] = {"QCD", "DYJets", "ttbar", "Non-prompt", "Other"}; 
     for(int i_legend_list = 0; i_legend_list < 4; i_legend_list++){
       
       unsigned int vector_size = map_sample_names[legend_list[i_legend_list]].size();
@@ -904,6 +964,7 @@ void QuickPlot_CR_signal(int year=2018){
     //map_sample_names["WJets"] = {"WJets_MG_HT"};
     map_sample_names["Non-prompt"] = {"fake"};
     map_sample_names["Other"] = {"VV"};
+    map_sample_names["QCD"] = {"QCD"};
     map_sample_names["Muon"] = {"data_SingleMuon"};
     map_sample_names["EGamma"] = {"data_EGamma"};
     
@@ -918,6 +979,7 @@ void QuickPlot_CR_signal(int year=2018){
     //map_sample_names["WJets"] = {"WJets_MG_HT"};
     map_sample_names["Non-prompt"] = {"fake"};
     map_sample_names["Other"] = {"VV"};
+    map_sample_names["QCD"] = {"QCD"};
     map_sample_names["Muon"] = {"data_SingleMuon"};
     map_sample_names["EGamma"] = {"data_DoubleEG"};
 
@@ -932,6 +994,7 @@ void QuickPlot_CR_signal(int year=2018){
     //map_sample_names["WJets"] = {"WJets_MG_HT"};
     map_sample_names["Non-prompt"] = {"fake"};
     map_sample_names["Other"] = {"VV"};
+    map_sample_names["QCD"] = {"QCD"};
     map_sample_names["Muon"] = {"data_SingleMuon"};
     map_sample_names["EGamma"] = {"data_DoubleEG"};
 
@@ -939,16 +1002,26 @@ void QuickPlot_CR_signal(int year=2018){
     DoubleEG = "data_DoubleEG";
   }
   
-  map_sample_names["Signal"] = {"ZP1000_N200", "ZP2000_N500", "ZP3000_N1000", "ZP4000_N1500"};
+  //map_sample_names["Signal"] = {"ZP1000_N200", "ZP2000_N500", "ZP3000_N1000", "ZP4000_N1500"};
+  map_sample_names["Signal"] = {""};
 
   Cycle_name = "HN_pair_all_SkimTree_LRSMHighPt";
 
   
-  //open_binning_file("binning_uniform_test.txt");
-  //open_binning_file("binning_uniform_few.txt");
-  //open_binning_file("binning_Zp.txt");
-  //open_binning_file("binning_mZp.txt");
-  open_binning_file("binning_signal_vs_data.txt");
+  open_binning_file("binning_limit_postfit.txt");
+  
+  /*
+  open_binning_file("binning_limit_merged_mZp_2AK8_SR_DiEle.txt");
+  open_binning_file("binning_limit_merged_mZp_1AK8_SR_DiEle.txt");
+  open_binning_file("binning_limit_merged_mZp_0AK8_SR_DiEle.txt");
+  */
+  open_binning_file("binning_limit_merged_mZp_2AK8_SR_DiMu.txt");
+  //open_binning_file("binning_limit_merged_mZp_1AK8_SR_DiMu.txt");
+  //open_binning_file("binning_limit_merged_mZp_0AK8_SR_DiMu.txt");
+  
+  //open_binning_file("binning_2017_comparion.txt");
+  //open_binning_file("binning_problematic.txt");
+  //open_binning_file("binning_signal_vs_data.txt");
   
   outfile.close();
   

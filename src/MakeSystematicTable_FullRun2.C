@@ -268,6 +268,30 @@ void MakeSystematicTable_FullRun2(int ahahah){
       };
     }
   }
+
+  for(int j = 0; j < N_syst_comparison; j++){
+    map_syst_table["bkgs" + systematics_comparison[j] + "EE"] = {
+      std::min(std::min(std::min(map_syst_table[bkgs[0] + systematics_comparison[j] + "EE"].at(0),
+				 map_syst_table[bkgs[1] + systematics_comparison[j] + "EE"].at(0)),
+			map_syst_table[bkgs[2] + systematics_comparison[j] + "EE"].at(0) ),
+	       map_syst_table[bkgs[3] + systematics_comparison[j] + "EE"].at(0)),
+      std::max(std::max(std::max(map_syst_table[bkgs[0] + systematics_comparison[j] + "EE"].at(1),
+                                 map_syst_table[bkgs[1] + systematics_comparison[j] + "EE"].at(1)),
+			map_syst_table[bkgs[2] + systematics_comparison[j] + "EE"].at(1) ),
+	       map_syst_table[bkgs[3] + systematics_comparison[j] + "EE"].at(1)),
+    };
+    
+    map_syst_table["bkgs" + systematics_comparison[j] + "MuMu"] = {
+      std::min(std::min(std::min(map_syst_table[bkgs[0] + systematics_comparison[j] + "MuMu"].at(0),
+                                 map_syst_table[bkgs[1] + systematics_comparison[j] + "MuMu"].at(0)),
+			map_syst_table[bkgs[2] + systematics_comparison[j] + "MuMu"].at(0) ),
+	       map_syst_table[bkgs[3] + systematics_comparison[j] + "MuMu"].at(0)),
+      std::max(std::max(std::max(map_syst_table[bkgs[0] + systematics_comparison[j] + "MuMu"].at(1),
+				 map_syst_table[bkgs[1] + systematics_comparison[j] + "MuMu"].at(1)),
+			map_syst_table[bkgs[2] + systematics_comparison[j] + "MuMu"].at(1) ),
+               map_syst_table[bkgs[3] + systematics_comparison[j] + "MuMu"].at(1)),
+    };
+  }
   
   for(int j = 0; j < 2; j++){
     map_syst_table[PDF_uncertainty[j] + "EE"] = {
@@ -280,7 +304,6 @@ void MakeSystematicTable_FullRun2(int ahahah){
       std::max(std::max(map_syst_table[PDF_uncertainty[j] + "MuMu2016"].at(1), map_syst_table[PDF_uncertainty[j] + "MuMu2017"].at(1)), map_syst_table[PDF_uncertainty[j] + "MuMu2018"].at(1))
     };
   }
-
 
   TString systematics_table[N_syst] = {"ElectronScale",
 				       "ElectronSmear",
@@ -302,82 +325,107 @@ void MakeSystematicTable_FullRun2(int ahahah){
 				       "ZPtRw",
   };  
   
-  TString syst_correlation[N_syst] = {"Unco.",
-				      "Unco.",
+  TString syst_correlation[N_syst] = {"Correlated",
+				      "Correlated",
 				      "Correlated",
 				      "Correlated",
 				      //"Correlated",
 				      "Correlated",
-				      "Unco.",
-				      "Unco.",
-				      //"Not Done",
-				      "Unco.",
-				      "Unco.",
-				      "Unco.",
-				      "Unco.",
-				      "Unco.",
-				      "Unco.",
-				      "Unco.",
-				      "Unco.",
 				      "Correlated",
+				      "Correlated",
+				      //"Not Done",
+				      "Correlated",
+				      "Correlated",
+				      "Correlated",
+				      "Correlated",
+				      "Uncorrelated",
+				      "Correlated",
+				      "Correlated",
+				      "Uncorrelated",
+				      "Correlated",
+  };
+
+  TString syst_bkg_signal[N_syst] = {"All bkgd./Signal",
+				     "All bkgd./Signal",
+				     "All bkgd./Signal",
+				     "All bkgd./Signal",
+				     "All bkgd./Signal",
+				     "All bkgd./Signal",
+				     "All bkgd./Signal",
+				     "All bkgd./Signal",
+				     "All bkgd./Signal",
+				     "All bkgd./Signal",
+				     "All bkgd./Signal",
+				     "All bkgd./Signal",
+				     "All bkgd./Signal",
+				     "All bkgd./Signal",
+				     "All bkgd./Signal",
+				     "DY+jets"
   };
   
   ofstream file_syst_table("./output/latex/syst_table.tex", ios::trunc);
   
   file_syst_table << "\\begin{table}"<< endl;
   file_syst_table << "\\centering" << endl;
-  file_syst_table << "\\topcaption{The list of systematics and their impacts on total number of events at $\\Pe\\Pe$ siganl region.}" << endl;
+  file_syst_table << "\\topcaption{The list of systematics and their impacts on total number of events at siganl region.}" << endl;
   file_syst_table << "\\label{tab:syst_ee}" << endl;
   file_syst_table << "\\resizebox{\\textwidth}{!}{" << endl;
   file_syst_table << "\\begin{tabular}{l l l l l l l}" << endl;
   file_syst_table << "\\hline\\hline" << endl;
-  file_syst_table << "Systematics (\\%) & Handling &DY & ttbar & Non-prompt Leptons & Others & Signal \\\\" << endl;
+  file_syst_table << "\\multirow{2}{*}{Source} & \\multirow{2}{*}{Bkgd./Signal process} & \\multirow{2}{*}{Year-to-year treatment} & $\\Pe\\Pe$ bkgd. & $\\Pe\\Pe$ signal & $\\mu\\mu$ bkgd. & $\\mu\\mu$ signal \\\\" << endl;
+  file_syst_table << "&                                       &     &  (\\%)           & (\\%)            & (\\%)           & (\\%) \\\\" << endl;
   file_syst_table << "\\hline" << endl;
+
+  file_syst_table << "Integrated luminosity & All bkgd./Signal & Uncorrelated & 2.3 -- 2.5 & 2.3 -- 2.5 & 2.3 -- 2.5 & 2.3 -- 2.5\\\\ " << endl;
   for(int j = 0; j < N_syst_comparison; j++){
-    file_syst_table << systematics_table[j] << " & " << syst_correlation[j];
-    for(int i = 0; i < 4; i++){
-      file_syst_table << fixed <<setprecision(3) << " & " << map_syst_table[bkgs[i] + systematics_comparison[j] + "EE"].at(0) << " -- " << map_syst_table[bkgs[i] + systematics_comparison[j] + "EE"].at(1);
+    file_syst_table << systematics_table[j] << " & " << syst_bkg_signal[j] << " & " << syst_correlation[j];
+    file_syst_table << fixed <<setprecision(1) << " & " ;
+    if(map_syst_table["bkgs" + systematics_comparison[j] + "EE"].at(1) > 0.1){
+      file_syst_table << map_syst_table["bkgs" + systematics_comparison[j] + "EE"].at(0) << " -- " << map_syst_table["bkgs" + systematics_comparison[j] + "EE"].at(1);
     }
-    file_syst_table << " & " << map_syst_table[systematics_comparison[j] + "EE"].at(0) << " -- " << map_syst_table[systematics_comparison[j] + "EE"].at(1) << "\\\\" << endl;
+    else file_syst_table << " $< 0.1$ ";
+    file_syst_table << " & " ;
+    
+    if( systematics_table[j] == "ZPtRw"){
+      file_syst_table << "\\NA";
+    }
+    else{
+      if(map_syst_table[systematics_comparison[j] + "EE"].at(1) > 0.1){
+	file_syst_table << map_syst_table[systematics_comparison[j] + "EE"].at(0) << " -- " << map_syst_table[systematics_comparison[j] + "EE"].at(1);
+      }
+      else file_syst_table << " $< 0.1$ ";
+    }
+
+    file_syst_table << " & " ;
+    if(map_syst_table["bkgs" + systematics_comparison[j] + "MuMu"].at(1) > 0.1){
+      file_syst_table << map_syst_table["bkgs" + systematics_comparison[j] + "MuMu"].at(0) << " -- " << map_syst_table["bkgs" + systematics_comparison[j] + "MuMu"].at(1);
+    }    
+    else file_syst_table << " $< 0.1$ ";
+    file_syst_table << " & " ;
+
+    if( systematics_table[j] == "ZPtRw"){
+      file_syst_table << "\\NA";
+    }
+    else{
+      if(map_syst_table[systematics_comparison[j] + "MuMu"].at(1) > 0.1){
+	file_syst_table << map_syst_table[systematics_comparison[j] + "MuMu"].at(0) << " -- " << map_syst_table[systematics_comparison[j] + "MuMu"].at(1);
+      }
+      else file_syst_table << " $< 0.1$ ";
+    }
+    file_syst_table << "\\\\" << endl;
   }
   for(int j = 0; j < 2; j++){
     file_syst_table << PDF_uncertainty[j];
-    file_syst_table << " & Correlated & - & - & - & - & " <<  map_syst_table[PDF_uncertainty[j] + "EE"].at(0) << " -- " << map_syst_table[PDF_uncertainty[j] + "EE"].at(1) << "\\\\" << endl;
+    file_syst_table << " & Signal & Correlated & \\NA & " << map_syst_table[PDF_uncertainty[j] + "EE"].at(0) << " -- " << map_syst_table[PDF_uncertainty[j] + "EE"].at(1) << " & \\NA & ";
+    file_syst_table << map_syst_table[PDF_uncertainty[j] + "MuMu"].at(0) << " -- " << map_syst_table[PDF_uncertainty[j] + "MuMu"].at(1) << "\\\\" << endl;
   }
-  file_syst_table << "Non prompt bkg norm. & Correlated & - &  - & 50 & - & - \\\\" << endl;
-  file_syst_table << "Minor bkg norm. & Correlated & - &  - & - & 50 & - \\\\" << endl;
+  file_syst_table << "Nonprompt norm. & Nonprompt & Correlated & 100 & \\NA & 100 & \\NA  \\\\" << endl;
+  file_syst_table << "Rare SM norm. & Others & Correlated & 50 & \\NA & 50 & \\NA \\\\" << endl;
   file_syst_table << "\\hline\\hline" << endl;
   file_syst_table << "\\end{tabular}" << endl;
   file_syst_table << "}" << endl;
   file_syst_table << "\\end{table}" << endl;
   file_syst_table << "\n\n";
-  
-  file_syst_table << "\\begin{table}"<< endl;
-  file_syst_table << "\\centering" << endl;
-  file_syst_table << "\\topcaption{The list of systematics and their impacts on total number of events at $\\mu\\mu$ siganl region.}" << endl;
-  file_syst_table << "\\label{tab:syst_mumu}" << endl;
-  file_syst_table << "\\resizebox{\\textwidth}{!}{" << endl;
-  file_syst_table << "\\begin{tabular}{l l l l l l l}" << endl;
-  file_syst_table << "\\hline\\hline" << endl;
-  file_syst_table << "Systematics (\\%) & Handling  & DY & ttbar & Non-prompt Leptons & Others & Signal \\\\" << endl;
-  file_syst_table << "\\hline" << endl;
-  for(int j = 0; j < N_syst_comparison; j++){
-    file_syst_table << systematics_table[j] << " & " << syst_correlation[j];
-    for(int i = 0; i < 4; i++){
-      file_syst_table << fixed << setprecision(3) << " & " << map_syst_table[bkgs[i] + systematics_comparison[j] + "MuMu"].at(0) << " -- " << map_syst_table[bkgs[i] + systematics_comparison[j] + "MuMu"].at(1);
-    }
-    file_syst_table << " & " << map_syst_table[systematics_comparison[j] + "MuMu"].at(0) << " -- " << map_syst_table[systematics_comparison[j] + "MuMu"].at(1) << "\\\\" << endl;
-  }
-  for(int j = 0; j < 2; j++){
-    file_syst_table << PDF_uncertainty[j];
-    file_syst_table << " & Correlated & - & - & - & - & " <<  map_syst_table[PDF_uncertainty[j] + "MuMu"].at(0) << " -- " << map_syst_table[PDF_uncertainty[j] + "MuMu"].at(1) << "\\\\" << endl;
-  }
-  file_syst_table << "Non prompt bkg norm. & Correlated & - &  - & 50 & - & - \\\\" << endl;
-  file_syst_table << "Minor bkg norm. & Correlated & - &  - & - & 50 & - \\\\" << endl;
-  file_syst_table << "\\hline\\hline" << endl;
-  file_syst_table << "\\end{tabular}" << endl;
-  file_syst_table << "}" << endl;
-  file_syst_table << "\\end{table}" << endl;
   
 
   /*

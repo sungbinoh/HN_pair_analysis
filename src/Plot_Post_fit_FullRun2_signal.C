@@ -15,14 +15,7 @@ void openfile(TString plot_name, TString which_fit, TString mass_point){
   if(plot_name.Contains("2AK8")){
     NAK8 = "2AK8";
   }
-  
-  TString filename = WORKING_DIR+"/rootfiles/fitDiagnostics/output_" + plot_name + "_" + mass_point + ".root";
-  if(plot_name.Contains("SR")){
-    if(plot_name.Contains("DiEle") || plot_name.Contains("DiMu")){
-      filename = WORKING_DIR+"/rootfiles/fitDiagnostics/output_mZp_"+ NAK8+ "_SR_"  + mass_point + ".root";
-    }
-  }
-  cout << "[openfile] " << filename << endl;
+  TString filename = WORKING_DIR+"/rootfiles/fitDiagnostics/output_mZp_" + NAK8 + "_SR_" + mass_point + ".root";
   //TString filename = WORKING_DIR+"/rootfiles/fitDiagnostics/fitDiagnostics_fit_result_100fake.root";
 
   TFile *current_file = new TFile ((filename)) ;
@@ -54,6 +47,7 @@ void openfile(TString plot_name, TString which_fit, TString mass_point){
   gDirectory -> cd(which_fit);
   TH1F * current_bkg = (TH1F*)gDirectory -> Get("TotalBkg");
   TH1F * current_data = (TH1F*)gDirectory -> Get("data_obs");
+  TH1F * current_signal = (TH1F*)gDirectory -> Get("TotalSig");
   if(current_bkg){
     current_bkg -> SetDirectory(0);
   }
@@ -64,12 +58,17 @@ void openfile(TString plot_name, TString which_fit, TString mass_point){
   }
   TH1::AddDirectory(kFALSE);
   mapfunc[plot_name + "data" + which_fit] = current_data;
+  if(current_signal){
+    current_signal -> SetDirectory(0);
+  }
+  TH1::AddDirectory(kFALSE);
+  mapfunc[plot_name + "signal" + which_fit] = current_signal;
 
   current_file -> Close();
   delete current_file;
 }
 
-void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx[]){
+void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx[], TString mass_point){
 
   TString nameofhistogram = plot_name + "_" + which_fit;
   
@@ -113,7 +112,7 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
   mappad[pad1] -> cd();
   mappad[pad1] -> SetLogy();
   
-  maplegend[legend] = new TLegend(0.60, 0.60, 0.96, 0.92);
+  maplegend[legend] = new TLegend(0.55, 0.60, 0.96, 0.92);
 
   if(debug) cout << "1" << endl;
   
@@ -152,7 +151,6 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
     TString current_hist = plot_name + histograms[4 - i_legend - 1] + which_fit;
     if(mapfunc[current_hist + "sum"]){
       maplegend[legend] -> AddEntry(mapfunc[current_hist + "sum"] , legend_list[4 - i_legend - 1], "lf");
-      cout << "current_hist + sum : " << current_hist + "sum" << endl;
     }
   }
 
@@ -178,6 +176,16 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
     if(current_content > max_data) max_data = current_content;
   }
 
+  TString current_signal = plot_name + "signal" + which_fit;
+  TH1F* signal_hist = new TH1F(current_signal + "rebin", current_signal + "rebin", N_bin-1, binx);
+  for(int i_bin = 1; i_bin < N_bin; i_bin++){
+    double current_content = mapfunc[current_signal] -> GetBinContent(i_bin);
+    double current_error = mapfunc[current_signal] -> GetBinError(i_bin);
+    signal_hist -> SetBinContent(i_bin, current_content);
+    signal_hist -> SetBinError(i_bin, current_error);
+  }
+
+  // -- Proper error bar for data
   map_asym_gr[current_data] = new TGraphAsymmErrors(data_hist);
   for(int i = 0; i < N_bin; i++){
     int N = data_hist -> GetBinContent(i + 1);
@@ -221,8 +229,14 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
 
   maplegend[legend] -> AddEntry(bkg_sum, "Stat.+syst. uncert.", "f");
   maplegend[legend] -> AddEntry(map_asym_gr[current_data], "Observed", "lp");
-  
-  
+  TString signal_str = mass_point;
+  TObjArray *tx = signal_str.Tokenize("_");
+  TString mZp =((TObjString *)(tx->At(2)))->String();
+  TString mN = ((TObjString *)(tx->At(3)))->String();
+  mZp.ReplaceAll("ZP","");
+  mN.ReplaceAll("N","");
+  maplegend[legend] -> AddEntry(signal_hist, "(m_{Z'} , m_{N}) = (" + mZp + ", " + mN + ") (GeV)", "l");
+
   // -- Draw Pad
   pad1_template -> Draw("hist");
   pad1_template -> GetYaxis()->SetLabelSize(0.05);;
@@ -245,6 +259,10 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
 
   //data_hist -> Draw("psame");
   map_asym_gr[current_data] -> Draw("epsame");
+
+  signal_hist -> SetLineStyle(5);
+  signal_hist -> SetLineWidth(3);
+  signal_hist -> Draw("histsame");
 
   maplegend[legend] -> SetFillColor(kWhite);
   maplegend[legend] -> SetLineColor(kBlack);
@@ -282,7 +300,8 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
   pad2_template -> GetYaxis() -> SetTitleOffset(0.5);
   pad2_template -> GetYaxis() -> SetLabelSize(0.08);
   pad2_template -> GetYaxis() -> SetNdivisions(505);
-  pad2_template -> GetYaxis() -> SetRangeUser(0.0, 2.0);
+  pad2_template -> GetYaxis() -> SetRangeUser(0.0, 2.5);
+  //pad2_template -> GetYaxis() -> SetRangeUser(0.5, 1.5);
   pad2_template -> SetStats(0);
   pad2_template -> Draw("histsame");
   
@@ -381,7 +400,7 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
   }
   else return;
 
-  TLatex latex_fit;
+  TLatex latex_fit; 
   latex_fit.SetTextSize(0.035);
   if(nameofhistogram.Contains("prefit")){
     latex_fit.DrawLatex(0.40, 0.80, "Prefit");
@@ -431,10 +450,10 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
 }
 
 
-void open_files(TString plot_name){
+void open_files(TString plot_name, TString mass_point){
   
-  //maphist.clear();
-  //mapfunc.clear();
+  maphist.clear();
+  mapfunc.clear();
   if(debug) cout << "[[open_files]] plot_name : " << plot_name << endl;  
   unsigned int N_bin = map_bin_vector[plot_name].size();
   double current_bins[100];
@@ -445,18 +464,22 @@ void open_files(TString plot_name){
   TString which_fits[2] = {"prefit", "postfit"};
   for(int i_which_fit = 0; i_which_fit < 2; i_which_fit++){
     TString which_fit = which_fits[i_which_fit];
-    if(plot_name.Contains("DiEle")){
-      openfile(plot_name, which_fit, "HNPairToJJJJ_EE_ZP4000_N1200_WR5000");
-    }
-    else{
-      openfile(plot_name, which_fit, "HNPairToJJJJ_MuMu_ZP4000_N1200_WR5000");
-    }   
-
-    make_histogram(plot_name, which_fit, N_bin, current_bins);
+    openfile(plot_name, which_fit, mass_point);
+    make_histogram(plot_name, which_fit, N_bin, current_bins, mass_point);
   }
 }
 
-void open_binning_file(TString filename){
+void open_binning_file(TString filename, TString mass_point){
+
+
+  TString signal_str = mass_point;
+  TObjArray *tx = signal_str.Tokenize("_");
+  TString mZp = ((TObjString *)(tx->At(2)))->String();
+  TString mN = ((TObjString *)(tx->At(3)))->String();
+  mZp.ReplaceAll("ZP","");
+  mN.ReplaceAll("N","");
+  cout << "mass_point : " << mass_point << endl;
+  cout << "mZp : " << mZp << ", mN : " << mN << endl; 
 
   cout << "[open_binning_file] start to open binngin file : " << filename << endl;
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
@@ -497,7 +520,7 @@ void open_binning_file(TString filename){
 
       cout << "[[open_binning_file]] current_histname : " << current_histname << endl;
 
-      open_files(current_histname);
+      open_files(current_histname, mass_point);
       map_bin_vector.clear();
     }
   }
@@ -505,121 +528,15 @@ void open_binning_file(TString filename){
 }
 
 
-void overlap_ttbar(TString NAK8){
-  
-  TString nameofhistogram = "mZp_" + NAK8;
-  TString title_y;
-  if(nameofhistogram.Contains("N")) title_y = "Number";
-  else title_y = "Events/bin";
-
-  TString canvas = nameofhistogram;
-  TString legend = nameofhistogram;
-  TString func = nameofhistogram;
-  TString clone = nameofhistogram;
-  TString line = nameofhistogram;
-  canvas.Insert(0, "c_");
-  legend.Insert(0, "legend_");
-  func.Insert(0, "ratio_");
-  clone.Insert(0, "h3_");
-  line.Insert(0, "l_");
-
-  mapcanvas[canvas] = new TCanvas(canvas,"",800,800);
-  canvas_margin(mapcanvas[canvas]);
-  gStyle -> SetOptStat(1111);
-  mapcanvas[canvas] -> SetLogy();
-
-  maplegend[legend] = new TLegend(0.60, 0.80, 0.96, 0.95);
-
-  TString histname_ee = "mZp_" + NAK8 + "_SR_DiEleTT_powhegprefitsum";
-  TString histname_mumu = "mZp_" + NAK8 + "_SR_DiMuTT_powhegprefitsum";
-  TString histname_emu = "mZp_" + NAK8 + "_SR_EMuTT_powhegprefitsum";
-  
-  cout << "histname_emu : " << histname_emu << endl;
-  
-  mapfunc[func + "template"] = (TH1F*)mapfunc[histname_emu] -> Clone(func + "template");
-  mapfunc[func + "template"]  -> SetStats(0);
-  double hist_max = mapfunc[func + "template"] -> GetMaximum();
-  //mapfunc[func + "template"] -> SetMaximum(hist_max * 1.5);
-  mapfunc[func + "template"] -> SetMaximum(hist_max * 100);//logy 
-  mapfunc[func + "template"] -> SetMinimum(0.1);
-  mapfunc[func + "template"] -> GetXaxis() -> SetTitle(nameofhistogram);
-  mapfunc[func + "template"] -> GetYaxis()->SetLabelSize(0.05);;
-  mapfunc[func + "template"] -> GetYaxis()->SetTitleSize(0.07);;
-  mapfunc[func + "template"] -> GetYaxis()->SetTitleOffset(1.02);;
-  mapfunc[func + "template"] -> GetYaxis()->SetTitle("Events/bin");
-  mapfunc[func + "template"] -> SetFillColor(0);
-  mapfunc[func + "template"] -> Draw("l");
-
-  mapfunc[histname_ee] -> SetLineColor(kBlack);
-  mapfunc[histname_mumu] -> SetLineColor(kBlue);
-  mapfunc[histname_emu] -> SetLineColor(kRed);
-  
-  mapfunc[histname_ee] -> SetFillColor(0);
-  mapfunc[histname_mumu] -> SetFillColor(0);
-  mapfunc[histname_emu] -> SetFillColor(0);
-
-  mapfunc[histname_ee] -> SetLineWidth(2);
-  mapfunc[histname_mumu] -> SetLineWidth(2);
-  mapfunc[histname_emu] -> SetLineWidth(2);
-  
-  mapfunc[histname_ee] -> Draw("histsame");
-  mapfunc[histname_mumu] -> Draw("histsame");
-  mapfunc[histname_emu]-> Draw("histsame");
-
-  maplegend[legend] -> AddEntry(mapfunc[histname_ee], "ee", "l");
-  maplegend[legend] -> AddEntry(mapfunc[histname_mumu], "mumu", "l");
-  maplegend[legend] -> AddEntry(mapfunc[histname_emu], "emu", "l");
-  
-  maplegend[legend] -> SetFillColor(kWhite);
-  maplegend[legend] -> SetLineColor(kBlack);
-  maplegend[legend] -> SetBorderSize(1);
-  maplegend[legend] -> SetFillStyle(1001);
-  maplegend[legend] -> SetShadowColor(0);
-  maplegend[legend] -> SetEntrySeparation(0.3);
-  maplegend[legend] -> Draw("same");
-
-  mapcanvas[canvas] -> cd();
-
-  TLatex latex_CMSPriliminary, latex_Lumi;
-  latex_CMSPriliminary.SetNDC();
-  latex_Lumi.SetNDC();
-  latex_CMSPriliminary.SetTextSize(0.035);
-  latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
-  latex_Lumi.SetTextSize(0.035);
-  latex_Lumi.DrawLatex(0.7, 0.96, "137.4 fb^{-1} (13 TeV)");
-  
-  TString pdfname;
-  TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
-  pdfname = WORKING_DIR + "/plots/Signal/ttbar_comparison_" + NAK8 + ".pdf";
-  mapcanvas[canvas] -> SaveAs(pdfname);
-
-  
-}
-
-
-
-
-void Plot_Post_fit_FullRun2(int year=2019){
+void Plot_Post_fit_FullRun2_signal(int year=2019){
   setTDRStyle();
   tag_year = year;
 
-  TString binning_file = "binning_limit_postfit.txt";
-  cout << "binning_file : " << binning_file << endl;
-
-  open_binning_file(binning_file);  
-
-  /*
-  open_binning_file("binning_limit_merged_mZp_2AK8_SR_DiEle.txt");
-  open_binning_file("binning_limit_merged_mZp_1AK8_SR_DiEle.txt");
-  open_binning_file("binning_limit_merged_mZp_0AK8_SR_DiEle.txt");
-  open_binning_file("binning_limit_merged_mZp_2AK8_SR_DiMu.txt");
-  open_binning_file("binning_limit_merged_mZp_1AK8_SR_DiMu.txt");
-  open_binning_file("binning_limit_merged_mZp_0AK8_SR_DiMu.txt");
-  */
-  /*
-  overlap_ttbar("0AK8");
-  overlap_ttbar("1AK8");
-  overlap_ttbar("2AK8");
-  */
+  open_binning_file("binning_limit_merged_mZp_2AK8_SR_DiEle.txt", "HNPairToJJJJ_EE_ZP4000_N200_WR5000");
+  open_binning_file("binning_limit_merged_mZp_1AK8_SR_DiEle.txt", "HNPairToJJJJ_EE_ZP4000_N1200_WR5000");
+  open_binning_file("binning_limit_merged_mZp_0AK8_SR_DiEle.txt", "HNPairToJJJJ_EE_ZP4000_N1200_WR5000");
+  open_binning_file("binning_limit_merged_mZp_2AK8_SR_DiMu.txt", "HNPairToJJJJ_MuMu_ZP4000_N200_WR5000");
+  open_binning_file("binning_limit_merged_mZp_1AK8_SR_DiMu.txt", "HNPairToJJJJ_MuMu_ZP4000_N1200_WR5000");
+  open_binning_file("binning_limit_merged_mZp_0AK8_SR_DiMu.txt", "HNPairToJJJJ_MuMu_ZP4000_N1200_WR5000");
 
 }

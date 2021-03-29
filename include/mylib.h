@@ -5,9 +5,10 @@ ofstream outfile;
 
 using namespace std;
 const double alpha = 1 - 0.6827;
-const double signal_scale = 0.001;
+const double signal_scale = 0.01;
 // == Debugging Mode
 bool debug = true;
+bool blind_SR = false;
 int tag_year = 0;
 TString Cycle_name;
 TString Cycle_name_signal;
@@ -90,6 +91,129 @@ TH1F * GetHist(TString hname){
 
 }
 
+double get_DY_norm_SF(TString nameofhistogram){
+
+  double DY_norm = 1.;
+
+  // -- Flavor dependent
+  /*
+  if(tag_year == 2016){
+    if(nameofhistogram.Contains("0AK8")){
+      if(nameofhistogram.Contains("DiMu")){
+	DY_norm = 0.812;
+      }
+      if(nameofhistogram.Contains("DiEle")){
+	DY_norm = 0.962;
+      }
+    }
+    if(nameofhistogram.Contains("1AK8")){
+      if(nameofhistogram.Contains("DiMu")){
+	DY_norm = 0.709;
+      }
+      if(nameofhistogram.Contains("DiEle")){
+	DY_norm = 0.689;
+      }
+    }
+    if(nameofhistogram.Contains("2AK8")){
+      if(nameofhistogram.Contains("DiMu")){
+	DY_norm = 0.604;
+      }
+      if(nameofhistogram.Contains("DiEle")){
+	DY_norm = 0.511;
+      }
+    }
+  }
+  if(tag_year == 2017){
+    if(nameofhistogram.Contains("0AK8")){
+      if(nameofhistogram.Contains("DiMu")){
+	DY_norm = 1.095;
+      }
+      if(nameofhistogram.Contains("DiEle")){
+	DY_norm = 1.093;
+      }
+    }
+    if(nameofhistogram.Contains("1AK8")){
+      if(nameofhistogram.Contains("DiMu")){
+	DY_norm = 1.056;
+      }
+      if(nameofhistogram.Contains("DiEle")){
+	DY_norm = 1.062;
+      }
+    }
+    if(nameofhistogram.Contains("2AK8")){
+      if(nameofhistogram.Contains("DiMu")){
+	DY_norm = 0.747;
+      }
+      if(nameofhistogram.Contains("DiEle")){
+	DY_norm = 0.881;
+      }
+    }
+  }
+  if(tag_year == 2018){
+    if(nameofhistogram.Contains("0AK8")){
+      if(nameofhistogram.Contains("DiMu")){
+	DY_norm = 1.127;
+      }
+      if(nameofhistogram.Contains("DiEle")){
+	DY_norm = 1.087;
+      }
+    }
+    if(nameofhistogram.Contains("1AK8")){
+      if(nameofhistogram.Contains("DiMu")){
+	DY_norm = 0.947;
+      }
+      if(nameofhistogram.Contains("DiEle")){
+	DY_norm = 0.952;
+      }
+    }
+    if(nameofhistogram.Contains("2AK8")){
+      if(nameofhistogram.Contains("DiMu")){
+	DY_norm = 0.997;
+      }
+      if(nameofhistogram.Contains("DiEle")){
+	DY_norm = 0.957;
+      }
+    }
+  }
+  */
+  // -- Flavor Independent
+  if(tag_year == 2016){
+    if(nameofhistogram.Contains("0AK8")){
+      DY_norm = 0.887;
+    }
+    if(nameofhistogram.Contains("1AK8")){
+      DY_norm = 0.699;
+    }
+    if(nameofhistogram.Contains("2AK8")){
+      DY_norm = 0.558;
+    }
+  }
+  if(tag_year == 2017){
+    if(nameofhistogram.Contains("0AK8")){
+      DY_norm = 1.094;
+    }
+    if(nameofhistogram.Contains("1AK8")){
+      DY_norm = 1.059;
+    }
+    if(nameofhistogram.Contains("2AK8")){
+      DY_norm = 0.814;
+    }
+  }
+  if(tag_year == 2018){
+    if(nameofhistogram.Contains("0AK8")){
+      DY_norm = 1.107;
+    }
+    if(nameofhistogram.Contains("1AK8")){
+      DY_norm = 0.950;
+    }
+    if(nameofhistogram.Contains("2AK8")){
+      DY_norm = 0.977;
+    }
+  }
+
+  return DY_norm;
+}
+
 vector<double> Get_Syst_Error(TString nameofhistogram, TString sample){
   
   vector<double> error_vector;
@@ -119,19 +243,11 @@ void Rebin_with_overflow(TString histname, int N_bin, double binx[]){
 
   if(debug) cout << "[Rebin_with_overflow]" << endl;
 
-  Int_t nx    = mapfunc[histname] -> GetNbinsX()+1;
-  Double_t x1 = mapfunc[histname] -> GetBinLowEdge(1);
-  Double_t bw = (binx[N_bin - 1] - binx[0]) / 20.;
-  Double_t x2 = mapfunc[histname] -> GetBinLowEdge(nx)+bw;
+  mapfunc[histname + "rebin"] = (TH1F*)mapfunc[histname] -> Rebin(N_bin - 1, histname + "rebin", binx);
 
-  TH1F *htmp = new TH1F("", "", nx, x1, x2);
-  for(Int_t j = 1; j < nx + 1; j++){
-    double current_bin_content = mapfunc[histname] -> GetBinContent(j);
-    double current_bin_error = mapfunc[histname] -> GetBinError(j);
-    htmp -> SetBinContent(j, current_bin_content);
-    htmp -> SetBinError(j, current_bin_error);
-  }
-  mapfunc[histname + "rebin"] = dynamic_cast<TH1F*>(htmp -> Rebin(N_bin, histname + "rebin", binx));
+  double last_bin = 0.;
+  last_bin =  mapfunc[histname + "rebin"] -> GetBinContent(N_bin - 1) + mapfunc[histname + "rebin"] -> GetBinContent(N_bin);
+  mapfunc[histname + "rebin"] -> SetBinContent(N_bin - 1, last_bin);
 
 }
 
@@ -144,6 +260,20 @@ void Rebin_with_overflow_limit(TString histname, int N_bin, double binx[]){
   
   //mapfunc[histname + "rebin"] -> Integral();
 }
+
+void Remove_Negative_Bins(TString current_histname){
+  int N_bin = mapfunc[current_histname] -> GetNbinsX();
+  for(int i = 1; i <= N_bin; i++){
+    double current_bin_content = mapfunc[current_histname] -> GetBinContent(i);
+    if (current_bin_content < 0.000001){
+      current_bin_content = 0.000001;
+      double current_error = current_bin_content / 1.0;
+      mapfunc[current_histname] -> SetBinContent(i, current_bin_content);
+      mapfunc[current_histname] -> SetBinError(i, 0.);
+    }
+  }
+}
+
 
 void Save_syst_array(TString current_histname, TString systematics, TString cycle_and_sample, int N_bin, double binx[]){
   
@@ -159,45 +289,25 @@ void Save_syst_array(TString current_histname, TString systematics, TString cycl
   
   cout << "[Save_syst_array] : " << histname_Up << endl;
   if(!mapfunc[histname_Up]) return;
-  
-  Int_t nx    = mapfunc[histname_Up] -> GetNbinsX()+1;
-  Double_t x1 = mapfunc[histname_Up] -> GetBinLowEdge(1);
-  Double_t bw = (binx[N_bin - 1] - binx[0]) / 20.;
-  Double_t x2 = mapfunc[histname_Up] -> GetBinLowEdge(nx)+bw;
+  Rebin_with_overflow(histname_Up, N_bin, binx);
+  Rebin_with_overflow(histname_Down, N_bin, binx);
+  Remove_Negative_Bins(histname_Up + "rebin");
+  Remove_Negative_Bins(histname_Down + "rebin");
 
-  TH1F *htmp_syst_Up = new TH1F("", "", nx, x1, x2);
-  TH1F *htmp_syst_Down = new TH1F("", "", nx, x1, x2);
+  //mapfunc[histname_Up + "rebin"] = (TH1F*)mapfunc[histname_Up] ->  Rebin(N_bin - 1, histname_Up + "tmp", binx);
+  //mapfunc[histname_Down + "rebin"] = (TH1F*)mapfunc[histname_Down] ->  Rebin(N_bin - 1, histname_Down + "tmp", binx);
 
-  for(Int_t j = 1; j <= nx; j++){
-    double current_bin_content_Up = mapfunc[histname_central] -> GetBinContent(j);
-    double current_bin_error_Up = mapfunc[histname_central] -> GetBinError(j);
-    if(mapfunc[histname_Up]){
-      current_bin_content_Up = mapfunc[histname_Up] -> GetBinContent(j);
-      current_bin_error_Up = mapfunc[histname_Up] -> GetBinError(j);
-      up_hist =true;
-    }
-    htmp_syst_Up -> SetBinContent(j, current_bin_content_Up);
-    htmp_syst_Up -> SetBinError(j, current_bin_error_Up);
-    
-    double current_bin_content_Down = mapfunc[histname_central] -> GetBinContent(j);
-    double current_bin_error_Down = mapfunc[histname_central] -> GetBinError(j);
-    if(mapfunc[histname_Down]){
-      current_bin_content_Down = mapfunc[histname_Down] -> GetBinContent(j);
-      current_bin_error_Down = mapfunc[histname_Down] -> GetBinError(j);
-      down_hist = true;
-    }
-    htmp_syst_Down -> SetBinContent(j, current_bin_content_Down);
-    htmp_syst_Down -> SetBinError(j, current_bin_error_Down);
-  }
-  
-  mapfunc[histname_Up + "rebin"] = dynamic_cast<TH1F*>(htmp_syst_Up -> Rebin(N_bin, histname_Up + "rebin", binx));
-  mapfunc[histname_Down + "rebin"] = dynamic_cast<TH1F*>(htmp_syst_Down -> Rebin(N_bin, histname_Down + "rebin", binx));
+  double last_bin_up = 0.;
+  double last_bin_down = 0.;
+
+  last_bin_up = mapfunc[histname_Up + "rebin"] -> GetBinContent(N_bin - 1) + mapfunc[histname_Up + "rebin"] -> GetBinContent(N_bin);
+  last_bin_down = mapfunc[histname_Down + "rebin"] -> GetBinContent(N_bin - 1) + mapfunc[histname_Down + "rebin"] -> GetBinContent(N_bin);
+
   
   map_syst_array[current_histname + systematics + "Up"].clear();
   map_syst_array[current_histname + systematics + "Down"].clear();
   //map_syst_array
-  Int_t new_nx = mapfunc[histname_Up + "rebin"] -> GetNbinsX() + 1;
-  for(Int_t j = 1; j < new_nx; j++){
+  for(Int_t j = 1; j < N_bin; j++){
     double current_entry_Up = mapfunc[histname_Up + "rebin"] -> GetBinContent(j);
     double current_entry_Down =  mapfunc[histname_Down + "rebin"] ->GetBinContent(j);
 
@@ -221,7 +331,7 @@ void sum_syst_error(TString current_histname, TString cycle_and_sample, int N_bi
   std::vector<double> central_content;
   central_content.clear();
   
-  for(int j = 1; j < N_bin + 1; j++){
+  for(int j = 1; j < N_bin; j++){
     double current_content = mapfunc[current_histname + "_central" + cycle_and_sample + "rebin"] -> GetBinContent(j);
     central_content.push_back(current_content);
   }
@@ -230,7 +340,7 @@ void sum_syst_error(TString current_histname, TString cycle_and_sample, int N_bi
   map_syst_array[current_histname + cycle_and_sample + "Up"].clear();
   map_syst_array[current_histname + cycle_and_sample + "Down"].clear();
 
-  for(int j = 1; j < N_bin + 1; j++){
+  for(int j = 1; j < N_bin; j++){
     double current_error_up = 0.;
     double current_error_down = 0.;
     
@@ -280,41 +390,26 @@ void Write_syst_error(TString current_histname,  TString systematics, TString Cy
 
   if(!mapfunc[histname_Up]) return;
 
-  Int_t nx    = mapfunc[histname_Up] -> GetNbinsX()+1;
-  Double_t x1 = mapfunc[histname_Up] -> GetBinLowEdge(1);
-  Double_t bw = (binx[N_bin - 1] - binx[0]) / 20.;
-  Double_t x2 = mapfunc[histname_Up] -> GetBinLowEdge(nx)+bw;
-
-  TH1F *htmp_syst_Up = new TH1F("", "", nx, x1, x2);
-  TH1F *htmp_syst_Down = new TH1F("", "", nx, x1, x2);
-
-  for(Int_t j = 1; j <= nx; j++){
-    double current_bin_content_Up = mapfunc[histname_central] -> GetBinContent(j);
-    double current_bin_error_Up = mapfunc[histname_central] -> GetBinError(j);
-    if(mapfunc[histname_Up]){
-      current_bin_content_Up = mapfunc[histname_Up] -> GetBinContent(j);
-      current_bin_error_Up = mapfunc[histname_Up] -> GetBinError(j);
-      up_hist =true;
-    }
-    htmp_syst_Up -> SetBinContent(j, current_bin_content_Up);
-    htmp_syst_Up -> SetBinError(j, current_bin_error_Up);
-
-    double current_bin_content_Down = mapfunc[histname_central] -> GetBinContent(j);
-    double current_bin_error_Down = mapfunc[histname_central] -> GetBinError(j);
-    if(mapfunc[histname_Down]){
-      current_bin_content_Down = mapfunc[histname_Down] -> GetBinContent(j);
-      current_bin_error_Down = mapfunc[histname_Down] -> GetBinError(j);
-      down_hist = true;
-    }
-    htmp_syst_Down -> SetBinContent(j, current_bin_content_Down);
-    htmp_syst_Down -> SetBinError(j, current_bin_error_Down);
-  }
-
-  mapfunc[histname_Up + "rebin"] = dynamic_cast<TH1F*>(htmp_syst_Up -> Rebin(N_bin, histname_Up + "rebin", binx));
-  mapfunc[histname_Down + "rebin"] = dynamic_cast<TH1F*>(htmp_syst_Down -> Rebin(N_bin, histname_Down + "rebin", binx));
+  mapfunc[histname_Up + "rebin"] = (TH1F*)mapfunc[histname_Up] ->  Rebin(N_bin - 1, histname_Up + "rebin", binx);
+  mapfunc[histname_Down + "rebin"] = (TH1F*)mapfunc[histname_Down] ->  Rebin(N_bin - 1, histname_Down + "rebin", binx);
   
-  mapfunc[histname_Up + "rebin"] -> SetName(current_histname + "_" + current_sample + "_" + systematics + "Up");
-  mapfunc[histname_Down + "rebin"] -> SetName(current_histname + "_" + current_sample + "_" + systematics + "Down");
+  double last_bin_up = 0.;
+  double last_bin_down = 0.;
+
+  last_bin_up = mapfunc[histname_Up + "rebin"] -> GetBinContent(N_bin - 1) + mapfunc[histname_Up + "rebin"] -> GetBinContent(N_bin);
+  last_bin_down = mapfunc[histname_Down + "rebin"] -> GetBinContent(N_bin - 1) + mapfunc[histname_Down + "rebin"] -> GetBinContent(N_bin);
+  
+  // -- ADD year on syst name for correlated systematics over years 
+  TString name_up = current_histname + "_" + current_sample + "_" + systematics + "Up";
+  TString name_down = current_histname + "_" + current_sample + "_" + systematics + "Down";
+  // -- Uncorrelated Systematics
+  if(systematics.Contains("TriggerSF")){
+    name_up = current_histname + "_" + current_sample + "_" + systematics + TString::Itoa(tag_year,10) + "Up";
+    name_down = current_histname + "_" + current_sample + "_" + systematics +  TString::Itoa(tag_year,10) + "Down";
+  }
+  
+  mapfunc[histname_Up + "rebin"] -> SetName(name_up);
+  mapfunc[histname_Down + "rebin"] -> SetName(name_down);
   
 
   cout << "[Write_syst_error] histname_Up : " << histname_Up << endl;
@@ -361,18 +456,62 @@ void Write_syst_error_limit(TString current_histname,  TString systematics, TStr
   //cout << "[Write_syst_error_limit] histname_Up : " << histname_Up << endl;
 }
 
-void Remove_Negative_Bins(TString current_histname){
-  int N_bin = mapfunc[current_histname] -> GetNbinsX();
+
+void Remove_Syst_bin_for_Empty_central(TString histname, TString systematics, TString cycle, TString sample){
+  
+  TString nameofhistogram = histname + "_central";
+  TString cycle_and_sample = cycle + sample;
+  TString histname_central = nameofhistogram + cycle_and_sample + "rebin";
+  TString histname_Up = histname + "_" + systematics + "Up"   + cycle_and_sample + "rebin";
+  TString histname_Down = histname + "_" + systematics + "Down"   + cycle_and_sample + "rebin";
+  if(systematics == "PDF" || systematics == "Scale"){
+    histname_Up = histname + "_" + sample + "_" + systematics + "Up";
+    histname_Down = histname + "_" + sample + "_" + systematics + "Down";
+  }
+
+  int N_bin = mapfunc[histname_central] -> GetNbinsX();
   for(int i = 1; i <= N_bin; i++){
-    double current_bin_content = mapfunc[current_histname] -> GetBinContent(i);
-    if (current_bin_content < 0.){
-      current_bin_content = 0.00001;
-      double current_error = current_bin_content / 1.0;
-      mapfunc[current_histname] -> SetBinContent(i, current_bin_content);
-      mapfunc[current_histname] -> SetBinError(i, current_error);
+    double central_content = mapfunc[histname_central] -> GetBinContent(i);
+    if(central_content < 0.0000011){
+      mapfunc[histname_Up] -> SetBinContent(i, 0.000001);
+      mapfunc[histname_Up] -> SetBinError(i, 0.);
+      mapfunc[histname_Down] -> SetBinContent(i, 0.000001);
+      mapfunc[histname_Down] -> SetBinError(i, 0.);
     }
   }
 }
+
+void Remove_Syst_bin_for_Empty_syst(TString histname, TString systematics, TString cycle, TString sample){
+  TString nameofhistogram = histname + "_central";
+  TString cycle_and_sample = cycle + sample;
+  TString histname_central = nameofhistogram + cycle_and_sample + "rebin";
+  TString histname_Up = histname + "_" + systematics + "Up"   + cycle_and_sample + "rebin";
+  TString histname_Down = histname + "_" + systematics + "Down"   + cycle_and_sample + "rebin";
+  if(systematics == "PDF" || systematics == "Scale"){
+    histname_Up = histname + "_" + sample + "_" + systematics + "Up";
+    histname_Down = histname + "_" + sample + "_" + systematics + "Down";
+  }
+  
+  int N_bin = mapfunc[histname_central] -> GetNbinsX();
+  for(int i = 1; i <= N_bin; i++){
+    double central_content = mapfunc[histname_central] -> GetBinContent(i);
+    double central_error = mapfunc[histname_central] -> GetBinError(i); 
+    if(central_content > 0.0000011){
+      double up_content = mapfunc[histname_Up] -> GetBinContent(i);
+      double down_content = mapfunc[histname_Down] -> GetBinContent(i);
+      
+      if(up_content < 0.0000011){
+	mapfunc[histname_Up] -> SetBinContent(i, central_content);
+	mapfunc[histname_Up] -> SetBinError(i, central_error);
+      }
+      if(down_content < 0.0000011){
+	mapfunc[histname_Down] -> SetBinContent(i, central_content);
+	mapfunc[histname_Down] -> SetBinError(i, central_error);
+      }
+    }
+  }
+}
+
 
 void change_to_pseudo_data(TString current_histname){
   
@@ -396,15 +535,25 @@ void Estimate_PDF_Error(TString current_histname, TString Cycle_name, TString cu
   for(int i_err = 1; i_err < 101; i_err++){
     TString current_err_hist = current_histname + "_central_Hessian_" + TString::Itoa(i_err, 10) + cycle_and_sample;
     //cout << "current_err_hist : " << current_err_hist << endl;
-    mapfunc[current_err_hist + "rebin"] = (TH1F*)mapfunc[current_err_hist] -> Clone();
-    mapfunc[current_err_hist + "rebin"] = (TH1F*)mapfunc[current_err_hist + "rebin"] -> Rebin(N_bin - 1, current_err_hist + "rebin", binx);
+    //mapfunc[current_err_hist + "rebin"] = (TH1F*)mapfunc[current_err_hist] -> Clone();
+    //mapfunc[current_err_hist + "rebin"] = (TH1F*)mapfunc[current_err_hist + "rebin"] -> Rebin(N_bin, current_err_hist + "rebin", binx);
+    
+    mapfunc[current_err_hist + "rebin"] = (TH1F*)mapfunc[current_err_hist] -> Rebin(N_bin - 1, current_err_hist + "rebin", binx);
+    double last_bin = 0.;
+    last_bin = mapfunc[current_err_hist + "rebin"] -> GetBinContent(N_bin - 1) + mapfunc[current_err_hist + "rebin"] -> GetBinContent(N_bin);
+    mapfunc[current_err_hist + "rebin"] -> SetBinContent(N_bin - 1, last_bin);
   }
   
   // -- Rebin Alpha_s
   for(int i_err = 0; i_err < 2; i_err++){
     TString current_err_hist = current_histname + "_central_AlphaS_" + TString::Itoa(i_err, 10) + cycle_and_sample;
-    mapfunc[current_err_hist + "rebin"]= (TH1F*)mapfunc[current_err_hist] -> Clone();
-    mapfunc[current_err_hist + "rebin"] = (TH1F*)mapfunc[current_err_hist + "rebin"] ->Rebin(N_bin - 1, current_err_hist + "rebin", binx);
+    //mapfunc[current_err_hist + "rebin"]= (TH1F*)mapfunc[current_err_hist] -> Clone();
+    //mapfunc[current_err_hist + "rebin"] = (TH1F*)mapfunc[current_err_hist + "rebin"] ->Rebin(N_bin, current_err_hist + "rebin", binx);
+    
+    mapfunc[current_err_hist + "rebin"] = (TH1F*)mapfunc[current_err_hist] -> Rebin(N_bin - 1, current_err_hist + "rebin", binx);
+    double last_bin = 0.;
+    last_bin = mapfunc[current_err_hist + "rebin"] -> GetBinContent(N_bin - 1) + mapfunc[current_err_hist + "rebin"] -> GetBinContent(N_bin);
+    mapfunc[current_err_hist + "rebin"] -> SetBinContent(N_bin - 1, last_bin);
   }
 
   // -- Save PDF errors in a vector
@@ -464,8 +613,12 @@ void Estimate_Scale_Error(TString current_histname, TString Cycle_name, TString 
     if(i_err == 5 || i_err == 7) continue;
     TString current_err_hist = current_histname + "_central_Scale_" + TString::Itoa(i_err, 10) + cycle_and_sample;
     //cout << "current_err_hist : " << current_err_hist << endl;
-    mapfunc[current_err_hist + "rebin"] = (TH1F*)mapfunc[current_err_hist] -> Clone();
-    mapfunc[current_err_hist + "rebin"] = (TH1F*)mapfunc[current_err_hist + "rebin"] -> Rebin(N_bin - 1, current_err_hist + "rebin", binx);
+    //mapfunc[current_err_hist + "rebin"] = (TH1F*)mapfunc[current_err_hist] -> Clone();
+    //mapfunc[current_err_hist + "rebin"] = (TH1F*)mapfunc[current_err_hist + "rebin"] -> Rebin(N_bin, current_err_hist + "rebin", binx);
+    mapfunc[current_err_hist + "rebin"] = (TH1F*)mapfunc[current_err_hist] -> Rebin(N_bin - 1, current_err_hist + "rebin", binx);
+    double last_bin = 0.;
+    last_bin = mapfunc[current_err_hist + "rebin"] -> GetBinContent(N_bin - 1) + mapfunc[current_err_hist + "rebin"] -> GetBinContent(N_bin);
+    mapfunc[current_err_hist + "rebin"] -> SetBinContent(N_bin - 1, last_bin);
   }
 
   // -- Save Scale errors in two vectors

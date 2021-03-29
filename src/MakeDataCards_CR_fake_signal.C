@@ -9,10 +9,16 @@ void open_files(TString histname){
   TString bkgs[4] = {"VV", "TT_powheg", "DYJets_MG_HT", "fake"};
  
   double lumi_error = 1.;
+  /*
   if(tag_year == 2016) lumi_error = 1.025;
   if(tag_year == 2017) lumi_error = 1.023;
   if(tag_year == 2018) lumi_error = 1.025;
-  
+  */
+  // -- Correlated Run2 Lumi error = 1.8 https://twiki.cern.ch/twiki/bin/viewauth/CMS/TWikiLUM
+  if(tag_year == 2016) lumi_error = 1.018;
+  if(tag_year == 2017) lumi_error = 1.018;
+  if(tag_year == 2018) lumi_error = 1.018;
+
   TString channel = "";
   TString channel2 = "";
   if(histname.Contains("DiEle")){
@@ -24,7 +30,9 @@ void open_files(TString histname){
     channel2 = "MuMu";
   }
   
-  TString current_input = root_file_path + "shape_" + histname + "_fake_signal.root";
+  //TString current_input = root_file_path + "shape_" + histname + "_fake_signal.root";
+  TString current_input = root_file_path + "shape_" + histname + ".root";
+
   TFile *current_input_file = new TFile ((current_input)) ;
   //TH1F *obs_hist = (TH1F *)current_input_file->Get(histname);
   //double obs = obs_hist -> Integral();
@@ -45,15 +53,19 @@ void open_files(TString histname){
   //TH1F *current_signal_hist = (TH1F *)current_input_file->Get(histname + "_" + this_line + "_central");
   //cout << histname + "_" + this_line + "_central" << endl;
   //signal_rate = current_signal_hist -> Integral();
+
   
-  ofstream file_shape("./output/DataCards/shape_" + histname + "_" + TString::Itoa(tag_year,10) + "_fake_signal.txt", ios::trunc);
+  //ofstream file_shape("./output/DataCards/shape_" + histname + "_" + TString::Itoa(tag_year,10) + "_fake_signal.txt", ios::trunc);
+  ofstream file_shape("./output/DataCards/shape_" + histname + "_" + TString::Itoa(tag_year,10) + ".txt", ios::trunc);
+
   //file_shape << "imax 1" << endl;
   //file_shape << "jmax " << N_bkg << endl;
   file_shape << "imax *" << endl;
   file_shape << "jmax *" << endl;
   file_shape << "kmax *" << endl;
   file_shape << "---------------" << endl;
-  file_shape << "shapes * * /data6/Users/suoh/Limit/CMSSW_10_2_13/src/HiggsAnalysis/CombinedLimit/ZpNN/LimitTemplate/" + TString::Itoa(tag_year,10) + "/shape_"<< histname << "_fake_signal.root $PROCESS $PROCESS_$SYSTEMATIC" << endl;
+  //file_shape << "shapes * * /data6/Users/suoh/Limit/CMSSW_10_2_13/src/HiggsAnalysis/CombinedLimit/ZpNN/LimitTemplate/" + TString::Itoa(tag_year,10) + "/shape_"<< histname << "_fake_signal.root $PROCESS $PROCESS_$SYSTEMATIC" << endl;
+  file_shape << "shapes * * /data6/Users/suoh/Limit/CMSSW_10_2_13/src/HiggsAnalysis/CombinedLimit/ZpNN/LimitTemplate/" + TString::Itoa(tag_year,10) + "/shape_"<< histname << ".root $PROCESS $PROCESS_$SYSTEMATIC" << endl;
   file_shape << "---------------" << endl;
   file_shape << "bin\tbin1" << endl;
   //file_shape << "observation " << obs << endl;
@@ -109,7 +121,7 @@ void open_files(TString histname){
   TString fake_norm = "\t1";
   for(int i = 0; i < 4; i++){
     if(bkg_bool[i]){
-      if(i == 3) fake_norm = fake_norm + "\t1.50";
+      if(i == 3) fake_norm = fake_norm + "\t2.0";
       else fake_norm = fake_norm + "\t1";
     }
   }
@@ -122,9 +134,20 @@ void open_files(TString histname){
     }
   }
   
+  TString NAK8 = "";
+  if(histname.Contains("0AK8")){
+    NAK8 = "0AK8";
+  }
+  if(histname.Contains("1AK8")){
+    NAK8 = "1AK8";
+  }
+  if(histname.Contains("2AK8")){
+    NAK8 = "2AK8";
+  }
 
   file_shape << "--------------------------------" << endl;
-  file_shape << "lumi" + TString::Itoa(tag_year,10) + "\tlnN\t" << lumi_error;// << "\t"<< lumi_error << "\t"<< lumi_error << "\t" << lumi_error << "\t" << lumi_error << endl;
+  //file_shape << "lumi" + TString::Itoa(tag_year,10) + "\tlnN\t" << lumi_error;// << "\t"<< lumi_error << "\t"<< lumi_error << "\t" << lumi_error << "\t" << lumi_error << endl; // -- lumi UnCo.
+  file_shape << "lumi" << "\tlnN\t" << lumi_error; // -- lumi correlated
   for(int i = 0; i < 4; i++){
     if(bkg_bool[i]) file_shape << "\t" << lumi_error;
   }
@@ -138,7 +161,7 @@ void open_files(TString histname){
   file_shape << "ElectronIDSF\tshapeN2" + adding_bkgs << endl;
   file_shape << "ElectronTriggerSF" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
   file_shape << "MuonScale\tshapeN2" + adding_bkgs << endl;
-  file_shape << "MuonSmear\tshapeN2" + adding_bkgs << endl;
+  //file_shape << "MuonSmear\tshapeN2" + adding_bkgs << endl;
   file_shape << "MuonRecoSF\tshapeN2" + adding_bkgs << endl;
   file_shape << "MuonIDSF\tshapeN2" + adding_bkgs << endl;
   file_shape << "MuonISOSF\tshapeN2" + adding_bkgs << endl;
@@ -149,8 +172,8 @@ void open_files(TString histname){
   file_shape << "PUReweight_\tshapeN2" + adding_bkgs << endl;
   file_shape << "Prefire_\tshapeN2" + adding_bkgs << endl;
   file_shape << "ZPtRw\tshapeN2" + adding_bkgs << endl;
-  if(histname.Contains("EMu")) file_shape << "R_" + histname + "\trateParam\tbin1\t" << histname + "_" + bkgs[1] << "\t1" << endl;
-  else file_shape << "R_" + histname + "\trateParam\tbin1\t" << histname + "_" + bkgs[2] << "\t1" << endl;
+  if(histname.Contains("EMu")) file_shape << "R_ttbar_" + NAK8 + "_" + TString::Itoa(tag_year,10) + "\trateParam\tbin1\t" << histname + "_" + bkgs[1] << "\t1" << endl; // -- ttbar in emu sideband CR
+  else file_shape << "R_DY_" + NAK8 + "_" + TString::Itoa(tag_year,10) + "\trateParam\tbin1\t" << histname + "_" + bkgs[2] << "\t1" << endl; // -- DY in ee & mumu CR
   file_shape << "* autoMCStats 0 0 1" << endl;
   file_shape.close();
   current_input_file -> Close();

@@ -2,11 +2,11 @@
 #include "mylib.h"
 
 
-void openfile(TString channel, TString which_fit, TString histname){
+void openfile(TString channel, TString which_fit, TString histname, TString mass_point){
   //if(debug) cout << "[openfile_background] " << samplename << endl;
 
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
-  TString filename = WORKING_DIR+"/rootfiles/fitDiagnostics/fitDiagnostics_fit_result_" + channel + ".root";
+  TString filename = WORKING_DIR+"/rootfiles/fitDiagnostics/fitDiagnostics_fit_result_" + mass_point + ".root";
   //TString filename = WORKING_DIR+"/rootfiles/fitDiagnostics/fitDiagnostics_fit_result.root";
 
   TFile *current_file = new TFile ((filename)) ;
@@ -38,7 +38,7 @@ void openfile(TString channel, TString which_fit, TString histname){
   delete current_file;
 }
 
-void make_histogram(TString histname, TString which_fit, int N_bin, double binx[]){
+void make_histogram(TString histname, TString which_fit, int N_bin, double binx[], TString mass_point){
 
   if(debug){
     cout << "[[make_histogram]] checking binning arrary" << endl;
@@ -178,7 +178,7 @@ void make_histogram(TString histname, TString which_fit, int N_bin, double binx[
   pad1_template -> GetXaxis()->SetLabelSize(0);
   pad1_template -> GetXaxis() -> SetTitle(nameofhistogram);
   //pad1_template -> GetYaxis() -> SetRangeUser(0., max_data * 1.8);
-  pad1_template -> GetYaxis() -> SetRangeUser(0.1, max_data * 10.); // logy
+  pad1_template -> GetYaxis() -> SetRangeUser(0.1, max_data * 1000.); // logy
   pad1_template -> GetYaxis() -> SetTitle(title_y);
   pad1_template -> SetStats(0);
   pad1_template -> Draw("histsame");
@@ -227,7 +227,7 @@ void make_histogram(TString histname, TString which_fit, int N_bin, double binx[
   pad2_template -> GetYaxis() -> SetTitleOffset(0.5);
   pad2_template -> GetYaxis() -> SetLabelSize(0.08);
   pad2_template -> GetYaxis() -> SetNdivisions(505);
-  pad2_template -> GetYaxis() -> SetRangeUser(0.0, 2.5);
+  pad2_template -> GetYaxis() -> SetRangeUser(0.5, 1.5);
   pad2_template -> SetStats(0);
   pad2_template -> Draw("histsame");
   
@@ -238,10 +238,8 @@ void make_histogram(TString histname, TString which_fit, int N_bin, double binx[
   for(int i_bin = 1; i_bin < N_bin; i_bin++){
     double current_data = data_hist -> GetBinContent(i_bin);
     double current_bkg = bkg_sum -> GetBinContent(i_bin);
-    //double current_data_ey_high = data_ey_high[i_bin - 1] / current_data;
-    //double current_data_ey_low = data_ey_low[i_bin - 1] / current_data;
-    double current_data_ey_high = data_ey_high[i_bin - 1] / current_bkg;
-    double current_data_ey_low = data_ey_low[i_bin - 1] / current_bkg;
+    double current_data_ey_high = data_ey_high[i_bin - 1] / current_data;
+    double current_data_ey_low = data_ey_low[i_bin - 1] / current_data;
     double current_bkg_ey = bkg_sum -> GetBinError(i_bin) / current_bkg;
     
     data_hist -> SetBinContent(i_bin, current_data/current_bkg);
@@ -312,6 +310,7 @@ void make_histogram(TString histname, TString which_fit, int N_bin, double binx[
   else return;
   
   pdfname.Append(nameofhistogram);
+  pdfname.Append("_" + mass_point);
   pdfname.Append(".pdf");
   if(debug) cout << "9.1" << endl;
 
@@ -329,7 +328,7 @@ void make_histogram(TString histname, TString which_fit, int N_bin, double binx[
 }
 
 
-void open_files(TString histname){
+void open_files(TString histname, TString mass_point){
   
   maphist.clear();
   map_syst_array.clear();
@@ -347,14 +346,14 @@ void open_files(TString histname){
   else if(histname.Contains("DiMu") || histname.Contains("EMu") ) channel = "DiMu";
   else channel = "NULL";
 
-  openfile(channel, "shapes_prefit", histname);
-  openfile(channel, "shapes_fit_b", histname);
-  make_histogram(histname, "shapes_prefit", N_bin, current_bins);
-  make_histogram(histname, "shapes_fit_b", N_bin, current_bins);
+  openfile(channel, "shapes_prefit", histname, mass_point);
+  openfile(channel, "shapes_fit_b", histname, mass_point);
+  make_histogram(histname, "shapes_prefit", N_bin, current_bins, mass_point);
+  make_histogram(histname, "shapes_fit_b", N_bin, current_bins, mass_point);
 
 }
 
-void open_binning_file(TString filename){
+void open_binning_file(TString filename, TString mass_point){
  
   cout << "[open_binning_file] start to open binngin file : " << filename << endl;
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
@@ -400,7 +399,7 @@ void open_binning_file(TString filename){
 
       cout << "[[open_binning_file]] current_histname : " << current_histname << endl;
       
-      open_files(current_histname);
+      open_files(current_histname, mass_point);
       map_bin_vector.clear();
       
     }//while not end of file
@@ -409,7 +408,7 @@ void open_binning_file(TString filename){
   
 }
 
-void Plot_Post_fit(int int_tag_year=2018){
+void Plot_Post_fit_signal(int int_tag_year=2018){
   setTDRStyle();
   
   tag_year = int_tag_year;
@@ -418,12 +417,14 @@ void Plot_Post_fit(int int_tag_year=2018){
   cout << "binning_file : " << binning_file << endl;
   
   open_binning_file(binning_file);
-  open_binning_file("binning_limit_merged_mZp_2AK8_SR_DiEle.txt");
+  
+  open_binning_file("binning_limit_merged_mZp_2AK8_SR_DiEle.txt", "HNPairToJJJJ_EE_ZP4000_N1200_WR5000");
+  /*
   open_binning_file("binning_limit_merged_mZp_1AK8_SR_DiEle.txt");
   open_binning_file("binning_limit_merged_mZp_0AK8_SR_DiEle.txt");
   open_binning_file("binning_limit_merged_mZp_2AK8_SR_DiMu.txt");
   open_binning_file("binning_limit_merged_mZp_1AK8_SR_DiMu.txt");
   open_binning_file("binning_limit_merged_mZp_0AK8_SR_DiMu.txt");
-
+  */
 
 }

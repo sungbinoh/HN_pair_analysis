@@ -413,7 +413,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
       
       Rebin_with_overflow(nameofhistogram + Cycle_name + current_sample, N_bin, binx);
 
-
+      
 
 
       // -- Make rebinned hists for all systematic categories
@@ -439,6 +439,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
     TString current_sample = map_sample_names[legend_list[4 - i_legend - 1]].at(0);
     if(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin")){
       maplegend[legend] -> AddEntry(GetHist(nameofhistogram + Cycle_name + current_sample + "rebin"), legend_string[4 - i_legend - 1], "lf");
+      cout << "nameofhistogram + Cycle_name + current_sample + rebin : " << nameofhistogram + Cycle_name + current_sample + "rebin" << endl;
       sum_syst_error(current_histname, Cycle_name + current_sample, N_bin);
     }
   }
@@ -910,6 +911,12 @@ void open_binning_file(TString filename){
   
 }
 
+void overlap_ttbar(TString NAK8){
+
+  cout << "haha" << endl;
+
+}
+
 void QuickPlotFullRun2(int year=2019){
   setTDRStyle();
   
@@ -974,8 +981,23 @@ void QuickPlotFullRun2(int year=2019){
   
   //open_binning_file("binning_uniform_test.txt");
   //open_binning_file("binning_Zp.txt");
-  open_binning_file("binning_Zp_2019.txt");
+  //open_binning_file("binning_Zp_2019.txt");
   //open_binning_file("binning_test.txt");
+
+  TString binning_file = "binning_limit_postfit.txt";
+  cout << "binning_file : " << binning_file << endl;
+
+  open_binning_file(binning_file);
+  open_binning_file("binning_limit_merged_mZp_2AK8_SR_DiEle.txt");
+  open_binning_file("binning_limit_merged_mZp_1AK8_SR_DiEle.txt");
+  open_binning_file("binning_limit_merged_mZp_0AK8_SR_DiEle.txt");
+  open_binning_file("binning_limit_merged_mZp_2AK8_SR_DiMu.txt");
+  open_binning_file("binning_limit_merged_mZp_1AK8_SR_DiMu.txt");
+  open_binning_file("binning_limit_merged_mZp_0AK8_SR_DiMu.txt");
+
+  overlap_ttbar("0AK8");
+  overlap_ttbar("1AK8");
+  overlap_ttbar("2AK8");
 
   outfile.close();
   

@@ -1,4 +1,4 @@
-#:<<END
+:<<END
 root -l -b -q "src/QuickLimit.C(0)"
 root -l -b -q "src/QuickLimit.C(1)"
 root -l -b -q "src/QuickLimit.C(2)"
@@ -19,20 +19,40 @@ root -l -b -q "src/QuickLimit.C(16)"
 root -l -b -q "src/QuickLimit.C(17)"
 root -l -b -q "src/QuickLimit.C(18)"
 root -l -b -q "src/QuickLimit.C(19)"
-#END
+END
 #root -l -b -q "src/Limit_signal_injection.C(0)"
 #root -l -b -q "src/Limit_signal_injection.C(1)"
 #root -l -b -q "src/Limit_signal_injection.C(3)"
 #root -l -b -q "src/Limit_signal_injection.C(6)"
 
-# 3AK8 CRs
-#root -l -b -q "src/QuickLimit.C(3)"
-#root -l -b -q "src/QuickLimit.C(7)"
+# 3AK8 CRs obs
+#:<<END
+root -l -b -q "src/QuickLimit_obs.C(0)"
+root -l -b -q "src/QuickLimit_obs.C(1)"
+root -l -b -q "src/QuickLimit_obs.C(2)"
+root -l -b -q "src/QuickLimit_obs.C(3)"
+root -l -b -q "src/QuickLimit_obs.C(4)"
+root -l -b -q "src/QuickLimit_obs.C(5)"
+root -l -b -q "src/QuickLimit_obs.C(6)"
+root -l -b -q "src/QuickLimit_obs.C(7)"
+root -l -b -q "src/QuickLimit_obs.C(8)"
+root -l -b -q "src/QuickLimit_obs.C(9)"
+root -l -b -q "src/QuickLimit_obs.C(10)"
+root -l -b -q "src/QuickLimit_obs.C(11)"
+root -l -b -q "src/QuickLimit_obs.C(12)"
+root -l -b -q "src/QuickLimit_obs.C(13)"
+root -l -b -q "src/QuickLimit_obs.C(14)"
+root -l -b -q "src/QuickLimit_obs.C(15)"
+root -l -b -q "src/QuickLimit_obs.C(16)"
+root -l -b -q "src/QuickLimit_obs.C(17)"
+root -l -b -q "src/QuickLimit_obs.C(18)"
+root -l -b -q "src/QuickLimit_obs.C(19)"
 
+scp -r ./plots/limit suoh@147.47.242.44:/home/suoh/Dropbox/HN_pair/
+#END
 
-#scp -r ./plots/limit suoh@147.47.242.44:/home/suoh/Dropbox/HN_pair/
-
-root -l -b -q "src/Quick_Contour_overlap.C(0)"
+# -- Comparison
+root -l -b -q "src/Quick_Contour_overlap_obs.C(0)"
 
 scp -r ./plots/limit/comparison suoh@147.47.242.44:/home/suoh/Dropbox/HN_pair/limit/
 

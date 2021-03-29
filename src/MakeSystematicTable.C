@@ -241,28 +241,31 @@ void MakeSystematicTable(int year=2018){
 				       "ZPtRw",
   };  
   
-  TString syst_correlation[N_syst] = {"Unco.",
-				      "Unco.",
+  TString syst_correlation[N_syst] = {"Correlated",
+				      "Correlated",
 				      "Correlated",
 				      "Correlated",
 				      //"Correlated",
 				      "Correlated",
+				      "Correlated",
+				      "Correlated",
+				      "Correlated",
+				      "Correlated",
+				      "Correlated",
+				      "Correlated",
+				      "Correlated",
 				      "Unco.",
-				      "Unco.",
-				      "Not Done",
-				      "Unco.",
-				      "Unco.",
-				      "Unco.",
-				      "Unco.",
-				      "Unco.",
-				      "Unco.",
-				      "Unco.",
+				      "Correlated",
+				      "Correlated",
 				      "Unco.",
 				      "Correlated",
   };
   
   ofstream file_syst_table("./output/latex/syst_table_" + TString::Itoa(tag_year,10) + ".tex", ios::trunc);
-  
+
+  double lumi_error = 2.5;
+  if(tag_year == 2017) lumi_error = 2.3;
+
   file_syst_table << "\\begin{table}"<< endl;
   file_syst_table << "\\centering" << endl;
   file_syst_table << "\\topcaption{The list of systematics and their impacts on total number of events at $\\Pe\\Pe$ siganl region in " << TString::Itoa(tag_year,10) << ".}" << endl;
@@ -272,6 +275,7 @@ void MakeSystematicTable(int year=2018){
   file_syst_table << "\\hline\\hline" << endl;
   file_syst_table << "Systematics (\\%) & Handling &DY & ttbar & Non-prompt Leptons & Others & Signal \\\\" << endl;
   file_syst_table << "\\hline" << endl;
+  file_syst_table << "Integrated luminosity & Uncorrelated & " << lumi_error << "& " << lumi_error << " & " << lumi_error << " & " << lumi_error << " & " << lumi_error << "\\\\ " << endl;
   for(int j = 0; j < N_syst_comparison; j++){
     file_syst_table << systematics_table[j] << " & " << syst_correlation[j];
     for(int i = 0; i < 4; i++){
@@ -283,7 +287,7 @@ void MakeSystematicTable(int year=2018){
     file_syst_table << PDF_uncertainty[j];
     file_syst_table << " & Correlated & - & - & - & - & " <<  map_syst_table[PDF_uncertainty[j] + "EE"].at(0) << " -- " << map_syst_table[PDF_uncertainty[j] + "EE"].at(1) << "\\\\" << endl;
   }
-  file_syst_table << "Non prompt bkg norm. & Correlated & - &  - & 50 & - & - \\\\" << endl;
+  file_syst_table << "Non prompt bkg norm. & Correlated & - &  - & 100 & - & - \\\\" << endl;
   file_syst_table << "Minor bkg norm. & Correlated & - &  - & - & 50 & - \\\\" << endl;
   file_syst_table << "\\hline\\hline" << endl;
   file_syst_table << "\\end{tabular}" << endl;
@@ -300,6 +304,7 @@ void MakeSystematicTable(int year=2018){
   file_syst_table << "\\hline\\hline" << endl;
   file_syst_table << "Systematics (\\%) & Handling  & DY & ttbar & Non-prompt Leptons & Others & Signal \\\\" << endl;
   file_syst_table << "\\hline" << endl;
+  file_syst_table << "Integrated luminosity & Uncorrelated & " << lumi_error << "& " << lumi_error << " & " << lumi_error << " & " << lumi_error << " & " << lumi_error << "\\\\ " << endl;
   for(int j = 0; j < N_syst_comparison; j++){
     file_syst_table << systematics_table[j] << " & " << syst_correlation[j];
     for(int i = 0; i < 4; i++){
@@ -311,7 +316,7 @@ void MakeSystematicTable(int year=2018){
     file_syst_table << PDF_uncertainty[j];
     file_syst_table << " & Correlated & - & - & - & - & " <<  map_syst_table[PDF_uncertainty[j] + "MuMu"].at(0) << " -- " << map_syst_table[PDF_uncertainty[j] + "MuMu"].at(1) << "\\\\" << endl;
   }
-  file_syst_table << "Non prompt bkg norm. & Correlated & - &  - & 50 & - & - \\\\" << endl;
+  file_syst_table << "Non prompt bkg norm. & Correlated & - &  - & 100 & - & - \\\\" << endl;
   file_syst_table << "Minor bkg norm. & Correlated & - &  - & - & 50 & - \\\\" << endl;
   file_syst_table << "\\hline\\hline" << endl;
   file_syst_table << "\\end{tabular}" << endl;

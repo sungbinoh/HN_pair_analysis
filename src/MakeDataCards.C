@@ -15,9 +15,15 @@ void open_files(TString histname){
   TString bkgs[4] = {"VV", "TT_powheg", "DYJets_MG_HT", "fake"};
 
   double lumi_error = 1.;
+  /*
   if(tag_year == 2016) lumi_error = 1.025;
   if(tag_year == 2017) lumi_error = 1.023;
   if(tag_year == 2018) lumi_error = 1.025;
+  */  
+  // -- Correlated Run2 Lumi error = 1.8 https://twiki.cern.ch/twiki/bin/viewauth/CMS/TWikiLUM
+  if(tag_year == 2016) lumi_error = 1.018;
+  if(tag_year == 2017) lumi_error = 1.018;
+  if(tag_year == 2018) lumi_error = 1.018;
   
   if(signal_file.is_open()){
 
@@ -123,7 +129,7 @@ void open_files(TString histname){
       TString fake_norm = "\t1";
       for(int i = 0; i < 4; i++){
 	if(bkg_bool[i]){
-	  if(i == 3) fake_norm = fake_norm + "\t1.50";
+	  if(i == 3) fake_norm = fake_norm + "\t2.0";
 	  else fake_norm = fake_norm + "\t1";
 	}
       }
@@ -136,8 +142,20 @@ void open_files(TString histname){
         }
       }
 
+      TString NAK8 = "";
+      if(histname.Contains("0AK8")){
+	NAK8 = "0AK8";
+      }
+      if(histname.Contains("1AK8")){
+	NAK8 = "1AK8";
+      }
+      if(histname.Contains("2AK8")){
+	NAK8 = "2AK8";
+      }
+
       file_shape << "--------------------------------" << endl;
-      file_shape << "lumi" + TString::Itoa(tag_year,10) + "\tlnN\t" << lumi_error;// << "\t"<< lumi_error << "\t"<< lumi_error << "\t" << lumi_error << "\t" << lumi_error << endl;
+      //file_shape << "lumi" + TString::Itoa(tag_year,10) + "\tlnN\t" << lumi_error;// << "\t"<< lumi_error << "\t"<< lumi_error << "\t" << lumi_error << "\t" << lumi_error << endl; // -- lumi UnCo.
+      file_shape << "lumi" << "\tlnN\t" << lumi_error;// << "\t"<< lumi_error << "\t"<< lumi_error << "\t" << lumi_error << "\t" << lumi_error << endl; // -- lumi correlated
       for(int i = 0; i < 4; i++){
 	if(bkg_bool[i]) file_shape << "\t" << lumi_error;
       }
@@ -150,7 +168,7 @@ void open_files(TString histname){
       file_shape << "ElectronIDSF\tshapeN2" + adding_bkgs << endl;
       file_shape << "ElectronTriggerSF" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
       file_shape << "MuonScale\tshapeN2" + adding_bkgs << endl;
-      file_shape << "MuonSmear\tshapeN2" + adding_bkgs << endl;
+      //file_shape << "MuonSmear\tshapeN2" + adding_bkgs << endl;
       file_shape << "MuonRecoSF\tshapeN2" + adding_bkgs << endl;
       file_shape << "MuonIDSF\tshapeN2" + adding_bkgs << endl;
       file_shape << "MuonISOSF\tshapeN2" + adding_bkgs << endl;
@@ -164,8 +182,8 @@ void open_files(TString histname){
       file_shape << "ZPtRw\tshapeN2" + adding_bkgs << endl;
       file_shape << "PDF\tshapeN2" + adding_bkgs_signal_only << endl;
       file_shape << "Scale\tshapeN2" + adding_bkgs_signal_only << endl;
-      file_shape << "R_" + histname + "\trateParam\tbin1\t" << histname + "_" + bkgs[1] << "\t1" << endl;
-      file_shape << "R_" + histname + "\trateParam\tbin1\t" << histname + "_" + bkgs[2] << "\t1" << endl;
+      file_shape << "R_ttbar_" + NAK8 + "_" + TString::Itoa(tag_year,10) + "\trateParam\tbin1\t" << histname + "_" + bkgs[1] << "\t1" << endl; // -- ttbar
+      file_shape << "R_DY_" + NAK8 + "_" + TString::Itoa(tag_year,10) + "\trateParam\tbin1\t" << histname + "_" + bkgs[2] << "\t1" << endl; // -- DY
       file_shape << "* autoMCStats 0 0 1" << endl;
       file_shape.close();
       current_input_file -> Close();

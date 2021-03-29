@@ -122,14 +122,38 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
    
    
     if(nameofhistogram.Contains("DiMu")){
-      DY_norm_2016 = 0.801;
-      DY_norm_2017 = 1.084;
-      DY_norm_2018 = 1.06;
+      if(nameofhistogram.Contains("0AK8")){
+	DY_norm_2016 = 0.812;
+	DY_norm_2017 = 1.095;
+	DY_norm_2018 = 1.127;
+      }
+      if(nameofhistogram.Contains("1AK8")){
+        DY_norm_2016 = 0.709;
+        DY_norm_2017 = 1.056;
+        DY_norm_2018 = 0.947;
+      }
+      if(nameofhistogram.Contains("2AK8")){
+        DY_norm_2016 = 0.604;
+        DY_norm_2017 = 0.747;
+        DY_norm_2018 = 0.997;
+      }
     }
     if(nameofhistogram.Contains("DiEle")){
-      DY_norm_2016 = 0.907;
-      DY_norm_2017 = 1.078;
-      DY_norm_2018 = 1.031;
+      if(nameofhistogram.Contains("0AK8")){
+        DY_norm_2016 = 0.962;
+        DY_norm_2017 = 1.093;
+        DY_norm_2018 = 1.087;
+      }
+      if(nameofhistogram.Contains("1AK8")){
+        DY_norm_2016 = 0.689;
+        DY_norm_2017 = 0.881;
+        DY_norm_2018 = 0.952;
+      }
+      if(nameofhistogram.Contains("2AK8")){
+        DY_norm_2016 = 0.511;
+        DY_norm_2017 = 0.881;
+        DY_norm_2018 = 0.957;
+      }
     }
 
     GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2016"].at(0) + "2016") -> Scale(DY_norm_2016); 
@@ -185,12 +209,18 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   if(GetHist(nameofhistogram + Cycle_name + map_sample_names["Other2016"].at(0) + "2016")) mapfunc[nameofhistogram + Cycle_name + map_sample_names["Other"].at(0)] -> Add( GetHist(nameofhistogram + Cycle_name + map_sample_names["Other2016"].at(0) + "2016"));
   if(GetHist(nameofhistogram + Cycle_name + map_sample_names["Other2017"].at(0) + "2017")) mapfunc[nameofhistogram + Cycle_name + map_sample_names["Other"].at(0)] -> Add(GetHist(nameofhistogram + Cycle_name + map_sample_names["Other2017"].at(0) + "2017"));
   if(GetHist(nameofhistogram + Cycle_name + map_sample_names["Other2018"].at(0) + "2018")) mapfunc[nameofhistogram + Cycle_name + map_sample_names["Other"].at(0)] -> Add(GetHist(nameofhistogram + Cycle_name + map_sample_names["Other2018"].at(0) + "2018"));
+  //map_sample_names["EGamma2016"].at(0)
+  if(nameofhistogram.Contains("DiEle")){
+    mapfunc[nameofhistogram + Cycle_name + current_data] = GetHist(nameofhistogram + Cycle_name + map_sample_names["EGamma2016"].at(0) + "2016");
+    mapfunc[nameofhistogram + Cycle_name + current_data] -> Add(GetHist(nameofhistogram + Cycle_name + map_sample_names["EGamma2017"].at(0) + "2017"));
+    mapfunc[nameofhistogram + Cycle_name + current_data] -> Add(GetHist(nameofhistogram + Cycle_name + map_sample_names["EGamma2018"].at(0) + "2018"));
+  }
+  else{
+    mapfunc[nameofhistogram + Cycle_name + current_data] = GetHist(nameofhistogram + Cycle_name + current_data + "2016");
+    mapfunc[nameofhistogram + Cycle_name + current_data] -> Add(GetHist(nameofhistogram + Cycle_name + current_data + "2017"));
+    mapfunc[nameofhistogram + Cycle_name + current_data] -> Add(GetHist(nameofhistogram + Cycle_name + current_data + "2018"));
+  }
   
-  mapfunc[nameofhistogram + Cycle_name + current_data] = GetHist(nameofhistogram + Cycle_name + current_data + "2016");
-  mapfunc[nameofhistogram + Cycle_name + current_data] -> Add(GetHist(nameofhistogram + Cycle_name + current_data + "2017"));
-  mapfunc[nameofhistogram + Cycle_name + current_data] -> Add(GetHist(nameofhistogram + Cycle_name + current_data + "2018"));
-  
-
 
   for(int i_syst = 1; i_syst < N_syst; i_syst++){
     mapfunc[current_histname + "_" +  systematics[i_syst] + Cycle_name + map_sample_names["DYJets"].at(0)] = (TH1F*)htmp_add -> Clone("DYJets" + systematics[i_syst]);
@@ -229,7 +259,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   else title_y = "Events/bin";
 
   bool blind = false;
-  blind = (nameofhistogram.Contains("SR")) && (!nameofhistogram.Contains("EMu"));
+  if((nameofhistogram.Contains("SR")) && (!nameofhistogram.Contains("EMu"))) blind = blind_SR;
 
   TString pad1 = nameofhistogram;
   TString pad2 = nameofhistogram;
@@ -280,19 +310,14 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   
   // -- Add Overflow bin
   TString overflow = "overflow";
-  //cout << nameofhistogram + Cycle_name + current_data << endl;
-  //cout << "nameofhistogram + Cycle_name + current_data : " << nameofhistogram + Cycle_name + current_data << endl;
-  Int_t nx_template = GetHist(nameofhistogram + Cycle_name + current_data) -> GetNbinsX()+1;
-  Double_t x1_template = GetHist(nameofhistogram + Cycle_name + current_data) -> GetBinLowEdge(1);
-  Double_t bw_template = binx[N_bin - 1] - binx[N_bin- 2];
-  Double_t x2_template = GetHist(nameofhistogram + Cycle_name + current_data) -> GetBinLowEdge(nx_template)+bw_template;
-  binx[N_bin] = binx[N_bin - 1] + bw_template;
   if(debug) cout << "[[make_histogram]] binx[N_bin] ; " << binx[N_bin]  << endl;
-  mapfunc[func] = new TH1F("", "", nx_template, x1_template, x2_template);
-  if(debug) cout << "func rebin rebinning" << endl;
-  mapfunc[func + "rebin"] = (TH1F*)mapfunc[func] -> Rebin(N_bin, func + "rebin", binx);
-  mapfunc[func + "rebin_stat_err"] = (TH1F*)mapfunc[func] -> Rebin(N_bin, func + "rebin", binx);
-  mapfunc[func + "blind_data"] = (TH1F*)mapfunc[func] -> Rebin(N_bin, func + "blind_Data", binx);
+  mapfunc[func] = new TH1F("", "", N_bin - 1, binx);
+  mapfunc[func + "rebin"] = new TH1F("", "", N_bin - 1, binx);
+  mapfunc[func + "rebin_stat_err"] = new TH1F("", "", N_bin - 1, binx);
+  mapfunc[func + "blind_data"] = new TH1F("", "", N_bin - 1, binx);
+  double x1_template = binx[0];
+  double x2_template = binx[N_bin - 1];
+
   // -- For each Bkg Legend : Add overflow, Rebin, Syst error bar, Add on legend, and set fill & line colors
   for(int i_legend = 0; i_legend < 4; i_legend++){
     if(debug) cout << legend_list[i_legend] << endl;
@@ -338,7 +363,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   bkg_up.clear();
   bkg_down.clear();
 
-  for(int j = 1; j < N_bin + 1; j++){
+  for(int j = 1; j < N_bin; j++){
     double current_bkg = mapfunc[func + "rebin"] -> GetBinContent(j);
     bkg_central.push_back(current_bkg);
 
@@ -362,7 +387,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] = new TGraphAsymmErrors(mapfunc[func + "rebin"]);
   map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error_ratio"] = new TGraphAsymmErrors(mapfunc[func + "rebin"]);
   
-  for(int i = 0; i < N_bin; i++){
+  for(int i = 0; i < N_bin - 1; i++){
     map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> SetPointEYlow(i,  bkg_down.at(i));
     map_asym_gr[nameofhistogram + Cycle_name + "Bkg_Error"] -> SetPointEYhigh(i, bkg_up.at(i));
 
@@ -472,7 +497,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   // -- Make Clone hist for Bkg. One for total error, and one for stat error
   mapfunc["pad2_template" + nameofhistogram] = (TH1F*)GetHist(func + "rebin") -> Clone(clone);
   mapfunc["stat_err" + nameofhistogram] = (TH1F*)GetHist(func + "rebin_stat_err") -> Clone(clone);
-  for(int i = 1; i < N_bin + 1; i++){
+  for(int i = 1; i < N_bin; i++){
     mapfunc["pad2_template" + nameofhistogram] -> SetBinContent(i, 1.);
     mapfunc["pad2_template" + nameofhistogram] -> SetBinError(i, 0.);
   }
@@ -480,7 +505,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   if(debug) cout << "7" << endl;
 
   // -- Draw Line at Data/MC = 1
-  mapline[line] = new TLine(binx[0], 1, binx[N_bin - 1] + bw_template, 1);
+  mapline[line] = new TLine(binx[0], 1, binx[N_bin - 1], 1);
   mapline[line] -> Draw();
   mapline[line] -> SetLineStyle(1);
   mapline[line] -> SetLineColor(kBlue);

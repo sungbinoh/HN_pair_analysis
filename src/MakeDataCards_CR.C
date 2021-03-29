@@ -112,7 +112,7 @@ void open_files(TString histname){
   TString fake_norm = "";
   for(int i = 0; i < 4; i++){
     if(bkg_bool[i]){
-      if(i == 3) fake_norm = fake_norm + "\t1.50";
+      if(i == 3) fake_norm = fake_norm + "\t2.0";
       else fake_norm = fake_norm + "\t1";
     }
   }
@@ -139,7 +139,7 @@ void open_files(TString histname){
   file_shape << "ElectronIDSF\tshapeN2" + adding_bkgs << endl;
   file_shape << "ElectronTriggerSF" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
   file_shape << "MuonScale\tshapeN2" + adding_bkgs << endl;
-  file_shape << "MuonSmear\tshapeN2" + adding_bkgs << endl;
+  //file_shape << "MuonSmear\tshapeN2" + adding_bkgs << endl;
   file_shape << "MuonRecoSF\tshapeN2" + adding_bkgs << endl;
   file_shape << "MuonIDSF\tshapeN2" + adding_bkgs << endl;
   file_shape << "MuonISOSF\tshapeN2" + adding_bkgs << endl;
@@ -150,8 +150,8 @@ void open_files(TString histname){
   file_shape << "PUReweight_\tshapeN2" + adding_bkgs << endl;
   file_shape << "Prefire_\tshapeN2" + adding_bkgs << endl;
   file_shape << "ZPtRw\tshapeN2" + adding_bkgs << endl;
-  if(histname.Contains("EMu")) file_shape << "R_" + histname + "\trateParam\tbin1\t" << histname + "_" + bkgs[1] << "\t1" << endl;
-  else file_shape << "R_" + histname + "\trateParam\tbin1\t" << histname + "_" + bkgs[2] << "\t1" << endl;
+  if(histname.Contains("EMu")) file_shape << "R_" + histname + TString::Itoa(tag_year,10) + "\trateParam\tbin1\t" << histname + "_" + bkgs[1] << "\t1" << endl;
+  else file_shape << "R_" + histname + TString::Itoa(tag_year,10) + "\trateParam\tbin1\t" << histname + "_" + bkgs[2] << "\t1" << endl;
   file_shape << "* autoMCStats 0 0 1" << endl;
   file_shape.close();
   current_input_file -> Close();

@@ -174,26 +174,81 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
     DY_norm = (N_DY + N_Data - N_MC) / N_DY;
     
     if(tag_year == 2016){
-      if(nameofhistogram.Contains("DiMu")){
-	DY_norm = 0.801;
+      if(nameofhistogram.Contains("0AK8")){
+	if(nameofhistogram.Contains("DiMu")){
+	  DY_norm = 0.812;
+	}
+	if(nameofhistogram.Contains("DiEle")){
+	  DY_norm = 0.962;
+	}
       }
-      if(nameofhistogram.Contains("DiEle")){
-        DY_norm = 0.907;
+      if(nameofhistogram.Contains("1AK8")){
+	if(nameofhistogram.Contains("DiMu")){
+          DY_norm = 0.709;
+	}
+        if(nameofhistogram.Contains("DiEle")){
+          DY_norm = 0.689;
+        }
+      }
+      if(nameofhistogram.Contains("2AK8")){
+	if(nameofhistogram.Contains("DiMu")){
+          DY_norm = 0.604;
+	}
+        if(nameofhistogram.Contains("DiEle")){
+          DY_norm = 0.511;
+        }
       }
     }
     if(tag_year == 2017){
-      if(nameofhistogram.Contains("DiMu")){
-        DY_norm = 1.084;
+      if(nameofhistogram.Contains("0AK8")){
+	if(nameofhistogram.Contains("DiMu")){
+          DY_norm = 1.095;
+	}
+        if(nameofhistogram.Contains("DiEle")){
+          DY_norm = 1.093;
+        }
       }
-      if(nameofhistogram.Contains("DiEle")){
-	DY_norm = 1.078;
+      if(nameofhistogram.Contains("1AK8")){
+	if(nameofhistogram.Contains("DiMu")){
+          DY_norm = 1.056;
+        }
+        if(nameofhistogram.Contains("DiEle")){
+          DY_norm = 1.062;
+        }
       }
-    }if(tag_year == 2018){
-      if(nameofhistogram.Contains("DiMu")){
-        DY_norm = 1.06015;
+      if(nameofhistogram.Contains("2AK8")){
+	if(nameofhistogram.Contains("DiMu")){
+          DY_norm = 0.747;
+        }
+        if(nameofhistogram.Contains("DiEle")){
+          DY_norm = 0.881;
+        }
       }
-      if(nameofhistogram.Contains("DiEle")){
-	DY_norm = 1.0312;
+    }
+    if(tag_year == 2018){
+      if(nameofhistogram.Contains("0AK8")){
+        if(nameofhistogram.Contains("DiMu")){
+          DY_norm = 1.127;
+        }
+        if(nameofhistogram.Contains("DiEle")){
+          DY_norm = 1.087;
+        }
+      }
+      if(nameofhistogram.Contains("1AK8")){
+        if(nameofhistogram.Contains("DiMu")){
+          DY_norm = 0.947;
+        }
+        if(nameofhistogram.Contains("DiEle")){
+          DY_norm = 0.952;
+        }
+      }
+      if(nameofhistogram.Contains("2AK8")){
+        if(nameofhistogram.Contains("DiMu")){
+          DY_norm = 0.997;
+        }
+        if(nameofhistogram.Contains("DiEle")){
+          DY_norm = 0.957;
+        }
       }
     }
     
@@ -226,23 +281,25 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   Double_t x1_template = GetHist(nameofhistogram + Cycle_name + current_data) -> GetBinLowEdge(1);
   double bw = GetHist(nameofhistogram + Cycle_name + current_data) -> GetBinWidth(nx_template);
   Double_t x2_template = GetHist(nameofhistogram + Cycle_name + current_data) -> GetBinLowEdge(nx_template) + bw;
-  //binx[N_bin] = binx[N_bin - 1] + bw_template;
+  binx[N_bin] = binx[N_bin - 1] + 500.;
   //if(debug) cout << "[[make_histogram]] binx[N_bin] ; " << binx[N_bin]  << endl;
   //cout << "nx_template : " << nx_template << endl;
   //cout << "x1_template : " << x1_template << endl;
   //cout << "x2_template : " << x2_template << endl;
   mapfunc[func] = new TH1F("", "", nx_template, x1_template, x2_template);
   if(debug) cout << "func rebin rebinning" << endl;
-  mapfunc[func + "rebin"] = (TH1F*)mapfunc[func] -> Rebin(N_bin - 1, func + "rebin", binx);
-  mapfunc[func + "rebin_stat_err"] = (TH1F*)mapfunc[func] -> Rebin(N_bin - 1, func + "rebin", binx);
-  mapfunc[func + "blind_data"] = (TH1F*)mapfunc[func] -> Rebin(N_bin - 1, func + "blind_Data", binx);
+  mapfunc[func + "rebin"] = (TH1F*)mapfunc[func] -> Rebin(N_bin, func + "rebin", binx);
+  mapfunc[func + "rebin_stat_err"] = (TH1F*)mapfunc[func] -> Rebin(N_bin, func + "rebin", binx);
+  mapfunc[func + "blind_data"] = (TH1F*)mapfunc[func] -> Rebin(N_bin, func + "blind_Data", binx);
   // -- For each Bkg Legend : Add overflow, Rebin, Syst error bar, Add on legend, and set fill & line colors
   for(int i_legend = 0; i_legend < 4; i_legend++){
     if(debug) cout << legend_list[i_legend] << endl;
     TString current_sample = map_sample_names[legend_list[i_legend]].at(0);
     if(mapfunc[nameofhistogram + Cycle_name + current_sample]){
       
-      Rebin_with_overflow_limit(nameofhistogram + Cycle_name + current_sample, N_bin, binx);
+      //Rebin_with_overflow_limit(nameofhistogram + Cycle_name + current_sample, N_bin, binx);
+      Rebin_with_overflow(nameofhistogram + Cycle_name + current_sample, N_bin, binx);
+
       //cout << "GetHist  integral " << current_sample << " : " << GetHist(nameofhistogram + Cycle_name + current_sample)->Integral() << endl;
       //cout << "temp integral " << current_sample << " : " << htmp->Integral() << endl;
       
@@ -250,7 +307,8 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
       if(debug) cout << current_sample + " : calling all syst hists" << endl;
       // -- Make rebinned hists for all systematic categories
       for(int i_syst = 0; i_syst < N_syst_comparison; i_syst++){
-	Write_syst_error_limit(current_histname, systematics_comparison[i_syst], Cycle_name, current_sample, N_bin, binx);
+	//Write_syst_error_limit(current_histname, systematics_comparison[i_syst], Cycle_name, current_sample, N_bin, binx);
+	Write_syst_error(current_histname, systematics_comparison[i_syst], Cycle_name, current_sample, N_bin, binx);
       }
       
       // -- Prepare blind data point (= bkg)
@@ -266,7 +324,9 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
     }
   }
   
-  Rebin_with_overflow_limit(nameofhistogram + Cycle_name + current_data, N_bin, binx);
+  //Rebin_with_overflow_limit(nameofhistogram + Cycle_name + current_data, N_bin, binx);
+  Rebin_with_overflow(nameofhistogram + Cycle_name + current_data, N_bin, binx);
+
 
   if(blind){
     mapfunc[nameofhistogram + Cycle_name + current_data + "rebin"] = (TH1F*)GetHist(func + "blind_data") -> Clone(clone + "blind");
@@ -333,11 +393,13 @@ void make_histogram_signal(TString nameofhistogram, TString current_histname, TS
   TString current_sample = mass_point;
   if(mapfunc[nameofhistogram + Cycle_name_signal + current_sample]){
     
-    Rebin_with_overflow_limit(nameofhistogram + Cycle_name_signal + current_sample, N_bin, binx);
-    
+    //Rebin_with_overflow_limit(nameofhistogram + Cycle_name_signal + current_sample, N_bin, binx);
+    Rebin_with_overflow(nameofhistogram + Cycle_name_signal + current_sample, N_bin, binx);
+
     if(debug) cout << current_sample + " : calling all syst hists" << endl;
     for(int i_syst = 0; i_syst < N_syst_comparison; i_syst++){
-      Write_syst_error_limit(current_histname, systematics_comparison[i_syst], Cycle_name_signal, current_sample, N_bin, binx);
+      //Write_syst_error_limit(current_histname, systematics_comparison[i_syst], Cycle_name_signal, current_sample, N_bin, binx);
+      Write_syst_error(current_histname, systematics_comparison[i_syst], Cycle_name_signal, current_sample, N_bin, binx);
     }
     mapfunc[nameofhistogram + Cycle_name_signal + current_sample + "rebin"] -> SetName(current_histname + "_" + current_sample);// + "_central");
     Remove_Negative_Bins(nameofhistogram + Cycle_name_signal + current_sample + "rebin");
@@ -613,10 +675,10 @@ void MakeLimitTemplate(int int_input=30){
     binning_file = binning_file + "mZp_2AK8_SR_DiMu.txt";
   }
   else if(int_binning == 7){
-    binning_file = binning_file + "mZp_SR_DiMu.txt";
+    binning_file = binning_file + "mZp_SR_DiEle.txt";
   }
   else if(int_binning == 8){
-    binning_file = binning_file + "mZp_SR_DiEle.txt";
+    binning_file = binning_file + "mZp_SR_DiMu.txt";
   }
   else return;
   cout << "binning_file : " << binning_file << endl;
