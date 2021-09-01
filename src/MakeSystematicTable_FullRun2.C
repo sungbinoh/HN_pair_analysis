@@ -15,9 +15,9 @@ void open_files(TString histname, int year){
   TString bkgs[4] = {"DYJets_MG_HT", "TT_powheg", "fake", "VV"};
 
   double lumi_error = 1.;
-  if(year == 2016) lumi_error = 1.025;
-  if(year == 2017) lumi_error = 1.023;
-  if(year == 2018) lumi_error = 1.025;
+  if(year == 2016) lumi_error = 1.018;
+  if(year == 2017) lumi_error = 1.018;
+  if(year == 2018) lumi_error = 1.018;
   
   if(signal_file.is_open()){
 
@@ -305,25 +305,25 @@ void MakeSystematicTable_FullRun2(int ahahah){
     };
   }
 
-  TString systematics_table[N_syst] = {"ElectronScale",
-				       "ElectronSmear",
-				       "JetsRes",
-				       "JetsScale",
+  TString systematics_table[N_syst] = {"Electron Momentum Scale",
+				       "Electron Momentum Smear",
+				       "Jet Energy Resolution",
+				       "Jet Energy Scale",
 				       //"SD Mass Res",
-				       "SD Mass Scale",
+				       "Soft drop Mass Scale",
 				       "PU Reweight",
-				       "MuonScale",
+				       "Muon Momentum Scale",
 				       //"MuonSmear",
 				       "L1 Prefire",
-				       "MuonRecoSF",
-				       "MuonIDSF",
-				       "MuonISOSF",
-				       "MuonTriggerSF",
-				       "ElectronRecoSF",
-				       "ElectronIDSF",
-				       "ElectronTriggerSF",
-				       "ZPtRw",
-  };  
+				       "Muon Reconstruction SF",
+				       "Muon ID SF",
+				       "Muon Isolation SF",
+				       "Muon Trigger SF",
+				       "Electron Reconstruction SF",
+				       "Electron ID SF",
+				       "Electron Trigger SF",
+				       "Z Pt Reweight",
+  };
   
   TString syst_correlation[N_syst] = {"Correlated",
 				      "Correlated",
@@ -367,7 +367,8 @@ void MakeSystematicTable_FullRun2(int ahahah){
   
   file_syst_table << "\\begin{table}"<< endl;
   file_syst_table << "\\centering" << endl;
-  file_syst_table << "\\topcaption{The list of systematics and their impacts on total number of events at siganl region.}" << endl;
+  //the total number of events in signal and background regions.
+  file_syst_table << "\\topcaption{The list of systematics and their impacts on the total number of events in signal regions.}" << endl;
   file_syst_table << "\\label{tab:syst_ee}" << endl;
   file_syst_table << "\\resizebox{\\textwidth}{!}{" << endl;
   file_syst_table << "\\begin{tabular}{l l l l l l l}" << endl;
@@ -376,7 +377,7 @@ void MakeSystematicTable_FullRun2(int ahahah){
   file_syst_table << "&                                       &     &  (\\%)           & (\\%)            & (\\%)           & (\\%) \\\\" << endl;
   file_syst_table << "\\hline" << endl;
 
-  file_syst_table << "Integrated luminosity & All bkgd./Signal & Uncorrelated & 2.3 -- 2.5 & 2.3 -- 2.5 & 2.3 -- 2.5 & 2.3 -- 2.5\\\\ " << endl;
+  file_syst_table << "Integrated luminosity & All bkgd./Signal & Correlated & 1.8 & 1.8 & 1.8 & 1.8\\\\ " << endl;
   for(int j = 0; j < N_syst_comparison; j++){
     file_syst_table << systematics_table[j] << " & " << syst_bkg_signal[j] << " & " << syst_correlation[j];
     file_syst_table << fixed <<setprecision(1) << " & " ;
@@ -386,7 +387,7 @@ void MakeSystematicTable_FullRun2(int ahahah){
     else file_syst_table << " $< 0.1$ ";
     file_syst_table << " & " ;
     
-    if( systematics_table[j] == "ZPtRw"){
+    if( systematics_table[j] == "Z Pt Reweight"){
       file_syst_table << "\\NA";
     }
     else{
@@ -403,7 +404,7 @@ void MakeSystematicTable_FullRun2(int ahahah){
     else file_syst_table << " $< 0.1$ ";
     file_syst_table << " & " ;
 
-    if( systematics_table[j] == "ZPtRw"){
+    if( systematics_table[j] == "Z Pt Reweight"){
       file_syst_table << "\\NA";
     }
     else{
@@ -416,6 +417,9 @@ void MakeSystematicTable_FullRun2(int ahahah){
   }
   for(int j = 0; j < 2; j++){
     file_syst_table << PDF_uncertainty[j];
+    if(PDF_uncertainty[j] == "Scale"){
+      file_syst_table << " (${\\mu}_{R}, {\\mu}_{F}$) ";
+    }
     file_syst_table << " & Signal & Correlated & \\NA & " << map_syst_table[PDF_uncertainty[j] + "EE"].at(0) << " -- " << map_syst_table[PDF_uncertainty[j] + "EE"].at(1) << " & \\NA & ";
     file_syst_table << map_syst_table[PDF_uncertainty[j] + "MuMu"].at(0) << " -- " << map_syst_table[PDF_uncertainty[j] + "MuMu"].at(1) << "\\\\" << endl;
   }

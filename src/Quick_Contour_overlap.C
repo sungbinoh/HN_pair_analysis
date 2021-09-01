@@ -73,7 +73,7 @@ void make_histogram(TString channel){
   latex_CMSPriliminary.SetTextSize(0.035);
   latex_CMSPriliminary.DrawLatex(0.16, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
   latex_Lumi.SetTextSize(0.035 );
-  latex_Lumi.DrawLatex(0.60, 0.96, "137.4 fb^{-1} (13 TeV, Full Run2)");
+  latex_Lumi.DrawLatex(0.60, 0.96, "137 fb^{-1} (13 TeV, Full Run2)");
   latex_channel.SetNDC();
   latex_channel.SetTextSize(0.08);
   if(channel.Contains("MuMu")) latex_channel.DrawLatex(0.2, 0.6, "#mu#mu OS + SS");

@@ -1188,7 +1188,7 @@ void Limit_signal_injection(int xxx=1){
   if(binning.Contains("2016"))latex_Lumi.DrawLatex(0.60, 0.96, "35.9 fb^{-1} (13 TeV, 2016)");
   else if(binning.Contains("2017"))latex_Lumi.DrawLatex(0.60, 0.96, "41.3 fb^{-1} (13 TeV, 2017)");
   else if(binning.Contains("2018")) latex_Lumi.DrawLatex(0.60, 0.96, "59.7 fb^{-1} (13 TeV, 2018)");
-  else latex_Lumi.DrawLatex(0.60, 0.96, "137.4 fb^{-1} (13 TeV, Full Run2)");
+  else latex_Lumi.DrawLatex(0.60, 0.96, "137 fb^{-1} (13 TeV, Full Run2)");
   latex_channel.SetNDC();
   latex_channel.SetTextSize(0.08);
   if(channel.Contains("MuMu")) latex_channel.DrawLatex(0.2, 0.6, "#mu#mu OS + SS");

@@ -391,7 +391,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   mappad[pad1] -> SetRightMargin( 0.03 );
   mappad[pad1] -> Draw();
   mappad[pad1] -> cd();
-  //mappad[pad1] -> SetLogy();
+  mappad[pad1] -> SetLogy();
   
   maplegend[legend] = new TLegend(0.60, 0.60, 0.96, 0.92);
 
@@ -563,8 +563,8 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   // -- Set y-axis range
   double data_max = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetMaximum();
   double data_min = GetHist(nameofhistogram + Cycle_name + current_data + "rebin") -> GetMinimum();
-  //maphstack[hstack] -> SetMaximum(data_max * 1000.);//logy
-  maphstack[hstack] -> SetMaximum(data_max * 1.5);
+  maphstack[hstack] -> SetMaximum(data_max * 1000.);//logy
+  //maphstack[hstack] -> SetMaximum(data_max * 1.5);
   maphstack[hstack] -> SetMinimum(0.01);
   
   // -- Draw Legend
@@ -624,8 +624,8 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   mapfunc["pad2_template" + nameofhistogram] -> GetYaxis() -> SetTitleOffset(0.5);
   mapfunc["pad2_template" + nameofhistogram] -> GetYaxis() -> SetLabelSize(0.08);
   mapfunc["pad2_template" + nameofhistogram] -> GetYaxis() -> SetNdivisions(505);
-  mapfunc["pad2_template" + nameofhistogram] -> SetMinimum(0.0);
-  mapfunc["pad2_template" + nameofhistogram] -> SetMaximum(3.0);
+  mapfunc["pad2_template" + nameofhistogram] -> SetMinimum(0.5);
+  mapfunc["pad2_template" + nameofhistogram] -> SetMaximum(1.5);
   mapfunc["pad2_template" + nameofhistogram] -> SetStats(0);
   mapfunc["pad2_template" + nameofhistogram] -> Draw("hist");
 
@@ -1008,19 +1008,19 @@ void QuickPlot_CR_signal(int year=2018){
   Cycle_name = "HN_pair_all_SkimTree_LRSMHighPt";
 
   
-  open_binning_file("binning_limit_postfit.txt");
+  //open_binning_file("binning_limit_postfit.txt");
   
   /*
   open_binning_file("binning_limit_merged_mZp_2AK8_SR_DiEle.txt");
   open_binning_file("binning_limit_merged_mZp_1AK8_SR_DiEle.txt");
   open_binning_file("binning_limit_merged_mZp_0AK8_SR_DiEle.txt");
   */
-  open_binning_file("binning_limit_merged_mZp_2AK8_SR_DiMu.txt");
+  //open_binning_file("binning_limit_merged_mZp_2AK8_SR_DiMu.txt");
   //open_binning_file("binning_limit_merged_mZp_1AK8_SR_DiMu.txt");
   //open_binning_file("binning_limit_merged_mZp_0AK8_SR_DiMu.txt");
   
   //open_binning_file("binning_2017_comparion.txt");
-  //open_binning_file("binning_problematic.txt");
+  open_binning_file("binning_problematic.txt");
   //open_binning_file("binning_signal_vs_data.txt");
   
   outfile.close();

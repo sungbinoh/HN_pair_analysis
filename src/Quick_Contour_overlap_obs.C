@@ -52,7 +52,8 @@ void make_histogram(TString channel){
   gr_Z2N->SetLineWidth(5);
   gr_Z2N->Draw("lsame");
 
-  Int_t signal_colour_array[] = {868, 632, 416, 400};
+  // -- 868 = kAzure + 8, 632 = kRed, 416 = kGreen, 400 = kYellow, 800 = kOrange
+  Int_t signal_colour_array[] = {868, 400, 416, 800};
 
   TLegend *lg = new TLegend(0.2, 0.7, 0.6, 0.90);
   lg->SetBorderSize(0);
@@ -80,6 +81,7 @@ void make_histogram(TString channel){
   map_gr[map_sample_names["limit"].at(0) + channel + "_down"] -> Draw("lsame");
 
   lg -> AddEntry(map_gr[map_sample_names["limit"].at(0) + channel], "Combined (exp.)", "l");
+  lg -> AddEntry(map_gr[map_sample_names["limit"].at(0) + channel + "_up"], "Combined (exp. #pm s.d.)", "l");
   lg -> AddEntry(map_gr[map_sample_names["limit"].at(0) + channel + "_obs"], "Combined (obs.)", "l");
   
   // -- Draw 0AK8, 1AK8, 2AK8 observed
@@ -96,9 +98,9 @@ void make_histogram(TString channel){
   map_gr[map_sample_names["limit"].at(0) + channel + "_atlas"] -> SetLineStyle(8);
   map_gr[map_sample_names["limit"].at(0) + channel + "_atlas"] -> SetLineWidth(3);
   map_gr[map_sample_names["limit"].at(0) + channel + "_atlas"] -> SetFillColor(kAzure + 8);
-  map_gr[map_sample_names["limit"].at(0) + channel + "_atlas"] -> SetLineColor(kWhite);
+  map_gr[map_sample_names["limit"].at(0) + channel + "_atlas"] -> SetLineColor(kRed);
   map_gr[map_sample_names["limit"].at(0) + channel + "_atlas"] -> Draw("lsame");
-  lg -> AddEntry(map_gr[map_sample_names["limit"].at(0) + channel + "_atlas"], "ATLAS 8 TeV", "lf");
+  lg -> AddEntry(map_gr[map_sample_names["limit"].at(0) + channel + "_atlas"], "ATLAS 8 TeV", "l");
    
   map_gr[map_sample_names["limit"].at(0) + channel + "_obs"] -> SetLineWidth(3);
   map_gr[map_sample_names["limit"].at(0) + channel + "_obs"] -> SetLineColor(kBlack);
@@ -113,7 +115,7 @@ void make_histogram(TString channel){
   latex_CMSPriliminary.SetTextSize(0.035);
   latex_CMSPriliminary.DrawLatex(0.16, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
   latex_Lumi.SetTextSize(0.035 );
-  latex_Lumi.DrawLatex(0.60, 0.96, "137.4 fb^{-1} (13 TeV, Full Run2)");
+  latex_Lumi.DrawLatex(0.60, 0.96, "137 fb^{-1} (13 TeV, Full Run2)");
   latex_channel.SetNDC();
   latex_channel.SetTextSize(0.08);
   if(channel.Contains("MuMu")) latex_channel.DrawLatex(0.2, 0.6, "#mu#mu OS + SS");

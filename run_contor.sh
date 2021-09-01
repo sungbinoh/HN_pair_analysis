@@ -26,7 +26,7 @@ END
 #root -l -b -q "src/Limit_signal_injection.C(6)"
 
 # 3AK8 CRs obs
-#:<<END
+:<<END
 root -l -b -q "src/QuickLimit_obs.C(0)"
 root -l -b -q "src/QuickLimit_obs.C(1)"
 root -l -b -q "src/QuickLimit_obs.C(2)"
@@ -49,7 +49,7 @@ root -l -b -q "src/QuickLimit_obs.C(18)"
 root -l -b -q "src/QuickLimit_obs.C(19)"
 
 scp -r ./plots/limit suoh@147.47.242.44:/home/suoh/Dropbox/HN_pair/
-#END
+END
 
 # -- Comparison
 root -l -b -q "src/Quick_Contour_overlap_obs.C(0)"

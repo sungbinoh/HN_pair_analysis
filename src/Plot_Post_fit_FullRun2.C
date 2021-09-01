@@ -106,21 +106,21 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
   ////////////////////////////////////
   mappad[pad1] = new TPad("", "", 0, 0.25, 1, 1);
   mappad[pad1] -> SetTopMargin( 0.07 );
-  mappad[pad1] -> SetBottomMargin( 0.02 );
+  mappad[pad1] -> SetBottomMargin( 0.05 );
   mappad[pad1] -> SetLeftMargin( 0.15 );
   mappad[pad1] -> SetRightMargin( 0.03 );
   mappad[pad1] -> Draw();
   mappad[pad1] -> cd();
   mappad[pad1] -> SetLogy();
   
-  maplegend[legend] = new TLegend(0.60, 0.60, 0.96, 0.92);
+  maplegend[legend] = new TLegend(0.55, 0.45, 0.95, 0.90);
 
   if(debug) cout << "1" << endl;
   
 
   TH1F * pad1_template = new TH1F("", "", N_bin-1, binx);
   gStyle->SetOptTitle(0);
-
+  gStyle->SetLineWidth(2);
   // -- Bkgs
   //TString histograms[4] = {"VV", "WJets_MG_HT", "TT_powheg", "DYJets_MG_HT"};
   //TString legend_list[4] = {"Other", "WJets", "ttbar", "DYJets"};
@@ -128,7 +128,7 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
   TString legend_list[4] = {"Other", "Non-prompt", "ttbar", "DYJets"};
   TString years[3] = {"2016", "2017", "2018"};
 
-  Int_t colour_array[] = {419, 901, 416, 400};
+  Int_t colour_array[] = {870, 632, 416, 400};
 
   maphstack[hstack] = new THStack(hstack, "Stacked_" + nameofhistogram);
     
@@ -152,7 +152,6 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
     TString current_hist = plot_name + histograms[4 - i_legend - 1] + which_fit;
     if(mapfunc[current_hist + "sum"]){
       maplegend[legend] -> AddEntry(mapfunc[current_hist + "sum"] , legend_list[4 - i_legend - 1], "lf");
-      cout << "current_hist + sum : " << current_hist + "sum" << endl;
     }
   }
 
@@ -168,6 +167,7 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
   
   // -- Data
   double max_data = 0.;
+  double last_bin_data = 0.;
   TString current_data = plot_name + "data" + which_fit;
   TH1F* data_hist = new TH1F(current_data + "rebin", current_data + "rebin", N_bin-1, binx);
   for(int i_bin = 1; i_bin < N_bin; i_bin++){
@@ -177,6 +177,16 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
     data_hist -> SetBinError(i_bin, current_error);
     if(current_content > max_data) max_data = current_content;
   }
+
+
+
+
+
+
+
+
+
+
 
   map_asym_gr[current_data] = new TGraphAsymmErrors(data_hist);
   for(int i = 0; i < N_bin; i++){
@@ -218,20 +228,51 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
       vexh.push_back(current_ex);
     }
   }
+  
+  const int N_points = N_bin - 1;
+  double data_y[N_points], data_x[N_points];
+  double data_ey_high[N_points], data_ey_low[N_points];
+  double data_ex_high[N_points], data_ex_low[N_points];
+  for(int i_bin = 1; i_bin < N_bin; i_bin++){
+    double current_data = data_hist -> GetBinContent(i_bin);
+    double current_data_ey_high = veyh.at(i_bin-1);
+    double current_data_ey_low = veyl.at(i_bin-1);
+
+    data_y[i_bin -1] = current_data;
+    data_ey_high[i_bin - 1] = current_data_ey_high;
+    data_ey_low[i_bin - 1] = current_data_ey_low;
+  }
+  for(int i_x = 0; i_x < N_points; i_x++){
+    double current_ex = (binx[i_x + 1] - binx[i_x]) / 2.0;
+    double current_x = binx[i_x] + current_ex;
+
+    data_x[i_x] = current_x;
+    data_ex_high[i_x] = 0.;
+    data_ex_low[i_x] = 0.;
+  }
+  last_bin_data = data_y[N_points - 1];
+  TGraphAsymmErrors * data_gr = new TGraphAsymmErrors(N_points, data_x, data_y, data_ex_low, data_ex_high, data_ey_low, data_ey_high);
 
   maplegend[legend] -> AddEntry(bkg_sum, "Stat.+syst. uncert.", "f");
-  maplegend[legend] -> AddEntry(map_asym_gr[current_data], "Observed", "lp");
+  maplegend[legend] -> AddEntry(data_gr, "Observed", "lp");
   
   
+
+
+
+
+
+
   // -- Draw Pad
   pad1_template -> Draw("hist");
-  pad1_template -> GetYaxis()->SetLabelSize(0.05);;
-  pad1_template -> GetYaxis()->SetTitleSize(0.07);;
-  pad1_template -> GetYaxis()->SetTitleOffset(1.02);;
+  pad1_template -> GetYaxis()->SetLabelSize(0.07);
+  pad1_template -> GetYaxis()->SetTitleSize(0.07);
+  pad1_template -> GetYaxis()->SetTitleOffset(1.02);
   pad1_template -> GetXaxis()->SetLabelSize(0);
   pad1_template -> GetXaxis() -> SetTitle(nameofhistogram);
   //pad1_template -> GetYaxis() -> SetRangeUser(0., max_data * 1.8);
-  pad1_template -> GetYaxis() -> SetRangeUser(0.1, max_data * 10.); // logy
+  //pad1_template -> GetYaxis() -> SetRangeUser(0.1, max_data * 10.); // logy
+  pad1_template -> GetYaxis() -> SetRangeUser(0.1, last_bin_data * 5000.); // last bin data logy
   pad1_template -> GetYaxis() -> SetTitle(title_y);
   pad1_template -> SetStats(0);
   pad1_template -> Draw("histsame");
@@ -241,25 +282,34 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
   bkg_sum -> SetFillColor(kBlack);
   bkg_sum -> SetFillStyle(3013);
   bkg_sum -> SetMarkerSize(0);;
-  bkg_sum -> Draw("e2same");;
+  bkg_sum -> SetLineWidth(0);
+  bkg_sum -> Draw("e2same");
 
   //data_hist -> Draw("psame");
-  map_asym_gr[current_data] -> Draw("epsame");
+  data_gr -> SetMarkerSize(1.3);
+  data_gr -> SetLineWidth(2);
+  data_gr -> Draw("ezpsame");
+
+
+
+
 
   maplegend[legend] -> SetFillColor(kWhite);
-  maplegend[legend] -> SetLineColor(kBlack);
-  maplegend[legend] -> SetBorderSize(1);
+  //maplegend[legend] -> SetLineColor(kBlack);
+  //maplegend[legend] -> SetBorderSize(1);
   maplegend[legend] -> SetFillStyle(1001);
   maplegend[legend] -> SetShadowColor(0);
   maplegend[legend] -> SetEntrySeparation(0.3);
   maplegend[legend] -> Draw("same");
+
+  gPad->RedrawAxis();
 
   ////////////////////////////////////
   /// Pad 2
   ////////////////////////////////////
   mapcanvas[canvas] -> cd();
   mappad[pad2] = new TPad(pad2, "", 0, 0, 1, 0.25);
-  mappad[pad2] -> SetTopMargin( 0.03 );
+  mappad[pad2] -> SetTopMargin( 0.05 );
   mappad[pad2] -> SetBottomMargin( 0.4 );
   mappad[pad2] -> SetLeftMargin( 0.15 );
   mappad[pad2] -> SetRightMargin( 0.03 );
@@ -275,12 +325,12 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
   pad2_template -> SetTitle("");
   pad2_template -> SetLineColor(kWhite);
   pad2_template -> GetXaxis() -> SetTitle(name_x);
-  pad2_template -> GetXaxis() -> SetTitleSize(0.15);
-  pad2_template -> GetXaxis() -> SetLabelSize(0.10);
+  pad2_template -> GetXaxis() -> SetTitleSize(0.20);
+  pad2_template -> GetXaxis() -> SetLabelSize(0.125);
   pad2_template -> GetYaxis() -> SetTitle("#frac{Obs.}{Pred.}");
   pad2_template -> GetYaxis() -> SetTitleSize(0.15);
-  pad2_template -> GetYaxis() -> SetTitleOffset(0.5);
-  pad2_template -> GetYaxis() -> SetLabelSize(0.08);
+  pad2_template -> GetYaxis() -> SetTitleOffset(0.4);
+  pad2_template -> GetYaxis() -> SetLabelSize(0.10);
   pad2_template -> GetYaxis() -> SetNdivisions(505);
   pad2_template -> GetYaxis() -> SetRangeUser(0.0, 2.0);
   pad2_template -> SetStats(0);
@@ -288,10 +338,10 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
   
   TH1F * pad2_bkg_err = new TH1F("", "", N_bin-1, binx);
   TH1F * pad2_ratio = new TH1F("", "", N_bin-1, binx);
-  const int N_points = N_bin - 1;
-  double data_y[N_points], data_x[N_points];
+  //const int N_points = N_bin - 1;
+  //double data_y[N_points], data_x[N_points];
   double ratio_data_y[N_points], ratio_data_ey_high[N_points], ratio_data_ey_low[N_points];
-  double data_ex_high[N_points], data_ex_low[N_points];
+  //double data_ex_high[N_points], data_ex_low[N_points];
   for(int i_bin = 1; i_bin < N_bin; i_bin++){
     double current_data = data_hist -> GetBinContent(i_bin);
     double current_bkg = bkg_sum -> GetBinContent(i_bin);
@@ -319,27 +369,34 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
     data_ex_low[i_x] =current_ex;
   }
   
-  pad2_bkg_err -> SetFillColor(kOrange);
+  pad2_bkg_err -> SetFillColor(kBlack);
   pad2_bkg_err -> SetMarkerSize(0);
-  pad2_bkg_err -> SetLineColor(kWhite);
+  //pad2_bkg_err -> SetLineColor(kWhite);
+  pad2_bkg_err -> SetFillStyle(3013);
   pad2_bkg_err -> Draw("E2same");
   
   pad2_ratio -> Draw("psame");
   
   TGraphAsymmErrors * ratio_data_gr = new TGraphAsymmErrors(N_points, data_x, ratio_data_y, data_ex_low, data_ex_high, ratio_data_ey_low, ratio_data_ey_high);
-  ratio_data_gr -> Draw("epsame");
+  ratio_data_gr -> SetMarkerSize(1.3);
+  ratio_data_gr -> SetLineWidth(2);
+  ratio_data_gr -> Draw("ezpsame");
 
   maplegend["bottom" + legend] = new TLegend(0.2, 0.85, 0.4, 0.95);
   maplegend["bottom" + legend]->SetBorderSize(0);
   maplegend["bottom" + legend]->SetNColumns(3);
   maplegend["bottom" + legend]->AddEntry(pad2_bkg_err, "Stat. + Syst.", "f");
   maplegend["bottom" + legend]->AddEntry(ratio_data_gr, "Obs./Pred.", "p");
-  maplegend["bottom" + legend]->Draw("same");
+  //maplegend["bottom" + legend]->Draw("same");
 
   TLine *pad2_line = new TLine(binx[0], 1, binx[N_bin - 1], 1);
   pad2_line -> SetLineStyle(1);
   pad2_line -> SetLineColor(kBlue);
   pad2_line -> Draw("same");
+
+  ratio_data_gr -> Draw("ezpsame");
+
+  gPad->RedrawAxis();
 
   ////////////////////////////////////
   /// -- Latex
@@ -351,18 +408,18 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
   latex_CMSPriliminary.SetTextSize(0.035);
   latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
   latex_Lumi.SetTextSize(0.035);
-  latex_Lumi.DrawLatex(0.7, 0.96, "137.4 fb^{-1} (13 TeV)");
+  latex_Lumi.DrawLatex(0.7, 0.96, "137 fb^{-1} (13 TeV)");
 
   TLatex latex_channel;
   latex_channel.SetTextSize(0.035);
   if(nameofhistogram.Contains("EMu")){
-    latex_channel.DrawLatex(0.40, 0.90, "e#mu");
+    latex_channel.DrawLatex(0.20, 0.90, "#font[42]{e#mu}");
   }
   else if(nameofhistogram.Contains("DiEle")){
-    latex_channel.DrawLatex(0.40, 0.90, "ee");
+    latex_channel.DrawLatex(0.20, 0.90, "#font[42]{ee}");
   }
   else if(nameofhistogram.Contains("DiMu")){
-    latex_channel.DrawLatex(0.40, 0.90, "#mu#mu");
+    latex_channel.DrawLatex(0.20, 0.90, "#mu#mu");
 
   }
   else return;
@@ -370,13 +427,13 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
   TLatex latex_region;
   latex_region.SetTextSize(0.035);
   if(nameofhistogram.Contains("0AK8")){
-    latex_region.DrawLatex(0.40, 0.85, "0AK8");
+    latex_region.DrawLatex(0.20, 0.85, "0AK8");
   }
   else if(nameofhistogram.Contains("1AK8")){
-    latex_region.DrawLatex(0.40, 0.85, "1AK8");
+    latex_region.DrawLatex(0.20, 0.85, "1AK8");
   }
   else if(nameofhistogram.Contains("2AK8")){
-    latex_region.DrawLatex(0.40, 0.85, "2AK8");
+    latex_region.DrawLatex(0.20, 0.85, "2AK8");
 
   }
   else return;
@@ -384,10 +441,10 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
   TLatex latex_fit;
   latex_fit.SetTextSize(0.035);
   if(nameofhistogram.Contains("prefit")){
-    latex_fit.DrawLatex(0.40, 0.80, "Prefit");
+    latex_fit.DrawLatex(0.20, 0.80, "Prefit");
   }
   else if(nameofhistogram.Contains("postfit")){
-    latex_fit.DrawLatex(0.40, 0.80, "Postfit");
+    latex_fit.DrawLatex(0.20, 0.80, "Postfit");
   }
   else return;
 
@@ -566,9 +623,9 @@ void overlap_ttbar(TString NAK8){
   mapfunc[histname_mumu] -> Draw("histsame");
   mapfunc[histname_emu]-> Draw("histsame");
 
-  maplegend[legend] -> AddEntry(mapfunc[histname_ee], "ee", "l");
+  maplegend[legend] -> AddEntry(mapfunc[histname_ee], "#font[42]{ee}", "l");
   maplegend[legend] -> AddEntry(mapfunc[histname_mumu], "mumu", "l");
-  maplegend[legend] -> AddEntry(mapfunc[histname_emu], "emu", "l");
+  maplegend[legend] -> AddEntry(mapfunc[histname_emu], "#font[42]{e#mu}", "l");
   
   maplegend[legend] -> SetFillColor(kWhite);
   maplegend[legend] -> SetLineColor(kBlack);
@@ -586,7 +643,7 @@ void overlap_ttbar(TString NAK8){
   latex_CMSPriliminary.SetTextSize(0.035);
   latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
   latex_Lumi.SetTextSize(0.035);
-  latex_Lumi.DrawLatex(0.7, 0.96, "137.4 fb^{-1} (13 TeV)");
+  latex_Lumi.DrawLatex(0.7, 0.96, "137 fb^{-1} (13 TeV)");
   
   TString pdfname;
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
