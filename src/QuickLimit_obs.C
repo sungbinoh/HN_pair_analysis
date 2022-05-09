@@ -8,6 +8,7 @@ void QuickLimit_obs(int xxx=0){
   setTDRStyle();
 
   gStyle->SetOptStat(0);
+  gStyle->SetLineWidth(2);
 
   TH1::SetDefaultSumw2(true);
   TH1::AddDirectory(kFALSE);
@@ -550,7 +551,10 @@ void QuickLimit_obs(int xxx=0){
     hist_dummy->GetYaxis()->SetRangeUser(1E-6,100);
     hist_dummy->GetYaxis()->SetTitle("#sigma (pb)");
     hist_dummy->GetYaxis()->SetTitleSize(0.04);
-    hist_dummy->GetYaxis()->SetTitleOffset(1.5);
+    hist_dummy->GetYaxis()->SetTitleOffset(1.7);
+    hist_dummy->GetYaxis()->SetLabelSize(0.045);
+    hist_dummy->GetXaxis()->SetLabelSize(0.045);
+
     if(channel == "EE"){
       hist_dummy->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z')BR(Z' #rightarrow NN #rightarrow eejjjj) (pb)");
     }
@@ -592,7 +596,7 @@ void QuickLimit_obs(int xxx=0){
     Limit_for_this_mN_obs->SetLineWidth(3);
     Limit_for_this_mN_obs->Draw("lsame");
 
-    TLegend *lg = new TLegend(0.7, 0.7, 0.95, 0.95);
+    TLegend *lg = new TLegend(0.6, 0.6, 0.95, 0.95);
     lg->SetBorderSize(0);
     lg->SetFillStyle(0);
     lg->AddEntry(Theory_for_this_mN, "Theory", "l");
@@ -616,6 +620,15 @@ void QuickLimit_obs(int xxx=0){
     if(channel == "MuMu"){
       latex_channel.DrawLatex(0.25, 0.85,"Combined #mu#mu channel");
     }
+
+    TLatex latex_CMSPriliminary, latex_Lumi;
+    latex_CMSPriliminary.SetNDC();
+    latex_Lumi.SetNDC();
+    latex_CMSPriliminary.SetTextSize(0.035);
+    //latex_CMSPriliminary.DrawLatex(0.16, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
+    latex_CMSPriliminary.DrawLatex(0.16, 0.96, "#font[62]{CMS}");
+    latex_Lumi.SetTextSize(0.035 ); 
+    latex_Lumi.DrawLatex(0.70, 0.96, "138 fb^{-1} (13 TeV)");
 
     c1->SaveAs(base_plotpath+"/Limit_N"+TString::Itoa(mN,10)+".pdf");
     //c1->SaveAs(base_plotpath+"/Limit_N"+TString::Itoa(mN,10)+".png");
@@ -785,8 +798,11 @@ void QuickLimit_obs(int xxx=0){
   hist_dummy->GetYaxis()->SetRangeUser(1E-6,100);
   hist_dummy->GetYaxis()->SetTitle("#sigma (pb)");
   hist_dummy->GetYaxis()->SetTitleSize(0.04);
-  hist_dummy->GetYaxis()->SetTitleOffset(1.5);
-  if(channel == "EE"){
+  hist_dummy->GetYaxis()->SetTitleOffset(1.7);
+  hist_dummy->GetYaxis()->SetLabelSize(0.045);
+  hist_dummy->GetXaxis()->SetLabelSize(0.045);
+
+ if(channel == "EE"){
     hist_dummy->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z')BR(Z' #rightarrow NN #rightarrow eejjjj) (pb)");
   }
   if(channel == "MuMu"){
@@ -822,7 +838,7 @@ void QuickLimit_obs(int xxx=0){
   Limit_quarter_obs->SetLineWidth(3);
   Limit_quarter_obs->Draw("lsame");
 
-  TLegend *lg_quarter = new TLegend(0.7, 0.7, 0.95, 0.95);
+  TLegend *lg_quarter = new TLegend(0.6, 0.6, 0.95, 0.95);
   lg_quarter->SetBorderSize(0);
   lg_quarter->SetFillStyle(0);
   lg_quarter->AddEntry(Theory_quarter, "Theory", "l");
@@ -846,7 +862,15 @@ void QuickLimit_obs(int xxx=0){
   if(channel == "MuMu"){
     latex_channel_quarter.DrawLatex(0.25, 0.85,"Combined #mu#mu channel");
   }
-  
+ 
+  TLatex latex_CMSPriliminary, latex_Lumi, latex_channel;
+  latex_CMSPriliminary.SetNDC();
+  latex_Lumi.SetNDC();
+  latex_CMSPriliminary.SetTextSize(0.035);
+  //latex_CMSPriliminary.DrawLatex(0.16, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
+  latex_CMSPriliminary.DrawLatex(0.16, 0.96, "#font[62]{CMS}");
+  latex_Lumi.SetTextSize(0.035 );
+  latex_Lumi.DrawLatex(0.70, 0.96, "138 fb^{-1} (13 TeV)");
   
   c_quarter->SaveAs(base_plotpath+"/Limit_quarter.pdf");
   
@@ -1346,6 +1370,8 @@ void QuickLimit_obs(int xxx=0){
     mZP_crosses_obs.push_back(1600.);
     mN_crosses_obs.push_back(750.);
   }
+
+
   
   //========================================
   //==== 3) Let's draw found points 
@@ -1498,7 +1524,7 @@ void QuickLimit_obs(int xxx=0){
   gr_atlas-> SetLineStyle(8);
   gr_atlas->SetLineWidth(3);
   gr_atlas->SetLineColor(kRed);
-  gr_atlas->Draw("lsame");
+  //gr_atlas->Draw("lsame");
   
 
   //========================================
@@ -1511,26 +1537,26 @@ void QuickLimit_obs(int xxx=0){
   lg->AddEntry(gr_Z2N, "m_{N} = m_{Z'} / 2 ", "l");
   lg->AddEntry(gr_obs, "95% CL Observed Limit", "l");
   lg->AddEntry(gr_central, "95% CL Expected Limit #pm 1 #sigma", "l");
-  lg->AddEntry(gr_atlas, "#splitline{95% CL Observed Limit}{ATLAS @ 8 TeV}", "l");
+  //lg->AddEntry(gr_atlas, "#splitline{95% CL Observed Limit}{ATLAS @ 8 TeV}", "l");
   lg->Draw();
 
-  TLatex latex_CMSPriliminary, latex_Lumi, latex_channel;
+  //TLatex latex_CMSPriliminary, latex_Lumi, latex_channel;
   latex_CMSPriliminary.SetNDC();
   latex_Lumi.SetNDC();
   latex_CMSPriliminary.SetTextSize(0.035);
-  latex_CMSPriliminary.DrawLatex(0.16, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
+  //latex_CMSPriliminary.DrawLatex(0.16, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
+  latex_CMSPriliminary.DrawLatex(0.16, 0.96, "#font[62]{CMS}");
   latex_Lumi.SetTextSize(0.035 );
   if(binning.Contains("2016"))latex_Lumi.DrawLatex(0.60, 0.96, "35.9 fb^{-1} (13 TeV, 2016)");
   else if(binning.Contains("2017"))latex_Lumi.DrawLatex(0.60, 0.96, "41.3 fb^{-1} (13 TeV, 2017)");
   else if(binning.Contains("2018")) latex_Lumi.DrawLatex(0.60, 0.96, "59.7 fb^{-1} (13 TeV, 2018)");
-  else latex_Lumi.DrawLatex(0.60, 0.96, "137 fb^{-1} (13 TeV, Full Run2)");
+  else latex_Lumi.DrawLatex(0.60, 0.96, "138 fb^{-1} (13 TeV, Full Run2)");
   latex_channel.SetNDC();
   latex_channel.SetTextSize(0.08);
   if(channel.Contains("MuMu")) latex_channel.DrawLatex(0.2, 0.6, "#mu#mu OS + SS");
   else latex_channel.DrawLatex(0.2, 0.6, "ee OS + SS");
   
-  
-  dummy_ct_ForEachZP -> Draw("axissame");
+    dummy_ct_ForEachZP -> Draw("axissame");
   
   //==== Save
 

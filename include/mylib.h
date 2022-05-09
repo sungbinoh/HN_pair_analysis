@@ -7,7 +7,7 @@ using namespace std;
 const double alpha = 1 - 0.6827;
 const double signal_scale = 0.01;
 // == Debugging Mode
-bool debug = true;
+bool debug = false;
 bool blind_SR = false;
 int tag_year = 0;
 TString Cycle_name;
@@ -179,35 +179,35 @@ double get_DY_norm_SF(TString nameofhistogram){
   // -- Flavor Independent
   if(tag_year == 2016){
     if(nameofhistogram.Contains("0AK8")){
-      DY_norm = 0.887;
+      DY_norm = 0.875;
     }
     if(nameofhistogram.Contains("1AK8")){
-      DY_norm = 0.699;
+      DY_norm = 0.701;
     }
     if(nameofhistogram.Contains("2AK8")){
-      DY_norm = 0.558;
+      DY_norm = 0.583;
     }
   }
   if(tag_year == 2017){
     if(nameofhistogram.Contains("0AK8")){
-      DY_norm = 1.094;
+      DY_norm = 1.090;
     }
     if(nameofhistogram.Contains("1AK8")){
-      DY_norm = 1.059;
+      DY_norm = 1.042;
     }
     if(nameofhistogram.Contains("2AK8")){
-      DY_norm = 0.814;
+      DY_norm = 0.837;
     }
   }
   if(tag_year == 2018){
     if(nameofhistogram.Contains("0AK8")){
-      DY_norm = 1.107;
+      DY_norm = 1.093;
     }
     if(nameofhistogram.Contains("1AK8")){
-      DY_norm = 0.950;
+      DY_norm = 0.946;
     }
     if(nameofhistogram.Contains("2AK8")){
-      DY_norm = 0.977;
+      DY_norm = 0.959;
     }
   }
 
@@ -266,10 +266,11 @@ void Remove_Negative_Bins(TString current_histname){
   for(int i = 1; i <= N_bin; i++){
     double current_bin_content = mapfunc[current_histname] -> GetBinContent(i);
     if (current_bin_content < 0.000001){
+      //current_bin_content = 0.; // -- For table
       current_bin_content = 0.000001;
       double current_error = current_bin_content / 1.0;
       mapfunc[current_histname] -> SetBinContent(i, current_bin_content);
-      mapfunc[current_histname] -> SetBinError(i, 0.);
+      //mapfunc[current_histname] -> SetBinError(i, 0.); // -- For table
     }
   }
 }
@@ -398,6 +399,9 @@ void Write_syst_error(TString current_histname,  TString systematics, TString Cy
 
   last_bin_up = mapfunc[histname_Up + "rebin"] -> GetBinContent(N_bin - 1) + mapfunc[histname_Up + "rebin"] -> GetBinContent(N_bin);
   last_bin_down = mapfunc[histname_Down + "rebin"] -> GetBinContent(N_bin - 1) + mapfunc[histname_Down + "rebin"] -> GetBinContent(N_bin);
+
+  mapfunc[histname_Up + "rebin"] -> SetBinContent(N_bin - 1, last_bin_up);
+  mapfunc[histname_Down + "rebin"] -> SetBinContent(N_bin - 1, last_bin_down);
   
   // -- ADD year on syst name for correlated systematics over years 
   TString name_up = current_histname + "_" + current_sample + "_" + systematics + "Up";
@@ -473,10 +477,19 @@ void Remove_Syst_bin_for_Empty_central(TString histname, TString systematics, TS
   for(int i = 1; i <= N_bin; i++){
     double central_content = mapfunc[histname_central] -> GetBinContent(i);
     if(central_content < 0.0000011){
+
       mapfunc[histname_Up] -> SetBinContent(i, 0.000001);
       mapfunc[histname_Up] -> SetBinError(i, 0.);
       mapfunc[histname_Down] -> SetBinContent(i, 0.000001);
       mapfunc[histname_Down] -> SetBinError(i, 0.);
+
+      // -- For table
+      /*
+      mapfunc[histname_Up] -> SetBinContent(i, 0.);
+      mapfunc[histname_Up] -> SetBinError(i, 0.);
+      mapfunc[histname_Down] -> SetBinContent(i, 0.);
+      mapfunc[histname_Down] -> SetBinError(i, 0.);
+      */    
     }
   }
 }
@@ -530,6 +543,9 @@ void Estimate_PDF_Error(TString current_histname, TString Cycle_name, TString cu
   cout << "[Estimate_PDF_Error]" << endl;
   TString cycle_and_sample = Cycle_name + current_sample;
   TString histname_central = current_histname + "_central" + cycle_and_sample + "rebin"; // -- central hists are already rebinned
+  mapfunc[histname_central] -> SetBinContent(0, 0.);
+  mapfunc[histname_central] -> SetBinContent(N_bin, 0.);
+  double integ_central_hist = mapfunc[histname_central] -> Integral();
   
   // -- Rebin Hessian
   for(int i_err = 1; i_err < 101; i_err++){
@@ -568,7 +584,9 @@ void Estimate_PDF_Error(TString current_histname, TString Cycle_name, TString cu
     for(int i_err = 1; i_err < 101; i_err++){
       TString current_err_hist = current_histname + "_central_Hessian_" + TString::Itoa(i_err, 10) + cycle_and_sample + "rebin";
       double current_diff = mapfunc[histname_central] -> GetBinContent(i_bin) - mapfunc[current_err_hist] -> GetBinContent(i_bin);
+      double current_relative_diff = fabs(current_diff / mapfunc[histname_central] -> GetBinContent(i_bin));
       current_diff = pow(current_diff, 2);
+      if(current_relative_diff > 0.5) current_diff = 0;
       current_Hessian_err += current_diff;
     }
     
@@ -596,10 +614,19 @@ void Estimate_PDF_Error(TString current_histname, TString Cycle_name, TString cu
     mapfunc[PDF_Up] -> SetBinContent(i_bin, current_Up_content);
     mapfunc[PDF_Down] -> SetBinContent(i_bin, current_Down_content);
   }
-  
+
+  // -- Normalize syst hists
+  /*
+  double integ_up_hist = mapfunc[PDF_Up] -> Integral();
+  double integ_down_hist = mapfunc[PDF_Down] -> Integral();
+  mapfunc[PDF_Up] -> Scale(integ_central_hist / integ_up_hist);
+  mapfunc[PDF_Down] -> Scale(integ_central_hist / integ_down_hist);
+
+  cout << "cetral : " << integ_central_hist << ", PDF up : " << mapfunc[PDF_Up] -> Integral() << ", PDF down : " << mapfunc[PDF_Down] -> Integral() << endl; 
+  */
+  // -- Set Syst hist names
   mapfunc[PDF_Up] -> SetName(PDF_Up);
   mapfunc[PDF_Down] -> SetName(PDF_Down);
-
 }
 
 void Estimate_Scale_Error(TString current_histname, TString Cycle_name, TString current_sample, int N_bin, double binx[]){
@@ -607,6 +634,7 @@ void Estimate_Scale_Error(TString current_histname, TString Cycle_name, TString 
   cout << "[Estimate_Scale_Error]" << endl;
   TString cycle_and_sample = Cycle_name + current_sample;
   TString histname_central = current_histname + "_central" + cycle_and_sample + "rebin"; // -- central hists are already rebinned
+  double integ_central_hist = mapfunc[histname_central] -> Integral();
   
   // -- Rebin Scale Hists
   for(int i_err = 1; i_err < 9; i_err++){
@@ -666,8 +694,33 @@ void Estimate_Scale_Error(TString current_histname, TString Cycle_name, TString 
     mapfunc[Scale_Down] -> SetBinContent(i_bin,current_Down_content);
   }
 
+  // -- Normalize
+  /*
+  double integ_up_hist = mapfunc[Scale_Up] -> Integral();
+  double integ_down_hist = mapfunc[Scale_Down] -> Integral();
+  mapfunc[Scale_Up] -> Scale(integ_central_hist / integ_up_hist);
+  mapfunc[Scale_Down] -> Scale(integ_central_hist / integ_down_hist);
+  */
   mapfunc[Scale_Up] -> SetName(Scale_Up);
   mapfunc[Scale_Down] -> SetName(Scale_Down);
+
+}
+
+void Estimate_PDF_accep_Error(TString current_histname, TString Cycle_name, TString current_sample){
+  cout << "[Estimate_PDF_Error]" << endl;
+  TString cycle_and_sample = Cycle_name + current_sample;
+  TString histname_central = current_histname + "_central" + cycle_and_sample;
+  TString norm_central = "Norm_central" + cycle_and_sample;
+  double central_SR_norm = mapfunc[histname_central] -> Integral();
+  double central_norm = mapfunc[norm_central] -> GetBinContent(1);
+  double central_accep = central_SR_norm/central_norm;
+  cout << "[[Estimate_PDF_accep_Error]] central_norm : " << central_norm << endl;
+  for(int i_err = 1; i_err < 101; i_err++){
+    
+    TString current_err_hist = current_histname + "_central_Hessian_" + TString::Itoa(i_err, 10) + cycle_and_sample;
+    double current_norm = mapfunc[current_err_hist] -> Integral();
+  }
+  
 
 }
 

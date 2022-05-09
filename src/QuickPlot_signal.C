@@ -323,11 +323,12 @@ void QuickPlot_signal(int year=2018){
   
   //open_binning_file("binning_uniform_test.txt");
   //open_binning_file("binning_signal_vs_data.txt");
-  open_binning_file("binning_limit_merged.txt");
+  //open_binning_file("binning_limit_merged.txt");
   //open_binning_file("binning_test.txt");
-  open_binning_file("binning_2017_comparion.txt");
+  //open_binning_file("binning_2017_comparion.txt");
+  open_binning_file("binning_dilepton_charge.txt");
   outfile.close();
-  
+ 
 }
 
 

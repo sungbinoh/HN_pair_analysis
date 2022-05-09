@@ -85,6 +85,11 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   else if(nameofhistogram.Contains("DiEle")) current_data = DoubleEG;
   else return;
 
+  bool its_EMu = false;
+  if(nameofhistogram.Contains("EMu")){
+    its_EMu  = true;
+  }
+
 
   double N_DY = 0.;
   double N_MC = 0.;
@@ -123,7 +128,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
    
     if(nameofhistogram.Contains("DiMu")){
       if(nameofhistogram.Contains("0AK8")){
-	DY_norm_2016 = 0.812;
+	DY_norm_2016 = 0.811;
 	DY_norm_2017 = 1.095;
 	DY_norm_2018 = 1.127;
       }
@@ -133,28 +138,30 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
         DY_norm_2018 = 0.947;
       }
       if(nameofhistogram.Contains("2AK8")){
-        DY_norm_2016 = 0.604;
-        DY_norm_2017 = 0.747;
-        DY_norm_2018 = 0.997;
+        DY_norm_2016 = 0.600;
+        DY_norm_2017 = 0.742;
+        DY_norm_2018 = 0.996;
       }
     }
     if(nameofhistogram.Contains("DiEle")){
       if(nameofhistogram.Contains("0AK8")){
-        DY_norm_2016 = 0.962;
-        DY_norm_2017 = 1.093;
-        DY_norm_2018 = 1.087;
+        DY_norm_2016 = 0.939;
+        DY_norm_2017 = 1.084;
+        DY_norm_2018 = 1.059;
       }
       if(nameofhistogram.Contains("1AK8")){
-        DY_norm_2016 = 0.689;
-        DY_norm_2017 = 0.881;
-        DY_norm_2018 = 0.952;
+        DY_norm_2016 = 0.692;
+        DY_norm_2017 = 1.027;
+        DY_norm_2018 = 0.945;
       }
       if(nameofhistogram.Contains("2AK8")){
-        DY_norm_2016 = 0.511;
-        DY_norm_2017 = 0.881;
-        DY_norm_2018 = 0.957;
+        DY_norm_2016 = 0.565;
+        DY_norm_2017 = 0.931;
+        DY_norm_2018 = 0.921;
       }
     }
+
+    DY_norm = get_DY_norm_SF(nameofhistogram);
 
     GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2016"].at(0) + "2016") -> Scale(DY_norm_2016); 
     GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets2017"].at(0) + "2017") -> Scale(DY_norm_2017);
@@ -448,16 +455,17 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
 
   // -- Draw Signal
   Int_t signal_colour_array[] = {622, 632, 432, 600};
-  for(unsigned int i_signal = 0; i_signal < map_sample_names["Signal"].size(); i_signal++){
-    mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "2016"] -> Add(mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "2017"]);
-    mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "2016"] -> Add(mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "2018"]);
-    Rebin_with_overflow(nameofhistogram + map_sample_names["Signal"].at(i_signal) + "2016", N_bin, binx);
-    mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "2016rebin"] -> SetLineColor(signal_colour_array[i_signal]);
-    mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "2016rebin"] -> SetLineWidth(2);
-    maplegend[legend] -> AddEntry(mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "2016rebin"],  map_sample_names["Signal"].at(i_signal), "l");
-    mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "2016rebin"] -> Draw("histsame");
+  if(!its_EMu && !nameofhistogram.Contains("CR")){
+    for(unsigned int i_signal = 0; i_signal < map_sample_names["Signal"].size(); i_signal++){
+      mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "2016"] -> Add(mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "2017"]);
+      mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "2016"] -> Add(mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "2018"]);
+      Rebin_with_overflow(nameofhistogram + map_sample_names["Signal"].at(i_signal) + "2016", N_bin, binx);
+      mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "2016rebin"] -> SetLineColor(signal_colour_array[i_signal]);
+      mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "2016rebin"] -> SetLineWidth(2);
+      maplegend[legend] -> AddEntry(mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "2016rebin"],  map_sample_names["Signal"].at(i_signal), "l");
+      mapfunc[nameofhistogram + map_sample_names["Signal"].at(i_signal) + "2016rebin"] -> Draw("histsame");
+    }
   }
-
   
   
   // -- Set y-axis range
@@ -524,8 +532,8 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   mapfunc["pad2_template" + nameofhistogram] -> GetYaxis() -> SetTitleOffset(0.5);
   mapfunc["pad2_template" + nameofhistogram] -> GetYaxis() -> SetLabelSize(0.08);
   mapfunc["pad2_template" + nameofhistogram] -> GetYaxis() -> SetNdivisions(505);
-  mapfunc["pad2_template" + nameofhistogram] -> SetMinimum(0.5);
-  mapfunc["pad2_template" + nameofhistogram] -> SetMaximum(1.5);
+  mapfunc["pad2_template" + nameofhistogram] -> SetMinimum(0.0);
+  mapfunc["pad2_template" + nameofhistogram] -> SetMaximum(4.0);
   mapfunc["pad2_template" + nameofhistogram] -> SetStats(0);
   mapfunc["pad2_template" + nameofhistogram] -> Draw("hist");
   
@@ -925,8 +933,9 @@ void QuickPlotFullRun2_signal(int year=2019){
   
   //open_binning_file("binning_uniform_test.txt");
   //open_binning_file("binning_signal_vs_data.txt");
-  open_binning_file("binning_limit_merged.txt");
-
+  //open_binning_file("binning_limit_merged.txt");
+  open_binning_file("binning_dilepton_charge.txt");
+  //open_binning_file("binning_check_last_bin.txt");
   outfile.close();
   
 }

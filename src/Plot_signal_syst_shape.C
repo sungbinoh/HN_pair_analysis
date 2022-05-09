@@ -302,7 +302,7 @@ void Plot_signal_syst_shape(int year=2018){
   tag_year = year;
 
   map_sample_names["Signal"] = {"ZP2000_N200", "ZP3200_N600", "ZP4400_N600"};
-  map_sample_names["syst"] = {"PDF", ""}
+  map_sample_names["syst"] = {"PDF", ""};
   Cycle_name = "HN_pair_all_SkimTree_LRSMHighPt";
 
   open_binning_file("binning_limit_merged_mZp_2AK8_SR_DiEle.txt");

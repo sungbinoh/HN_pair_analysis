@@ -75,7 +75,7 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
   
   TString title_y;
   if(nameofhistogram.Contains("N")) title_y = "Number";
-  else title_y = "Events/bin";
+  else title_y = "Events";
 
   bool blind = false;
   blind = (nameofhistogram.Contains("SR")) && (!nameofhistogram.Contains("EMu"));
@@ -128,8 +128,10 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
   TString legend_list[4] = {"Other", "Non-prompt", "ttbar", "DYJets"};
   TString years[3] = {"2016", "2017", "2018"};
 
-  Int_t colour_array[] = {870, 632, 416, 400};
-
+  //Int_t colour_array[] = {870, 632, 416, 400}; // -- Original
+  //Int_t colour_array[] = {870, 901, 416, 400}; // -- For John's comment
+  //Int_t colour_array[] = {869, 901, 416, 400}; // -- Test for graylish blue
+  Int_t colour_array[] = {867, 901, 416, 393}; // -- Test for, more pastel Blue, darker Yellow and Green
   maphstack[hstack] = new THStack(hstack, "Stacked_" + nameofhistogram);
     
   for(int i_hist = 0; i_hist < 4; i_hist++){
@@ -406,9 +408,10 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
   latex_CMSPriliminary.SetNDC();
   latex_Lumi.SetNDC();
   latex_CMSPriliminary.SetTextSize(0.035);
-  latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
+  //latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
+  latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS}");
   latex_Lumi.SetTextSize(0.035);
-  latex_Lumi.DrawLatex(0.7, 0.96, "137 fb^{-1} (13 TeV)");
+  latex_Lumi.DrawLatex(0.7, 0.96, "138 fb^{-1} (13 TeV)");
 
   TLatex latex_channel;
   latex_channel.SetTextSize(0.035);
@@ -567,7 +570,7 @@ void overlap_ttbar(TString NAK8){
   TString nameofhistogram = "mZp_" + NAK8;
   TString title_y;
   if(nameofhistogram.Contains("N")) title_y = "Number";
-  else title_y = "Events/bin";
+  else title_y = "Events";
 
   TString canvas = nameofhistogram;
   TString legend = nameofhistogram;
@@ -641,9 +644,10 @@ void overlap_ttbar(TString NAK8){
   latex_CMSPriliminary.SetNDC();
   latex_Lumi.SetNDC();
   latex_CMSPriliminary.SetTextSize(0.035);
-  latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
+  //latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
+  latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS}");
   latex_Lumi.SetTextSize(0.035);
-  latex_Lumi.DrawLatex(0.7, 0.96, "137 fb^{-1} (13 TeV)");
+  latex_Lumi.DrawLatex(0.7, 0.96, "138 fb^{-1} (13 TeV)");
   
   TString pdfname;
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");

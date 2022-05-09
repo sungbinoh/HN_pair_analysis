@@ -4,7 +4,7 @@ void open_files(TString histname, int year){
   
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
   //TString signal_list_file_path=WORKING_DIR+"/script/Signal_list/MC_signal_" + TString::Itoa(tag_year,10) + ".txt";
-  TString signal_list_file_path=WORKING_DIR+"/script/Signal_list/MC_signal_2018.txt";
+  TString signal_list_file_path=WORKING_DIR+"/script/Signal_list/MC_signal_table.txt";
   TString root_file_path = WORKING_DIR+"/output/LimitTemplate/" + TString::Itoa(year,10) + "/";
   char line[500];
   ifstream signal_file;
@@ -25,7 +25,7 @@ void open_files(TString histname, int year){
     while(!signal_file.eof()){
       signal_file.getline(line, 500);
       
-      cout << line << endl;
+      //cout << line << endl;
       TString this_line = line;
       TString channel = "";
       TString channel2 = "";
@@ -40,7 +40,7 @@ void open_files(TString histname, int year){
       if(!this_line.Contains(channel2)) continue;
       
       TString current_input = root_file_path + "shape_" + histname + "_" + this_line + ".root";
-      //cout << "current_input : " << current_input << endl;
+      cout << "current_input : " << current_input << endl;
       TFile *current_input_file = new TFile ((current_input)) ;
       //TH1F *obs_hist = (TH1F *)current_input_file->Get(histname);
       //double obs = obs_hist -> Integral();
@@ -75,7 +75,7 @@ void open_files(TString histname, int year){
 	    //str_current_hist_Down = histname + "_" + bkgs[i] + "_" + systematics_comparison[j] + "Down";
 	  }
 	  
-	  cout << "[open_files] str_current_hist_Up : " << str_current_hist_Up << endl;
+	  //cout << "[open_files] str_current_hist_Up : " << str_current_hist_Up << endl;
 	  TH1F *current_hist_Up = (TH1F *)current_input_file->Get(str_current_hist_Up);
 	  TH1F *current_hist_Down = (TH1F *)current_input_file->Get(str_current_hist_Down);
 	  double current_Up = current_hist_Up -> Integral();
@@ -97,8 +97,11 @@ void open_files(TString histname, int year){
 	}
       }
 
-
+      double ElectronScale_syst = 0., ElectronSmear_syst = 0.;
+      double MuonIDSF_syst = 0., MuonISOSFo_syst = 0.;
+      
       for(int j = 0; j < N_syst_comparison; j++){
+	//cout << systematics_comparison[j] << endl;
 	TString str_current_hist_Up = histname + "_" + this_line + "_" + systematics_comparison[j] + "Up";
 	TString str_current_hist_Down = histname + "_" + this_line + "_" + systematics_comparison[j] + "Down";
 	if(systematics_comparison[j].Contains("TriggerSF")){
@@ -106,6 +109,7 @@ void open_files(TString histname, int year){
 	  str_current_hist_Down = histname + "_" + this_line + "_" + systematics_comparison[j] + TString::Itoa(year,10) + "Down";
 	}
 	
+	//if(systematics_comparison[j].Contains("Electron") && channel2 == "MuMu") cout << "str_current_hist_Up : " << str_current_hist_Up << endl;	
 	TH1F *current_hist_Up = (TH1F *)current_input_file->Get(str_current_hist_Up);
 	TH1F *current_hist_Down = (TH1F *)current_input_file->Get(str_current_hist_Down);
 	double current_Up = current_hist_Up -> Integral();
@@ -116,7 +120,13 @@ void open_files(TString histname, int year){
 	current_syst = pow(current_syst, 0.5);
 	current_syst = current_syst * 100.;
 
-	double new_min, new_max;
+	//if(systematics_comparison[j].Contains("Electron") || systematics_comparison[j].Contains("Muon")) cout <<systematics_comparison[j] + channel2 + TString::Itoa(year,10) << ", current_syst : " << current_syst << endl;
+	if(systematics_comparison[j]=="ElectronScale") ElectronScale_syst = current_syst;
+	if(systematics_comparison[j]=="ElectronSmear") ElectronSmear_syst = current_syst;
+	if(systematics_comparison[j]=="MuonIDSF") MuonIDSF_syst = current_syst;
+	if(systematics_comparison[j]=="MuonISOSF") MuonIDSF_syst = current_syst;
+
+	double new_min = 100., new_max = 0.;
 	if(map_syst_table[systematics_comparison[j] + channel2 + TString::Itoa(year,10)].at(0) > current_syst) new_min = current_syst;
 	else new_min = map_syst_table[systematics_comparison[j] + channel2 + TString::Itoa(year,10)].at(0);
 
@@ -124,8 +134,30 @@ void open_files(TString histname, int year){
 	else new_max = map_syst_table[systematics_comparison[j] + channel2 + TString::Itoa(year,10)].at(1);
 
 	map_syst_table[systematics_comparison[j] + channel2 + TString::Itoa(year,10)] = {new_min, new_max};
+	//cout << systematics_comparison[j] + channel2 + TString::Itoa(year,10) << ", " << new_min << ", " << new_max << endl;
       }
-
+      
+      /*
+      if(fabs(ElectronScale_syst - ElectronSmear_syst) > 0.0000000001 && channel2 == "MuMu"){
+	cout << this_line << ", " << fabs(ElectronScale_syst - ElectronSmear_syst) << endl;
+      }
+      */
+      /*
+      if(ElectronScale_syst > 0.001 && channel2 == "MuMu"){
+	if(fabs(ElectronScale_syst - ElectronSmear_syst) > 0.0000000001 && channel2 == "MuMu"){
+	  cout << this_line << ", " << fabs(ElectronScale_syst - ElectronSmear_syst) << endl;
+	}
+	//cout << this_line << ", " << ElectronScale_syst << endl;
+      }      
+      
+      if(MuonIDSF_syst > 0.001 && channel2 == "EE"){
+	if(fabs(MuonIDSF_syst - MuonISOSFo_syst) > 0.00000001 && channel2 == "EE"){
+	  cout << this_line << ", " <<fabs(MuonIDSF_syst - MuonISOSFo_syst) << endl;
+	  
+	  //cout << this_line << ", " << MuonIDSF_syst << endl;
+	}
+      }
+      */
       TString PDF_uncertainty[2] = {"PDF", "Scale"};
       for(int j = 0; j < 2; j++){
 
@@ -152,17 +184,16 @@ void open_files(TString histname, int year){
         map_syst_table[PDF_uncertainty[j] + channel2 + TString::Itoa(year,10)] = {new_min, new_max};
       }
 
-
-      
+      current_input_file -> Close();
       abort++;
-      if(abort>5) break;
+      //if(abort>1) break;
     }
   }
 }
 
 void open_binning_file(TString filename, int year){
 
-  cout << "[open_binning_file] start to open binngin file : " << filename << endl;
+  //cout << "[open_binning_file] start to open binngin file : " << filename << endl;
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
   TString binning_file_path=WORKING_DIR+"/script/"+filename;
   ifstream data_file;
@@ -172,7 +203,7 @@ void open_binning_file(TString filename, int year){
   if(data_file.is_open()){
     while(!data_file.eof()){
       data_file.getline(line, 500);
-      if(debug) cout << line << endl;
+      //if(debug) cout << line << endl;
       TString this_line = line;
       if(this_line.Contains("#")) continue;
 
@@ -180,14 +211,14 @@ void open_binning_file(TString filename, int year){
       int N_line_part = tx -> GetEntries();
       if(N_line_part < 1) continue;
       if(debug){
-        cout << "[[open_binning_file]] histname : " << ((TObjString *)(tx->At(0)))->String() << endl;
-        cout << "[[open_binning_file]] binning : " << ((TObjString *)(tx->At(1)))->String() << endl;
+        //cout << "[[open_binning_file]] histname : " << ((TObjString *)(tx->At(0)))->String() << endl;
+        //cout << "[[open_binning_file]] binning : " << ((TObjString *)(tx->At(1)))->String() << endl;
       }
 
       TString current_histname = ((TObjString *)(tx->At(0)))->String();
-      if(debug) cout << "[[open_binning_file]] current_histname : " << current_histname << endl;
+      //if(debug) cout << "[[open_binning_file]] current_histname : " << current_histname << endl;
       
-      cout << "[[open_binning_file]] current_histname : " << current_histname << endl;
+      //cout << "[[open_binning_file]] current_histname : " << current_histname << endl;
 
       open_files(current_histname + "_DYreweight", year);
     }
@@ -241,9 +272,9 @@ void MakeSystematicTable_FullRun2(int ahahah){
 
   }
    
-  open_binning_file("binning_limit_merged.txt", 2016);
-  open_binning_file("binning_limit_merged.txt", 2017);
-  open_binning_file("binning_limit_merged.txt", 2018);
+  open_binning_file("binning_table.txt", 2016);
+  open_binning_file("binning_table.txt", 2017);
+  open_binning_file("binning_table.txt", 2018);
 
   for(int i = 0; i < 4; i++){
     for(int j = 0; j < N_syst_comparison; j++){
@@ -372,7 +403,7 @@ void MakeSystematicTable_FullRun2(int ahahah){
   file_syst_table << "\\label{tab:syst_ee}" << endl;
   file_syst_table << "\\resizebox{\\textwidth}{!}{" << endl;
   file_syst_table << "\\begin{tabular}{l l l l l l l}" << endl;
-  file_syst_table << "\\hline\\hline" << endl;
+  file_syst_table << "\\hline" << endl;
   file_syst_table << "\\multirow{2}{*}{Source} & \\multirow{2}{*}{Bkgd./Signal process} & \\multirow{2}{*}{Year-to-year treatment} & $\\Pe\\Pe$ bkgd. & $\\Pe\\Pe$ signal & $\\mu\\mu$ bkgd. & $\\mu\\mu$ signal \\\\" << endl;
   file_syst_table << "&                                       &     &  (\\%)           & (\\%)            & (\\%)           & (\\%) \\\\" << endl;
   file_syst_table << "\\hline" << endl;
@@ -420,12 +451,20 @@ void MakeSystematicTable_FullRun2(int ahahah){
     if(PDF_uncertainty[j] == "Scale"){
       file_syst_table << " (${\\mu}_{R}, {\\mu}_{F}$) ";
     }
-    file_syst_table << " & Signal & Correlated & \\NA & " << map_syst_table[PDF_uncertainty[j] + "EE"].at(0) << " -- " << map_syst_table[PDF_uncertainty[j] + "EE"].at(1) << " & \\NA & ";
-    file_syst_table << map_syst_table[PDF_uncertainty[j] + "MuMu"].at(0) << " -- " << map_syst_table[PDF_uncertainty[j] + "MuMu"].at(1) << "\\\\" << endl;
+    file_syst_table << " & Signal & Correlated & \\NA & " ;
+    if(map_syst_table[PDF_uncertainty[j] + "EE"].at(1) > 0.1){
+      file_syst_table << map_syst_table[PDF_uncertainty[j] + "EE"].at(0) << " -- " << map_syst_table[PDF_uncertainty[j] + "EE"].at(1) << " & \\NA & ";
+    }
+    else file_syst_table << " $< 0.1$ & \\NA &";
+    
+    if(map_syst_table[PDF_uncertainty[j] + "MuMu"].at(1) > 0.1){
+      file_syst_table << map_syst_table[PDF_uncertainty[j] + "MuMu"].at(0) << " -- " << map_syst_table[PDF_uncertainty[j] + "MuMu"].at(1) << " \\\\ " << endl;
+    }
+    else file_syst_table << " $< 0.1$ \\\\" << endl;
   }
   file_syst_table << "Nonprompt norm. & Nonprompt & Correlated & 100 & \\NA & 100 & \\NA  \\\\" << endl;
   file_syst_table << "Rare SM norm. & Others & Correlated & 50 & \\NA & 50 & \\NA \\\\" << endl;
-  file_syst_table << "\\hline\\hline" << endl;
+  file_syst_table << "\\hline" << endl;
   file_syst_table << "\\end{tabular}" << endl;
   file_syst_table << "}" << endl;
   file_syst_table << "\\end{table}" << endl;

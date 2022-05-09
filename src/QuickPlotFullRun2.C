@@ -154,7 +154,7 @@ void draw_syst_lines(TString current_histname, int N_bin, double x1_template, do
   latex_CMSPriliminary.SetTextSize(0.035);
   latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
   latex_Lumi.SetTextSize(0.035);
-  latex_Lumi.DrawLatex(0.7, 0.96, "137 fb^{-1} (13 TeV)");
+  latex_Lumi.DrawLatex(0.7, 0.96, "138 fb^{-1} (13 TeV)");
 
   TString pdfname;
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
@@ -699,7 +699,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
   latex_CMSPriliminary.SetTextSize(0.035);
   latex_CMSPriliminary.DrawLatex(0.15, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
   latex_Lumi.SetTextSize(0.035);
-  TString total_lumi = "137";
+  TString total_lumi = "138";
   latex_Lumi.DrawLatex(0.7, 0.96, total_lumi + " fb^{-1} (13 TeV)");
 
   if(debug) cout << "9" << endl;
@@ -987,6 +987,8 @@ void QuickPlotFullRun2(int year=2019){
   TString binning_file = "binning_limit_postfit.txt";
   cout << "binning_file : " << binning_file << endl;
 
+  open_binning_file("binning_dilepton_charge.txt");
+  /*
   open_binning_file(binning_file);
   open_binning_file("binning_limit_merged_mZp_2AK8_SR_DiEle.txt");
   open_binning_file("binning_limit_merged_mZp_1AK8_SR_DiEle.txt");
@@ -994,11 +996,12 @@ void QuickPlotFullRun2(int year=2019){
   open_binning_file("binning_limit_merged_mZp_2AK8_SR_DiMu.txt");
   open_binning_file("binning_limit_merged_mZp_1AK8_SR_DiMu.txt");
   open_binning_file("binning_limit_merged_mZp_0AK8_SR_DiMu.txt");
+  
 
   overlap_ttbar("0AK8");
   overlap_ttbar("1AK8");
   overlap_ttbar("2AK8");
-
+  */
   outfile.close();
   
 }

@@ -238,7 +238,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
     if(GetHist(nameofhistogram + Cycle_name + current_data) )N_Data = GetHist(nameofhistogram + Cycle_name + current_data) -> Integral();
     
     DY_norm = (N_DY + N_Data - N_MC) / N_DY;
-
+    /*
     if(tag_year == 2016){
       if(nameofhistogram.Contains("0AK8")){
         if(nameofhistogram.Contains("DiMu")){
@@ -317,7 +317,7 @@ void make_histogram(TString nameofhistogram, TString current_histname, int N_bin
         }
       }
     }
-
+    */
     GetHist(nameofhistogram + Cycle_name + map_sample_names["DYJets"].at(0)) -> Scale(DY_norm); 
     
     outfile << nameofhistogram << "'s DY_norm : " << DY_norm << endl;
@@ -955,12 +955,13 @@ void QuickPlot(int year=2018){
   Cycle_name = "HN_pair_all_SkimTree_LRSMHighPt";
 
   
-  open_binning_file("binning_uniform_test.txt");
+  //open_binning_file("binning_uniform_test.txt");
   //open_binning_file("binning_uniform_few.txt");
   //open_binning_file("binning_Zp.txt");
   //open_binning_file("binning_mZp.txt");
   //open_binning_file("binning_limit_CR.txt");
   //open_binning_file("binning_limit.txt");
+  open_binning_file("binning_dilepton_charge.txt");
   outfile.close();
   
 }

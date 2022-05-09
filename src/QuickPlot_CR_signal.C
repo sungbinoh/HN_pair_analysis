@@ -1010,19 +1010,20 @@ void QuickPlot_CR_signal(int year=2018){
   
   //open_binning_file("binning_limit_postfit.txt");
   
-  /*
+  
   open_binning_file("binning_limit_merged_mZp_2AK8_SR_DiEle.txt");
   open_binning_file("binning_limit_merged_mZp_1AK8_SR_DiEle.txt");
   open_binning_file("binning_limit_merged_mZp_0AK8_SR_DiEle.txt");
-  */
-  //open_binning_file("binning_limit_merged_mZp_2AK8_SR_DiMu.txt");
-  //open_binning_file("binning_limit_merged_mZp_1AK8_SR_DiMu.txt");
-  //open_binning_file("binning_limit_merged_mZp_0AK8_SR_DiMu.txt");
+  
+  open_binning_file("binning_limit_merged_mZp_2AK8_SR_DiMu.txt");
+  open_binning_file("binning_limit_merged_mZp_1AK8_SR_DiMu.txt");
+  open_binning_file("binning_limit_merged_mZp_0AK8_SR_DiMu.txt");
   
   //open_binning_file("binning_2017_comparion.txt");
-  open_binning_file("binning_problematic.txt");
+  //open_binning_file("binning_problematic.txt");
   //open_binning_file("binning_signal_vs_data.txt");
-  
+  open_binning_file("binning_dilepton_charge.txt");
+
   outfile.close();
   
 }

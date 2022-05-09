@@ -4,6 +4,7 @@
 void openfile(TString binning, TString channel){
   
   cout << "[openfile] " << binning + "_" + channel << endl;
+  gStyle->SetLineWidth(2);
 
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
   TString root_file_path = WORKING_DIR+"/plots/limit/" + binning + "/" + channel + "/";
@@ -35,13 +36,15 @@ void make_histogram(TString channel){
 
   TH1D *dummy_ct_ForEachZP = new TH1D("dummy_ct_ForEachZP", "", 6000, 0., 6000.);
   hist_axis(dummy_ct_ForEachZP);
-  dummy_ct_ForEachZP->GetYaxis()->SetLabelSize(0.04);
+  dummy_ct_ForEachZP->GetYaxis()->SetLabelSize(0.05);
   dummy_ct_ForEachZP->GetYaxis()->SetTitleSize(0.06);
   dummy_ct_ForEachZP->GetYaxis()->SetTitleOffset(1.25);
   dummy_ct_ForEachZP->Draw("hist");
   dummy_ct_ForEachZP->GetYaxis()->SetRangeUser(100., 2500.);
   dummy_ct_ForEachZP->GetYaxis()->SetTitle("m_{N} (GeV)");
+  dummy_ct_ForEachZP->GetXaxis()->SetLabelSize(0.045);
   dummy_ct_ForEachZP->GetXaxis()->SetRangeUser(400., 5000.);
+  dummy_ct_ForEachZP->GetXaxis()->SetTitleSize(0.06);
   dummy_ct_ForEachZP->GetXaxis()->SetTitle("m_{Z'} (GeV)");
 
 
@@ -55,10 +58,10 @@ void make_histogram(TString channel){
   // -- 868 = kAzure + 8, 632 = kRed, 416 = kGreen, 400 = kYellow, 800 = kOrange
   Int_t signal_colour_array[] = {868, 400, 416, 800};
 
-  TLegend *lg = new TLegend(0.2, 0.7, 0.6, 0.90);
+  TLegend *lg = new TLegend(0.2, 0.52, 0.7, 0.93);
   lg->SetBorderSize(0);
   lg->SetFillStyle(0);
-  lg->AddEntry(gr_Z2N, "m_{N} = m_{Z'} / 2 ", "l");
+  //lg->AddEntry(gr_Z2N, "m_{N} = m_{Z'} / 2 ", "l");
 
   TGraph *gr_central_fill = (TGraph*)map_gr[map_sample_names["limit"].at(0) + channel]->Clone();
   gr_central_fill -> SetFillColor(kAzure + 8);
@@ -99,8 +102,8 @@ void make_histogram(TString channel){
   map_gr[map_sample_names["limit"].at(0) + channel + "_atlas"] -> SetLineWidth(3);
   map_gr[map_sample_names["limit"].at(0) + channel + "_atlas"] -> SetFillColor(kAzure + 8);
   map_gr[map_sample_names["limit"].at(0) + channel + "_atlas"] -> SetLineColor(kRed);
-  map_gr[map_sample_names["limit"].at(0) + channel + "_atlas"] -> Draw("lsame");
-  lg -> AddEntry(map_gr[map_sample_names["limit"].at(0) + channel + "_atlas"], "ATLAS 8 TeV", "l");
+  //map_gr[map_sample_names["limit"].at(0) + channel + "_atlas"] -> Draw("lsame");
+  //lg -> AddEntry(map_gr[map_sample_names["limit"].at(0) + channel + "_atlas"], "ATLAS 8 TeV", "l");
    
   map_gr[map_sample_names["limit"].at(0) + channel + "_obs"] -> SetLineWidth(3);
   map_gr[map_sample_names["limit"].at(0) + channel + "_obs"] -> SetLineColor(kBlack);
@@ -109,19 +112,23 @@ void make_histogram(TString channel){
 
   lg->Draw("same");
 
-  TLatex latex_CMSPriliminary, latex_Lumi, latex_channel;
+  TLatex latex_CMSPriliminary, latex_Lumi, latex_channel, latex_xy;
   latex_CMSPriliminary.SetNDC();
   latex_Lumi.SetNDC();
   latex_CMSPriliminary.SetTextSize(0.035);
-  latex_CMSPriliminary.DrawLatex(0.16, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
+  //latex_CMSPriliminary.DrawLatex(0.16, 0.96, "#font[62]{CMS} #font[42]{#it{#scale[0.8]{Preliminary}}}");
+  latex_CMSPriliminary.DrawLatex(0.16, 0.96, "#font[62]{CMS}");
   latex_Lumi.SetTextSize(0.035 );
-  latex_Lumi.DrawLatex(0.60, 0.96, "137 fb^{-1} (13 TeV, Full Run2)");
+  latex_Lumi.DrawLatex(0.60, 0.96, "138 fb^{-1} (13 TeV, Full Run2)");
   latex_channel.SetNDC();
-  latex_channel.SetTextSize(0.08);
-  if(channel.Contains("MuMu")) latex_channel.DrawLatex(0.2, 0.6, "#mu#mu OS + SS");
-  else latex_channel.DrawLatex(0.2, 0.6, "ee OS + SS");
+  latex_channel.SetTextSize(0.05);
+  if(channel.Contains("MuMu")) latex_channel.DrawLatex(0.22, 0.45, "#mu#mu OS + SS");
+  else latex_channel.DrawLatex(0.22, 0.45, "#font[42]{ee} OS + SS");
   dummy_ct_ForEachZP -> Draw("axissame");
-  
+  latex_xy.SetNDC();
+  latex_xy.SetTextSize(0.05);
+  latex_xy.DrawLatex(0.70, 0.65, "m_{N} = m_{Z'} / 2");
+
   TString pdfname;
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
   pdfname = WORKING_DIR + "/plots/limit/comparison/";

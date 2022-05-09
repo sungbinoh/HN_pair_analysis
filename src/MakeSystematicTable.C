@@ -4,7 +4,7 @@ void open_files(TString histname){
   
   TString WORKING_DIR = getenv("PLOTTER_WORKING_DIR");
   //TString signal_list_file_path=WORKING_DIR+"/script/Signal_list/MC_signal_" + TString::Itoa(tag_year,10) + ".txt";
-  TString signal_list_file_path=WORKING_DIR+"/script/Signal_list/MC_signal_2018.txt";
+  TString signal_list_file_path=WORKING_DIR+"/script/Signal_list/MC_signal_table.txt";
   TString root_file_path = WORKING_DIR+"/output/LimitTemplate/" + TString::Itoa(tag_year,10) + "/";
   char line[500];
   ifstream signal_file;
@@ -15,9 +15,9 @@ void open_files(TString histname){
   TString bkgs[4] = {"DYJets_MG_HT", "TT_powheg", "fake", "VV"};
 
   double lumi_error = 1.;
-  if(tag_year == 2016) lumi_error = 1.025;
-  if(tag_year == 2017) lumi_error = 1.023;
-  if(tag_year == 2018) lumi_error = 1.025;
+  if(tag_year == 2016) lumi_error = 1.018;
+  if(tag_year == 2017) lumi_error = 1.018;
+  if(tag_year == 2018) lumi_error = 1.018;
   
   if(signal_file.is_open()){
 
@@ -219,52 +219,53 @@ void MakeSystematicTable(int year=2018){
 
   }
    
-  open_binning_file("binning_limit_merged.txt");
+  open_binning_file("binning_table.txt");
 
-  TString systematics_table[N_syst] = {"ElectronScale",
-				       "ElectronSmear",
-				       "JetsRes",
-				       "JetsScale",
-				       //"SD Mass Res",
-				       "SD Mass Scale",
-				       "PU Reweight",
-				       "MuonScale",
-				       "MuonSmear",
-				       "L1 Prefire",
-				       "MuonRecoSF",
-				       "MuonIDSF",
-				       "MuonISOSF",
-				       "MuonTriggerSF",
-				       "ElectronRecoSF",
-				       "ElectronIDSF",
-				       "ElectronTriggerSF",
-				       "ZPtRw",
-  };  
-  
-  TString syst_correlation[N_syst] = {"Correlated",
-				      "Correlated",
-				      "Correlated",
-				      "Correlated",
-				      //"Correlated",
-				      "Correlated",
-				      "Correlated",
-				      "Correlated",
-				      "Correlated",
-				      "Correlated",
-				      "Correlated",
-				      "Correlated",
-				      "Correlated",
-				      "Unco.",
-				      "Correlated",
-				      "Correlated",
-				      "Unco.",
-				      "Correlated",
+
+  TString systematics_table[N_syst] = {"Electron Momentum Scale",
+                                       "Electron Momentum Smear",
+                                       "Jet Energy Resolution",
+                                       "Jet Energy Scale",
+                                       //"SD Mass Res
+                                       "Soft drop Mass Scale",
+                                       "PU Reweight",
+                                       "Muon Momentum Scale",
+                                       //"Muon smear
+                                       "L1 Prefire",
+                                       "Muon Reconstruction SF",
+                                       "Muon ID SF",
+                                       "Muon Isolation SF",
+                                       "Muon Trigger SF",
+                                       "Electron Reconstruction SF",
+                                       "Electron ID SF",
+                                       "Electron Trigger SF",
+                                       "Z Pt Reweight",
   };
-  
+
+  TString syst_correlation[N_syst] = {"Correlated",
+                                      "Correlated",
+                                      "Correlated",
+                                      "Correlated",
+                                      //"Correlated
+                                      "Correlated",
+                                      "Correlated",
+                                      "Correlated",
+                                      //"Not Done
+                                      "Correlated",
+                                      "Correlated",
+                                      "Correlated",
+                                      "Correlated",
+				      "Uncorrelated",
+                                      "Correlated",
+                                      "Correlated",
+                                      "Uncorrelated",
+                                      "Correlated",
+  };
+
   ofstream file_syst_table("./output/latex/syst_table_" + TString::Itoa(tag_year,10) + ".tex", ios::trunc);
 
-  double lumi_error = 2.5;
-  if(tag_year == 2017) lumi_error = 2.3;
+  double lumi_error = 1.8;
+  if(tag_year == 2017) lumi_error = 1.8;
 
   file_syst_table << "\\begin{table}"<< endl;
   file_syst_table << "\\centering" << endl;

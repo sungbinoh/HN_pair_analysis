@@ -26,7 +26,7 @@ END
 #root -l -b -q "src/Limit_signal_injection.C(6)"
 
 # 3AK8 CRs obs
-:<<END
+#:<<END
 root -l -b -q "src/QuickLimit_obs.C(0)"
 root -l -b -q "src/QuickLimit_obs.C(1)"
 root -l -b -q "src/QuickLimit_obs.C(2)"
@@ -48,13 +48,29 @@ root -l -b -q "src/QuickLimit_obs.C(17)"
 root -l -b -q "src/QuickLimit_obs.C(18)"
 root -l -b -q "src/QuickLimit_obs.C(19)"
 
+
+
 scp -r ./plots/limit suoh@147.47.242.44:/home/suoh/Dropbox/HN_pair/
-END
+#END
+#root -l -b -q "src/QuickLimit_obs.C(10)"
+#scp -r ./plots/limit/2AK8/EE suoh@147.47.242.44:/home/suoh/Dropbox/HN_pair/limit/2AK8/
+
 
 # -- Comparison
 root -l -b -q "src/Quick_Contour_overlap_obs.C(0)"
 
 scp -r ./plots/limit/comparison suoh@147.47.242.44:/home/suoh/Dropbox/HN_pair/limit/
+
+#root -l -b -q src/QuickSignificance.C"(0)"
+#root -l -b -q src/QuickSignificance.C"(1)"
+#root -l -b -q src/QuickLimit_ratio.C"(0)"
+#root -l -b -q src/QuickLimit_ratio.C"(1)"
+
+#scp -r ./plots/limit/Significance suoh@147.47.242.44://home/suoh/Dropbox/HN_pair/limit/
+
+# -- Check exclusion values
+#root -l -b -q "src/QuickLimit_obs.C(3)" # -- MuMu
+#root -l -b -q "src/QuickLimit_obs.C(7)" # -- EE
 
 
 #root -l -b -q src/Comparison_Hybrid_Asym.C
