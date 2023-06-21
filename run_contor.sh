@@ -50,7 +50,7 @@ root -l -b -q "src/QuickLimit_obs.C(19)"
 
 
 
-scp -r ./plots/limit suoh@147.47.242.44:/home/suoh/Dropbox/HN_pair/
+#scp -r ./plots/limit suoh@147.47.242.44:/home/suoh/Dropbox/HN_pair/
 #END
 #root -l -b -q "src/QuickLimit_obs.C(10)"
 #scp -r ./plots/limit/2AK8/EE suoh@147.47.242.44:/home/suoh/Dropbox/HN_pair/limit/2AK8/
@@ -59,7 +59,7 @@ scp -r ./plots/limit suoh@147.47.242.44:/home/suoh/Dropbox/HN_pair/
 # -- Comparison
 root -l -b -q "src/Quick_Contour_overlap_obs.C(0)"
 
-scp -r ./plots/limit/comparison suoh@147.47.242.44:/home/suoh/Dropbox/HN_pair/limit/
+#scp -r ./plots/limit/comparison suoh@147.47.242.44:/home/suoh/Dropbox/HN_pair/limit/
 
 #root -l -b -q src/QuickSignificance.C"(0)"
 #root -l -b -q src/QuickSignificance.C"(1)"

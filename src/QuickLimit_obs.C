@@ -286,15 +286,15 @@ void QuickLimit_obs(int xxx=0){
     TH1D *hist_dummy = new TH1D("hist_dummy", "", 5000, 0., 5000.);
     hist_axis(hist_dummy);
     hist_dummy->Draw("hist");
-    hist_dummy->GetYaxis()->SetRangeUser(1E-6,100);
+    hist_dummy->GetYaxis()->SetRangeUser(1E-5,100);
     //hist_dummy->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z')BR(Z' #rightarrow NN #rightarrow ee) (pb)");
     hist_dummy->GetYaxis()->SetTitleSize(0.04);
     hist_dummy->GetYaxis()->SetTitleOffset(1.5);
     if(channel == "EE"){
-      hist_dummy->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z')BR(Z' #rightarrow NN #rightarrow eejjjj) (pb)");
+      hist_dummy->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z')BF(Z' #rightarrow NN #rightarrow eejjjj) (pb)");
     }
     if(channel == "MuMu"){
-      hist_dummy->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z')BR(Z' #rightarrow NN #rightarrow #mu#mujjjj) (pb)");
+      hist_dummy->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z')BF(Z' #rightarrow NN #rightarrow #mu#mujjjj) (pb)");
     }
     hist_dummy->GetXaxis()->SetRangeUser(hnmasses.at(0),hnmasses.at(hnmasses.size()-1));
     hist_dummy->GetXaxis()->SetTitle("m_{N} (GeV)");
@@ -350,9 +350,16 @@ void QuickLimit_obs(int xxx=0){
     
     out->cd();
     Theory_for_this_mZP->SetName("Zp"+TString::Itoa(mZP,10)+"_Theory");
-    Limit_for_this_mZP->SetName("Zp"+TString::Itoa(mZP,10)+"_Limit");
+    Limit_for_this_mZP_obs->SetName("Zp"+TString::Itoa(mZP,10)+"_Limit_Observed");
+    Limit_for_this_mZP->SetName("Zp"+TString::Itoa(mZP,10)+"_Limit_Expected");
+    Limit_for_this_mZP_68_band->SetName("Zp"+TString::Itoa(mZP,10)+"_Limit_Expected_1sigma");
+    Limit_for_this_mZP_95_band->SetName("Zp"+TString::Itoa(mZP,10)+"_Limit_Expected_2sigma");
+
     Theory_for_this_mZP->Write();
+    Limit_for_this_mZP_obs->Write();
     Limit_for_this_mZP->Write();
+    Limit_for_this_mZP_68_band->Write();
+    Limit_for_this_mZP_95_band->Write();
 
     c1->Close();
 
@@ -548,7 +555,7 @@ void QuickLimit_obs(int xxx=0){
     TH1D *hist_dummy = new TH1D("hist_dummy", "", 5000, 0., 5000.);
     hist_axis(hist_dummy);
     hist_dummy->Draw("hist");
-    hist_dummy->GetYaxis()->SetRangeUser(1E-6,100);
+    hist_dummy->GetYaxis()->SetRangeUser(1E-5,100);
     hist_dummy->GetYaxis()->SetTitle("#sigma (pb)");
     hist_dummy->GetYaxis()->SetTitleSize(0.04);
     hist_dummy->GetYaxis()->SetTitleOffset(1.7);
@@ -556,10 +563,10 @@ void QuickLimit_obs(int xxx=0){
     hist_dummy->GetXaxis()->SetLabelSize(0.045);
 
     if(channel == "EE"){
-      hist_dummy->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z')BR(Z' #rightarrow NN #rightarrow eejjjj) (pb)");
+      hist_dummy->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z')BF(Z' #rightarrow NN #rightarrow eejjjj) (pb)");
     }
     if(channel == "MuMu"){
-      hist_dummy->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z')BR(Z' #rightarrow NN #rightarrow #mu#mujjjj) (pb)");
+      hist_dummy->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z')BF(Z' #rightarrow NN #rightarrow #mu#mujjjj) (pb)");
     }
 
     //hist_dummy->GetXaxis()->SetRangeUser(zpmasses.at(0),zpmasses.at(zpmasses.size()-1));
@@ -634,10 +641,17 @@ void QuickLimit_obs(int xxx=0){
     //c1->SaveAs(base_plotpath+"/Limit_N"+TString::Itoa(mN,10)+".png");
 
     out->cd();
-    Theory_for_this_mN->SetName("Zp"+TString::Itoa(mN,10)+"_Theory");
-    Limit_for_this_mN->SetName("Zp"+TString::Itoa(mN,10)+"_Limit");
+    Theory_for_this_mN->SetName("N"+TString::Itoa(mN,10)+"_Theory");
+    Limit_for_this_mN_obs->SetName("N"+TString::Itoa(mN,10)+"_Limit_Observed");
+    Limit_for_this_mN->SetName("N"+TString::Itoa(mN,10)+"_Limit_Expected");
+    Limit_for_this_mZP_68_band->SetName("N"+TString::Itoa(mN,10)+"_Limit_Expected_1sigma");
+    Limit_for_this_mZP_95_band->SetName("N"+TString::Itoa(mN,10)+"_Limit_Expected_2sigma");
+
     Theory_for_this_mN->Write();
+    Limit_for_this_mN_obs->Write();
     Limit_for_this_mN->Write();
+    Limit_for_this_mZP_68_band->Write();
+    Limit_for_this_mZP_95_band->Write();
 
     c1->Close();
 
@@ -795,7 +809,7 @@ void QuickLimit_obs(int xxx=0){
   TH1D *hist_dummy = new TH1D("hist_dummy", "", 4000, 400., 4400.);
   hist_axis(hist_dummy);
   hist_dummy->Draw("hist");
-  hist_dummy->GetYaxis()->SetRangeUser(1E-6,100);
+  hist_dummy->GetYaxis()->SetRangeUser(1E-5,100);
   hist_dummy->GetYaxis()->SetTitle("#sigma (pb)");
   hist_dummy->GetYaxis()->SetTitleSize(0.04);
   hist_dummy->GetYaxis()->SetTitleOffset(1.7);
@@ -803,10 +817,10 @@ void QuickLimit_obs(int xxx=0){
   hist_dummy->GetXaxis()->SetLabelSize(0.045);
 
  if(channel == "EE"){
-    hist_dummy->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z')BR(Z' #rightarrow NN #rightarrow eejjjj) (pb)");
+    hist_dummy->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z')BF(Z' #rightarrow NN #rightarrow eejjjj) (pb)");
   }
   if(channel == "MuMu"){
-    hist_dummy->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z')BR(Z' #rightarrow NN #rightarrow #mu#mujjjj) (pb)");
+    hist_dummy->GetYaxis()->SetTitle("#sigma(pp #rightarrow Z')BF(Z' #rightarrow NN #rightarrow #mu#mujjjj) (pb)");
   }
   hist_dummy->GetXaxis()->SetTitle("m_{Z'} (GeV)");
   c_quarter->SetLogy();
@@ -875,6 +889,20 @@ void QuickLimit_obs(int xxx=0){
   c_quarter->SaveAs(base_plotpath+"/Limit_quarter.pdf");
   
   c_quarter->Close();
+
+  out->cd();
+  Theory_quarter->SetName("quarter_Theory");
+  Limit_quarter_obs->SetName("quarter_Limit_Observed");
+  Limit_quarter->SetName("quarter_Limit_Expected");
+  Limit_quarter_68_band->SetName("quarter_Limit_Expected_1sigma");
+  Limit_quarter_95_band->SetName("quarter_Limit_Expected_2sigma");
+
+  Theory_quarter->Write();
+  Limit_quarter_obs->Write();
+  Limit_quarter->Write();
+  Limit_quarter_68_band->Write();
+  Limit_quarter_95_band->Write();
+
 
   //=============================
   //==== Okay, Now Draw Contour
@@ -1458,6 +1486,7 @@ void QuickLimit_obs(int xxx=0){
   gr_central_fill -> SetFillColor(kAzure + 8);
   gr_central_fill -> Draw("fsame");
   
+  cout << "Print gr_central" << endl;
   gr_central->Print();
   gr_central-> SetLineStyle(8);
   gr_central->SetLineWidth(3);
@@ -1465,6 +1494,7 @@ void QuickLimit_obs(int xxx=0){
   gr_central->Draw("lsame");
   
   TGraph *gr_68_down = new TGraph(n_point_68_down, x_mZp_68_down, y_mZp_68_down);
+  cout << "Print gr_68_down" <<endl;
   gr_68_down->Print();
   gr_68_down->SetLineStyle(2);
   gr_68_down->SetLineWidth(1);
@@ -1472,6 +1502,7 @@ void QuickLimit_obs(int xxx=0){
   gr_68_down->Draw("lsame");
   
   TGraph *gr_68_up = new TGraph(n_point_68_up, x_mZp_68_up, y_mZp_68_up);
+  cout << "Print gr_68_up" <<endl;
   gr_68_up->Print();
   gr_68_up->SetLineStyle(2);
   gr_68_up->SetLineWidth(1);
@@ -1479,6 +1510,7 @@ void QuickLimit_obs(int xxx=0){
   gr_68_up->Draw("lsame");
 
   TGraph *gr_obs = new TGraph(n_point_obs, x_mZp_obs, y_mZp_obs);
+  cout << "Print gr_obs" <<endl;
   gr_obs->Print();
   gr_obs->SetLineWidth(3);
   gr_obs->SetLineColor(kBlack);

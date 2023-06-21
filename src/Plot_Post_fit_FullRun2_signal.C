@@ -108,7 +108,7 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
   mappad[pad1] -> SetTopMargin( 0.07 );
   mappad[pad1] -> SetBottomMargin( 0.05 );
   mappad[pad1] -> SetLeftMargin( 0.15 );
-  mappad[pad1] -> SetRightMargin( 0.03 );
+  mappad[pad1] -> SetRightMargin( 0.04 );
   mappad[pad1] -> Draw();
   mappad[pad1] -> cd();
   mappad[pad1] -> SetLogy();
@@ -125,7 +125,7 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
   //TString histograms[4] = {"VV", "WJets_MG_HT", "TT_powheg", "DYJets_MG_HT"};
   //TString legend_list[4] = {"Other", "WJets", "ttbar", "DYJets"};
   TString histograms[4] = {"VV", "fake", "TT_powheg", "DYJets_MG_HT"};
-  TString legend_list[4] = {"Other", "Non-prompt", "ttbar", "DYJets"};
+  TString legend_list[4] = {"Other", "Nonprompt", "ttbar", "DYJets"};
   TString years[3] = {"2016", "2017", "2018"};
 
   //Int_t colour_array[] = {870, 632, 416, 400}; // -- Original
@@ -314,7 +314,7 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
   mappad[pad2] -> SetTopMargin( 0.05 );
   mappad[pad2] -> SetBottomMargin( 0.4 );
   mappad[pad2] -> SetLeftMargin( 0.15 );
-  mappad[pad2] -> SetRightMargin( 0.03 );
+  mappad[pad2] -> SetRightMargin( 0.04 );
   mappad[pad2] -> Draw();
   mappad[pad2] -> cd();
 
@@ -328,11 +328,13 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
   pad2_template -> SetLineColor(kWhite);
   pad2_template -> GetXaxis() -> SetTitle(name_x);
   pad2_template -> GetXaxis() -> SetTitleSize(0.20);
-  pad2_template -> GetXaxis() -> SetLabelSize(0.125);
+  //pad2_template -> GetXaxis() -> SetLabelSize(0.125);
+  pad2_template -> GetXaxis() -> SetLabelSize(0.15);
   pad2_template -> GetYaxis() -> SetTitle("#frac{Obs.}{Pred.}");
   pad2_template -> GetYaxis() -> SetTitleSize(0.15);
   pad2_template -> GetYaxis() -> SetTitleOffset(0.4);
-  pad2_template -> GetYaxis() -> SetLabelSize(0.10);
+  //pad2_template -> GetYaxis() -> SetLabelSize(0.10);
+  pad2_template -> GetYaxis() -> SetLabelSize(0.125);
   pad2_template -> GetYaxis() -> SetNdivisions(505);
   pad2_template -> GetYaxis() -> SetRangeUser(0.0, 2.5);
   pad2_template -> SetStats(0);
@@ -444,10 +446,10 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
   TLatex latex_fit; 
   latex_fit.SetTextSize(0.035);
   if(nameofhistogram.Contains("prefit")){
-    latex_fit.DrawLatex(0.20, 0.80, "Prefit");
+    latex_fit.DrawLatex(0.20, 0.80, "Pre-fit");
   }
   else if(nameofhistogram.Contains("postfit")){
-    latex_fit.DrawLatex(0.20, 0.80, "Postfit");
+    latex_fit.DrawLatex(0.20, 0.80, "Post-fit");
   }
   else return;
 
@@ -480,6 +482,32 @@ void make_histogram(TString plot_name, TString which_fit, int N_bin, double binx
   mapcanvas[canvas] -> SaveAs(pdfname);
 
   if(debug) cout << "10" << endl;
+
+  TString out_root_name = WORKING_DIR + "/output/root/" + TString::Itoa(tag_year,10) + "/" + nameofhistogram + ".root";
+  TFile *outfile = new TFile(out_root_name, "RECREATE");
+  outfile -> cd();
+  bkg_sum -> SetName("top_bkg");
+  data_gr -> SetName("top_data");
+  bkg_sum -> Write();
+  data_gr -> Write();
+  for(int i_legend = 0; i_legend < 4; i_legend++){
+    TString current_hist = plot_name + histograms[4 - i_legend - 1] + which_fit;
+    if(mapfunc[current_hist + "sum"]){
+      mapfunc[current_hist + "sum"] -> SetName(legend_list[4 - i_legend - 1]);
+      mapfunc[current_hist + "sum"] -> Write();
+    }
+  }
+  signal_hist -> SetName("signal");
+  signal_hist -> Write();
+  pad2_bkg_err -> SetName("bottom_unc");
+  ratio_data_gr -> SetName("bottom_ratio");
+  pad2_bkg_err -> Write();
+  ratio_data_gr -> Write();
+  outfile -> Close();
+
+
+
+
   
   vx.clear();
   vy.clear(); 

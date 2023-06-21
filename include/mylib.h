@@ -407,7 +407,7 @@ void Write_syst_error(TString current_histname,  TString systematics, TString Cy
   TString name_up = current_histname + "_" + current_sample + "_" + systematics + "Up";
   TString name_down = current_histname + "_" + current_sample + "_" + systematics + "Down";
   // -- Uncorrelated Systematics
-  if(systematics.Contains("TriggerSF")){
+  if(systematics.Contains("TriggerSF") || systematics.Contains("JetsRes") || systematics.Contains("Prefire")){
     name_up = current_histname + "_" + current_sample + "_" + systematics + TString::Itoa(tag_year,10) + "Up";
     name_down = current_histname + "_" + current_sample + "_" + systematics +  TString::Itoa(tag_year,10) + "Down";
   }

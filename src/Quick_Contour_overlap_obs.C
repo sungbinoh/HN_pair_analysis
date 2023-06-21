@@ -134,7 +134,27 @@ void make_histogram(TString channel){
   pdfname = WORKING_DIR + "/plots/limit/comparison/";
   pdfname = pdfname + binnings + "_" + channel + ".pdf";
   c_ct->SaveAs(pdfname);
-    
+
+  TString out_root_name = WORKING_DIR + "/output/root/" + binnings + "_" + channel + ".root";
+  TFile *outfile = new TFile(out_root_name, "RECREATE");
+  outfile -> cd();
+  map_gr[map_sample_names["limit"].at(0) + channel] -> SetName("exp");
+  map_gr[map_sample_names["limit"].at(0) + channel + "_up"] -> SetName("exp_up");
+  map_gr[map_sample_names["limit"].at(0) + channel + "_down"] -> SetName("exp_down");
+  for(unsigned int i = 1; i < map_sample_names["limit"].size(); i++){
+    map_gr[map_sample_names["limit"].at(i) + channel + "_obs"] -> SetName(map_sample_names["limit"].at(i) + "_obs");
+  }
+  map_gr[map_sample_names["limit"].at(0) + channel + "_obs"] -> SetName("obs");
+
+  map_gr[map_sample_names["limit"].at(0) + channel] -> Write();
+  map_gr[map_sample_names["limit"].at(0) + channel + "_up"] -> Write();
+  map_gr[map_sample_names["limit"].at(0) + channel + "_down"] -> Write();
+  for(unsigned int i = 1; i < map_sample_names["limit"].size(); i++){
+    map_gr[map_sample_names["limit"].at(i) + channel + "_obs"] -> Write();
+  }
+  map_gr[map_sample_names["limit"].at(0) + channel + "_obs"] -> Write();
+
+  outfile -> Close();
 }
 
 

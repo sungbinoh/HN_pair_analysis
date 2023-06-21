@@ -15,9 +15,9 @@ void open_files(TString histname, int year){
   TString bkgs[4] = {"DYJets_MG_HT", "TT_powheg", "fake", "VV"};
 
   double lumi_error = 1.;
-  if(year == 2016) lumi_error = 1.018;
-  if(year == 2017) lumi_error = 1.018;
-  if(year == 2018) lumi_error = 1.018;
+  if(year == 2016) lumi_error = 1.016;
+  if(year == 2017) lumi_error = 1.016;
+  if(year == 2018) lumi_error = 1.016;
   
   if(signal_file.is_open()){
 
@@ -68,7 +68,7 @@ void open_files(TString histname, int year){
 	  TString str_current_hist_Up = histname + "_" + bkgs[i] + "_" + systematics_comparison[j] + "Up";
 	  TString str_current_hist_Down = histname + "_" + bkgs[i] + "_" + systematics_comparison[j] + "Down";
 	  //if(systematics_comparison[j].Contains("Jets") || systematics_comparison[j].Contains("SD") || systematics_comparison[j].Contains("ZPtRw")){
-	  if(systematics_comparison[j].Contains("TriggerSF")){
+	  if(systematics_comparison[j].Contains("TriggerSF") || systematics_comparison[j].Contains("JetsRes") || systematics_comparison[j].Contains("Prefire")){
 	    str_current_hist_Up = histname + "_" + bkgs[i] + "_" + systematics_comparison[j] + TString::Itoa(year,10) + "Up";
 	    str_current_hist_Down = histname + "_" + bkgs[i] + "_" + systematics_comparison[j] + TString::Itoa(year,10) + "Down";
 	    //str_current_hist_Up = histname + "_" + bkgs[i] + "_" + systematics_comparison[j] + "Up";
@@ -104,7 +104,7 @@ void open_files(TString histname, int year){
 	//cout << systematics_comparison[j] << endl;
 	TString str_current_hist_Up = histname + "_" + this_line + "_" + systematics_comparison[j] + "Up";
 	TString str_current_hist_Down = histname + "_" + this_line + "_" + systematics_comparison[j] + "Down";
-	if(systematics_comparison[j].Contains("TriggerSF")){
+	if(systematics_comparison[j].Contains("TriggerSF") || systematics_comparison[j].Contains("JetsRes") || systematics_comparison[j].Contains("Prefire")){
 	  str_current_hist_Up = histname + "_" + this_line + "_" + systematics_comparison[j] + TString::Itoa(year,10) + "Up";
 	  str_current_hist_Down = histname + "_" + this_line + "_" + systematics_comparison[j] + TString::Itoa(year,10) + "Down";
 	}
@@ -345,7 +345,7 @@ void MakeSystematicTable_FullRun2(int ahahah){
 				       "PU Reweight",
 				       "Muon Momentum Scale",
 				       //"MuonSmear",
-				       "L1 Prefire",
+				       "L1 Trigger Inefficiency",
 				       "Muon Reconstruction SF",
 				       "Muon ID SF",
 				       "Muon Isolation SF",
@@ -358,14 +358,14 @@ void MakeSystematicTable_FullRun2(int ahahah){
   
   TString syst_correlation[N_syst] = {"Correlated",
 				      "Correlated",
-				      "Correlated",
+				      "Uncorrelated",
 				      "Correlated",
 				      //"Correlated",
 				      "Correlated",
 				      "Correlated",
 				      "Correlated",
 				      //"Not Done",
-				      "Correlated",
+				      "Uncorrelated",
 				      "Correlated",
 				      "Correlated",
 				      "Correlated",
@@ -408,7 +408,7 @@ void MakeSystematicTable_FullRun2(int ahahah){
   file_syst_table << "&                                       &     &  (\\%)           & (\\%)            & (\\%)           & (\\%) \\\\" << endl;
   file_syst_table << "\\hline" << endl;
 
-  file_syst_table << "Integrated luminosity & All bkgd./Signal & Correlated & 1.8 & 1.8 & 1.8 & 1.8\\\\ " << endl;
+  file_syst_table << "Integrated luminosity & All bkgd./Signal & Correlated & 1.6 & 1.6 & 1.6 & 1.6\\\\ " << endl;
   for(int j = 0; j < N_syst_comparison; j++){
     file_syst_table << systematics_table[j] << " & " << syst_bkg_signal[j] << " & " << syst_correlation[j];
     file_syst_table << fixed <<setprecision(1) << " & " ;
@@ -462,7 +462,7 @@ void MakeSystematicTable_FullRun2(int ahahah){
     }
     else file_syst_table << " $< 0.1$ \\\\" << endl;
   }
-  file_syst_table << "Nonprompt norm. & Nonprompt & Correlated & 100 & \\NA & 100 & \\NA  \\\\" << endl;
+  file_syst_table << "Nonprompt norm. & Nonprompt & Uncorrelated & 100 & \\NA & 100 & \\NA  \\\\" << endl;
   file_syst_table << "Rare SM norm. & Others & Correlated & 50 & \\NA & 50 & \\NA \\\\" << endl;
   file_syst_table << "\\hline" << endl;
   file_syst_table << "\\end{tabular}" << endl;

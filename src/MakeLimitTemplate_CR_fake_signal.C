@@ -325,7 +325,7 @@ void Write_data_bkg(TString current_histname){
     TString name_up = "signal_" + systematics + "Up";
     TString name_down = "signal_" + systematics + "Down";
     // -- Uncorrelated syst
-    if(systematics.Contains("TriggerSF")){
+    if(systematics.Contains("TriggerSF") || systematics.Contains("JetsRes") || systematics.Contains("Prefire")){
       name_up = "signal_" + systematics + TString::Itoa(tag_year,10) + "Up";
       name_down = "signal_" + systematics +  TString::Itoa(tag_year,10) + "Down";
     }

@@ -15,9 +15,9 @@ void open_files(TString histname){
   TString bkgs[4] = {"DYJets_MG_HT", "TT_powheg", "fake", "VV"};
 
   double lumi_error = 1.;
-  if(tag_year == 2016) lumi_error = 1.018;
-  if(tag_year == 2017) lumi_error = 1.018;
-  if(tag_year == 2018) lumi_error = 1.018;
+  if(tag_year == 2016) lumi_error = 1.016;
+  if(tag_year == 2017) lumi_error = 1.016;
+  if(tag_year == 2018) lumi_error = 1.016;
   
   if(signal_file.is_open()){
 
@@ -68,7 +68,7 @@ void open_files(TString histname){
 	  TString str_current_hist_Up = histname + "_" + bkgs[i] + "_" + systematics_comparison[j] + "Up";
 	  TString str_current_hist_Down = histname + "_" + bkgs[i] + "_" + systematics_comparison[j] + "Down";
 	  //if(systematics_comparison[j].Contains("Jets") || systematics_comparison[j].Contains("SD") || systematics_comparison[j].Contains("ZPtRw")){
-	  if(systematics_comparison[j].Contains("TriggerSF")){
+	  if(systematics_comparison[j].Contains("TriggerSF") || systematics_comparison[j].Contains("JetsRes") || systematics_comparison[j].Contains("Prefire")){
 	    str_current_hist_Up = histname + "_" + bkgs[i] + "_" + systematics_comparison[j] + TString::Itoa(tag_year,10) + "Up";
 	    str_current_hist_Down = histname + "_" + bkgs[i] + "_" + systematics_comparison[j] + TString::Itoa(tag_year,10) + "Down";
 	    //str_current_hist_Up = histname + "_" + bkgs[i] + "_" + systematics_comparison[j] + "Up";
@@ -101,7 +101,7 @@ void open_files(TString histname){
       for(int j = 0; j < N_syst_comparison; j++){
 	TString str_current_hist_Up = histname + "_" + this_line + "_" + systematics_comparison[j] + "Up";
 	TString str_current_hist_Down = histname + "_" + this_line + "_" + systematics_comparison[j] + "Down";
-	if(systematics_comparison[j].Contains("TriggerSF")){
+	if(systematics_comparison[j].Contains("TriggerSF") || systematics_comparison[j].Contains("JetsRes") || systematics_comparison[j].Contains("Prefire")){
 	  str_current_hist_Up = histname + "_" + this_line + "_" + systematics_comparison[j] + TString::Itoa(tag_year,10) + "Up";
 	  str_current_hist_Down = histname + "_" + this_line + "_" + systematics_comparison[j] + TString::Itoa(tag_year,10) + "Down";
 	}
@@ -231,7 +231,7 @@ void MakeSystematicTable(int year=2018){
                                        "PU Reweight",
                                        "Muon Momentum Scale",
                                        //"Muon smear
-                                       "L1 Prefire",
+                                       "L1 Trigger Inefficiency",
                                        "Muon Reconstruction SF",
                                        "Muon ID SF",
                                        "Muon Isolation SF",
@@ -244,14 +244,14 @@ void MakeSystematicTable(int year=2018){
 
   TString syst_correlation[N_syst] = {"Correlated",
                                       "Correlated",
-                                      "Correlated",
+                                      "Uncorrelated",
                                       "Correlated",
                                       //"Correlated
                                       "Correlated",
                                       "Correlated",
                                       "Correlated",
                                       //"Not Done
-                                      "Correlated",
+                                      "Uncorrelated",
                                       "Correlated",
                                       "Correlated",
                                       "Correlated",
@@ -264,8 +264,8 @@ void MakeSystematicTable(int year=2018){
 
   ofstream file_syst_table("./output/latex/syst_table_" + TString::Itoa(tag_year,10) + ".tex", ios::trunc);
 
-  double lumi_error = 1.8;
-  if(tag_year == 2017) lumi_error = 1.8;
+  double lumi_error = 1.6;
+  if(tag_year == 2017) lumi_error = 1.6;
 
   file_syst_table << "\\begin{table}"<< endl;
   file_syst_table << "\\centering" << endl;
@@ -317,7 +317,7 @@ void MakeSystematicTable(int year=2018){
     file_syst_table << PDF_uncertainty[j];
     file_syst_table << " & Correlated & - & - & - & - & " <<  map_syst_table[PDF_uncertainty[j] + "MuMu"].at(0) << " -- " << map_syst_table[PDF_uncertainty[j] + "MuMu"].at(1) << "\\\\" << endl;
   }
-  file_syst_table << "Non prompt bkg norm. & Correlated & - &  - & 100 & - & - \\\\" << endl;
+  file_syst_table << "Non prompt bkg norm. & Uncorrelated & - &  - & 100 & - & - \\\\" << endl;
   file_syst_table << "Minor bkg norm. & Correlated & - &  - & - & 50 & - \\\\" << endl;
   file_syst_table << "\\hline\\hline" << endl;
   file_syst_table << "\\end{tabular}" << endl;

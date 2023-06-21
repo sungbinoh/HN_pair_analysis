@@ -10,9 +10,9 @@ void open_files(TString histname){
   TString bkgs[4] = {"VV", "TT_powheg", "DYJets_MG_HT", "fake"};
 
   double lumi_error = 1.;
-  if(tag_year == 2016) lumi_error = 1.025;
-  if(tag_year == 2017) lumi_error = 1.023;
-  if(tag_year == 2018) lumi_error = 1.025;
+  if(tag_year == 2016) lumi_error = 1.016;
+  if(tag_year == 2017) lumi_error = 1.016;
+  if(tag_year == 2018) lumi_error = 1.016;
   
   
   TString channel = "";

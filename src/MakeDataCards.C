@@ -21,9 +21,9 @@ void open_files(TString histname){
   if(tag_year == 2018) lumi_error = 1.025;
   */  
   // -- Correlated Run2 Lumi error = 1.8 https://twiki.cern.ch/twiki/bin/viewauth/CMS/TWikiLUM
-  if(tag_year == 2016) lumi_error = 1.018;
-  if(tag_year == 2017) lumi_error = 1.018;
-  if(tag_year == 2018) lumi_error = 1.018;
+  if(tag_year == 2016) lumi_error = 1.016;
+  if(tag_year == 2017) lumi_error = 1.016;
+  if(tag_year == 2018) lumi_error = 1.016;
   
   if(signal_file.is_open()){
 
@@ -160,7 +160,7 @@ void open_files(TString histname){
 	if(bkg_bool[i]) file_shape << "\t" << lumi_error;
       }
       file_shape << "\n";
-      file_shape << "fake_norm\tlnN" + fake_norm << endl;
+      file_shape << "fake_norm" + TString::Itoa(tag_year,10) + "\tlnN" + fake_norm << endl;
       file_shape << "Minor_MC_norm\tlnN" + Minor_MC_norm << endl;
       file_shape << "ElectronScale\tshapeN2" + adding_bkgs << endl;
       file_shape << "ElectronSmear\tshapeN2" + adding_bkgs << endl;
@@ -173,12 +173,12 @@ void open_files(TString histname){
       file_shape << "MuonIDSF\tshapeN2" + adding_bkgs << endl;
       file_shape << "MuonISOSF\tshapeN2" + adding_bkgs << endl;
       file_shape << "MuonTriggerSF" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
-      file_shape << "JetsRes\tshapeN2" + adding_bkgs << endl;
+      file_shape << "JetsRes" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
       file_shape << "JetsScale\tshapeN2" + adding_bkgs << endl;
       //file_shape << "SD_JMR_\tshapeN2" + adding_bkgs << endl;
       file_shape << "SD_JMS_\tshapeN2" + adding_bkgs << endl;
       file_shape << "PUReweight_\tshapeN2" + adding_bkgs << endl;
-      file_shape << "Prefire_\tshapeN2" + adding_bkgs << endl;
+      file_shape << "Prefire_" + TString::Itoa(tag_year,10) + "\tshapeN2" + adding_bkgs << endl;
       file_shape << "ZPtRw\tshapeN2" + adding_bkgs << endl;
       file_shape << "PDF\tshapeN2" + adding_bkgs_signal_only << endl;
       file_shape << "Scale\tshapeN2" + adding_bkgs_signal_only << endl;
