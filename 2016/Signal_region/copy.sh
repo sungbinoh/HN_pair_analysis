@@ -1,0 +1,1 @@
+cp /data7/Users/suoh/SKFlatOutput/v949cand2_2/HN_pair_all/2017/output/*.root .

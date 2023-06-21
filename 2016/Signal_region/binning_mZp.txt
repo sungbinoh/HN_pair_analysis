@@ -1,0 +1,8 @@
+mZp_CR_Zmass_DiEle_central	{0., 300, 900, 1200, 1500, 1800, 2100, 2400, 2700, 3300, 5700, 6000 };
+mZp_CR_Zmass_DiMu_central	{0., 300, 900, 1200, 1500, 1800, 2100, 2400, 2700, 3300, 5700, 6000 };
+mZp_CR_ttbar1_DiEle_central	{0., 300, 900, 1200, 5700, 6000 };
+mZp_CR_ttbar1_DiMu_central	{0., 300, 900, 1200, 5700, 6000 };
+mZp_CR_ttbar2_DiEle_central	{0., 300, 900, 1200, 5700, 6000 };
+mZp_CR_ttbar2_DiMu_central	{0., 300, 900, 1200, 5700, 6000 };
+mZp_SR_DiEle_central		{0., 300, 900, 1200, 1500, 2400, 5700, 6000 };
+mZp_SR_DiMu_central		{0., 300, 900, 1200, 1500, 2100, 5700, 6000 };

@@ -1,0 +1,13 @@
+#ignore root files and pdfs etc
+*.pdf
+*.root
+*.jpg
+# ignore emacs tmp files
+*~
+# ignore libraries
+*.so
+*.pcm
+# ignore all object files
+*.[ao]
+# ignore all dep files
+*.d
